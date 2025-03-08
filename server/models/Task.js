@@ -11,9 +11,17 @@ const attachmentSchema = new Schema({
 
 const activityLogSchema = new Schema({
     text: { type: String },
-    type: { type: String, enum: ['normal', 'comment'], default: 'normal' },
+    type: { type: String, enum: ['action', 'comment'], default: 'action' },
+    details: {
+        fieldChanged: { type: String },
+        oldValue: { type: Schema.Types.Mixed }, 
+        newValue: { type: Schema.Types.Mixed },
+        whoChange: { type: String },
+    },
     createdBy: { type: Schema.ObjectId, ref: 'User' },
+    userId: { type: Schema.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now },
+    deleted: { type: Boolean, default: false },
 });
 
 const taskSchema = new Schema({
@@ -56,8 +64,11 @@ const taskSchema = new Schema({
         default: 'normal'
     },
 
-    // Relationships and organizational features
-    taskTags: [{ type: String }],
+    taskTags: [{
+        _id: { type: mongoose.Schema.Types.ObjectId, ref: 'Tag' },
+        tagName: { type: String },
+        color: { type: String }
+    }],
     assignedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     subtasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
     dependencies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],

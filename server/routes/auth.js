@@ -3,7 +3,6 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const authController = require("../controllers/authController");
 const router = express.Router();
-const User = require("../models/User");
 
 // Google OAuth 2.0 strategy
 passport.use(
@@ -35,33 +34,26 @@ passport.deserializeUser(async (id, done) => {
 // Google OAuth authentication route
 router.get("/auth/google", passport.authenticate("google", { scope: ["email", "profile"] }));
 
-router.get("/google/callback", (req, res, next) => {
+router.get("/auth/google/callback", (req, res, next) => {
   passport.authenticate("google", (err, user, info) => {
-    if (err) {
-      console.error("Error during Google authentication:", err);
-      return res.redirect("/login-failure");
-    }
+      if (err) return next(err);
 
-    if (!user) {
-      if (info?.message === "redirect_to_google_register") {
-        return res.redirect(`/googleRegister?googleEmail=${info.googleEmail}`);
+      if (!user && info?.googleEmail) {
+          return res.render("log/googleRegister", { 
+              googleEmail: info.googleEmail,
+              googleId: info.googleId,
+              profileImage: info.profileImage
+          });
       }
-      return res.redirect("/login-failure");
-    }
 
-    req.logIn(user, (loginErr) => {
-      if (loginErr) {
-        console.error("Login error:", loginErr);
-        return res.redirect("/login-failure");
-      }
-      console.log("User logged in:", user); // Debug log to confirm the login is successful
-      return res.redirect("/space");
-    });
+      req.logIn(user, (err) => {
+          if (err) return next(err);
+          return res.redirect("/space");
+      });
   })(req, res, next);
 });
 
-
-
+router.post('/google-register', authController.googleRegister);
 
 // Login
 router.get("/login", authController.loginPage);
@@ -71,17 +63,12 @@ router.post("/login", authController.login);
 router.post("/user/register", authController.registerUser);
 router.get("/register", authController.registerPage);
 
-// Google Registration
-router.get("/googleRegister", authController.googleRegisterPage);
-router.post("/google-register", authController.googleRegister);
-
 // Login failure
 router.get("/login-failure", authController.loginFailure);
 
 // Logout
 router.get("/logout", authController.logout);
 
-// Forgot Password
 router.get('/forgot-password', authController.showForgotPassword);
 router.post('/forgot-password', authController.resendOTP);
 

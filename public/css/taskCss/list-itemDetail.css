@@ -23,13 +23,15 @@
 
     --cancle: #E53935;
     --grey: rgb(235, 237, 242) ;
+    --ds-shadow-overlay: 0px 8px 12px #091E4226, 0px 0px 1px #091E424F;
 }
 
-*{
-    font-family: 'Kanit', sans-serif;
+* {
+    font-family: "Kanit", sans-serif;
     margin: 0;
     padding: 0;
-}
+    box-sizing: border-box;
+  }
 
 .topOption{
     width: 100%;
@@ -238,7 +240,7 @@
 
 /* detail */
 .detail{
-    width: 80%;
+    width: 65%;
     height: 100%;
     padding: 30px 50px;
     position: relative;
@@ -303,27 +305,89 @@
     transition: opacity 0.3s ease; /* Smooth transition for the text */
 }
 
-
-
-
-
 .taskName {
     font-size: 40px;
     font-weight: 400;
     color: black;
+    margin-bottom: 0;
 }
 
 #taskName {
-    font-size: 2em;
+    font-size: 40px;
     width: 100%;
+    height: 48px;
     font-weight: 400;
-    color: #a8aaad;
+    color: #757678;
     border: none;
     border-bottom: 2px solid var(--btn);
+    display: none;
 }
 
 #taskName:focus {
     outline: none;
+}
+#updateName{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+}
+.btnOption{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 10px;
+    gap: 15px;
+}
+#saveButton{
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 5px;
+    background: var(--btn);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0.7;
+    box-shadow: var(--ds-shadow-overlay, 0 4px 8px -2px #091e4240, 0 0 1px #091e424f);
+    transition: width 0.3s, 
+                height 0.3s,
+                font-size 0.3s,
+                opacity 0.3s;
+}
+#cancelButton{
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 5px;
+    background: var(--cancle);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0.7;
+    box-shadow: var(--ds-shadow-overlay, 0 4px 8px -2px #091e4240, 0 0 1px #091e424f);
+    transition: width 0.3s, 
+                height 0.3s,
+                font-size 0.3s,
+                opacity 0.3s;
+}
+#saveButton:hover,
+#cancelButton:hover{
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+    opacity: 1;
+}
+
+.previous-name {
+    color: red;
+    font-weight: 400;
+}
+
+.new-name {
+    color: green;
+    font-weight: 400;
 }
 
 .grid-container {
@@ -384,7 +448,12 @@
     cursor: pointer;
     font-weight: 300;
 }
-
+#updateDueDateForm{
+    width: 55%;
+}
+#dueDateText{
+    width: 100%;
+}
 .description-box {
     position: relative;
     margin-top: 30px;
@@ -392,12 +461,13 @@
 
 .description-box textarea {
     width: 100%;
-    height: 120px;
+    height: 150px;
     border: 1px solid var(--line);
-    padding: 15px;
+    padding: 20px 30px;
     border-radius: 5px;
     resize: none;
-    font-size: 14px;
+    font-size: 16px;
+    font-weight: 300;
 }
 .description-box textarea:focus{
     outline: none;
@@ -407,11 +477,12 @@
     top: 10px;
     right: 10px;
     cursor: pointer;
-    display: none;
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
 .description-box:hover .expand-icon {
-    display: block;
+    opacity: 1;
 }
 
 /* Full Page View */
@@ -837,7 +908,7 @@ td img{
 
 /* activity */
 .activity{
-    width: 20%;
+    width: 35%;
     height: 100%;
     background-color: #F7F8F9;
     border-left: 1.5px solid var(--line);
@@ -1023,7 +1094,7 @@ td img{
     font-weight: 300;
 }
 
-.status-div{
+.status-div {
     color: white;
     font-weight: 400;
     padding: 5px;
@@ -1031,7 +1102,37 @@ td img{
     border-radius: 5px;
     text-align: center;
     font-size: 14px;
+    cursor: pointer; 
+    position: relative; 
 }
+
+.dropdown-content {
+    position: absolute; /* Ensure it appears below .status-div */
+    background-color: #32344E;
+    display: none; /* Initially hidden */
+    padding: 5px 0;
+    border-radius: 5px;
+    z-index: 100; /* Ensure it appears above other elements */
+}
+
+.dropdown-content a {
+    color: white;
+    padding: 10px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #6EACDA; /* Slight hover effect */
+}
+
+.toArrow{
+    font-size: 16px;
+    padding: 0 10px;
+    color: var(--btn);
+}
+
+
 
 .checkTask-pending{
     display: flex;
@@ -1291,11 +1392,11 @@ button.btn:hover {
     white-space: nowrap;
     font-size: 14px;
     z-index: 10;
-  }
+}
   
-  .user-profile:hover .username-tooltip {
+.user-profile:hover .username-tooltip {
     display: block;
-  }
+}
   
 .fileWrap{
     display: flex;
@@ -1406,4 +1507,238 @@ button.btn:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* Styling for tags */
+
+/* Modal styles */
+#tagsDisplay{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+#tagsDisplay .tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 12px;
+    padding: 5px 10px;
+    font-size: 14px;
+    color: black; /* Ensures text is readable against pastel backgrounds */
+    font-weight: 400; /* Optional: Make text stand out */
+    white-space: nowrap; /* Prevent text wrapping */;
+}
+#visible-tags {
+    display: inline-block;
+    border-radius: 12px;
+    padding: 5px 10px;
+    font-size: 14px;
+    color: black;
+    font-weight: 400;
+    white-space: nowrap;
+    /* Add any specific styles you need for visible tags */
+}
+#visible-tags .remove-tag {
+    display: none;
+    transform: translateX(20px); 
+    opacity: 0; 
+    transition: all 0.3s ease;
+}
+#visible-tags{
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 5px 10px !important;
+    border-radius: 12px !important;
+    transition: width 0.3s ease;
+} 
+#visible-tags:hover{
+    width: fit-content;
+}
+#visible-tags:hover .remove-tag {
+    display: inline; 
+    transform: translateX(0);
+    opacity: 1;
+}
+.remove-tag{
+    height: 12px;
+    cursor: pointer;
+}
+.extra-tags{
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: var(--btn);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+}
+#extraTagsIndicator {
+    font-weight: 400;
+    color: white;
+}
+
+.showAllTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.showAllTags .tag-item {
+    display: inline-block;
+    border-radius: 12px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    cursor: pointer; /* Make the tag clickable */
+    transition: background-color 0.3s ease;
+}
+
+.showAllTags .tag-item:hover {
+    background-color: rgba(0, 0, 0, 0.1); /* Light hover effect */
+}
+.showTaskTags .tag-item {
+    display: inline-block;
+    border-radius: 12px;
+    padding: 5px 10px;
+    font-size: 14px;
+    color: black;
+    font-weight: 400;
+    white-space: nowrap;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+/* Additional styles */
+.tag-item {
+    display: inline-block;
+    transition: opacity 0.2s ease;
+}
+
+.tag-item[style*="display: none"] {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+#tagsManagementModal.hidden {
+    display: none;
+}
+
+#tagsManagementModal {
+    position: absolute; 
+    top: calc(100% + 15px);
+    left: -20px; 
+    z-index: 999; 
+    width: 250px;
+    max-height: 300px; 
+    overflow-y: auto; 
+    background-color: #fff; 
+    border-radius: 10px; 
+    padding: 10px;
+    display: none;
+    transition: opacity 0.3s ease; 
+    border: 1px solid var(--line);
+    box-shadow: var(--ds-shadow-overlay, 0 4px 8px -2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31));
+}
+
+#tagsManagementModal[style*="display: block"] {
+    opacity: 1;
+}
+
+.modal-content{
+    border: none;
+}
+.modal-header{
+    padding: 0;
+    padding-bottom: 15px;
+}
+.modal-body{
+    padding: 0;
+}
+.add-new-tag #newTagInput{
+    border-radius: 5px;
+    padding: 5px 10px;
+    border: 1px solid #cecece;
+    margin-top: 10px;
+    width: 100%;
+}
+.add-new-tag #newTagInput::placeholder{
+    color: #8d8d8d;
+}
+.showTaskTags{
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 7px;
+}
+
+.showAllAssigned {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.assigned-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.assigned-item:hover {
+    background-color: #f0f0f0;
+    border-radius: 5px;
+}
+
+#assignedName {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.fallback-circle {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #ccc;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    color: #fff;
+    margin-right: 8px;
+}
+.user-profile {
+    position: relative;
+}
+
+.user-profile:hover .remove-user-btn {
+    display: block;
+}
+
+.remove-user-btn {
+    display: none;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff0000;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 18px;
+    text-align: center;
+    z-index: 20;
 }

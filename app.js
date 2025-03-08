@@ -14,12 +14,28 @@ const User = require('./server/models/User');
 const moment = require('moment');
 const bodyParser = require('body-parser');
 const lineWebhook = require('./server/routes/lineWebhook');
-const schedule = require('node-schedule'); 
-const SystemAnnouncement = require('./server/models/SystemAnnouncements');
 const bcrypt = require('bcrypt'); 
+const cors = require('cors');
+const http = require("http");
+const socketIo = require("socket.io");
 
 const app = express();
 const port = process.env.PORT || 5001;
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO with the server
+const io = socketIo(server);
+
+// Handle Socket.IO connections
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
 
 // เชื่อมต่อฐานข้อมูล
 connectDB()
@@ -35,21 +51,24 @@ connectDB()
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'keyboard cat',
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    collectionName: 'sessions',
-  }),
-  cookie: {
-    secure: process.env.NODE_ENV === 'production', 
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'Lax',
-  },
-}));
+// Session Middleware ✅ ต้องมาก่อน passport
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'keyboard cat',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      collectionName: 'sessions',
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'Lax',
+    },
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -61,20 +80,9 @@ passport.use(
     User.authenticate()
   )
 );
-passport.serializeUser((user, done) => {
-  console.log("Serializing user:", user.id);
-  done(null, user.id); 
-});
 
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    console.log("Deserializing user:", user); 
-    done(null, user); // Set user in the session (req.user)
-  } catch (err) {
-    done(err); // Error handling
-  }
-});
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
@@ -85,6 +93,7 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/docUploads', express.static(path.join(__dirname, 'docUploads')));
 app.use(methodOverride('_method'));
 app.use('/webhook', lineWebhook);
+app.use(cors());
 
 // Flash messages
 app.use(flash());
@@ -125,6 +134,8 @@ app.use(expressLayouts);
 app.set('layout', './layouts/main');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+app.set("socketio", io);
+app.use(require('express-ejs-layouts'));
 
 // Routes
 app.use('/', require('./server/routes/auth'));
@@ -147,20 +158,8 @@ app.get('*', (req, res) => {
 });
 
 // Start server
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
 
-// ✅ ลบประกาศที่หมดอายุ
-schedule.scheduleJob('0 0 * * *', async () => {
-  try {
-    const now = new Date();
-    const result = await SystemAnnouncement.updateMany(
-      { expirationDate: { $lt: now }, isDeleted: { $ne: true } },
-      { isDeleted: true, updatedAt: now }
-    );
-    console.log(`${result.modifiedCount} expired announcements moved to history.`);
-  } catch (error) {
-    console.error('Error moving expired announcements to history:', error);
-  }
-});
+module.exports = { app, io };

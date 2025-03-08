@@ -1,601 +1,304 @@
-// Task Full View Toggles
-function closeFullView() {
+// Close button event ✅
+document.getElementById('close_btn').addEventListener('click', function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const spacesId = urlParams.get('spacesId');
+    window.location.href = `/space/item/${spacesId}/task_list`;
+});
+
+// detail Full View Toggles ✅
+document.addEventListener('DOMContentLoaded', () => {
     const fullPageView = document.getElementById('fullPageView');
-    fullPageView.classList.remove('show');
-    setTimeout(() => {
-        fullPageView.style.display = 'none';
-    }, 300);
-}
-function openFullView() {
-    const fullPageView = document.getElementById('fullPageView');
-    fullPageView.style.display = 'block';
-    requestAnimationFrame(() => {
-        fullPageView.classList.add('show');
-    });
-}
+    const openButton = document.querySelector('.description-box .expand-icon');
+    const closeButton = document.querySelector('.full-page-view .back-button button');
 
-// Task Name update
-document.addEventListener('DOMContentLoaded', function () {
-    var taskNameText = document.getElementById("taskName-text");
-    var taskNameInput = document.getElementById("taskName");
-    var notiAlert = document.getElementById("notiAlert");
-
-    document.getElementById("editTaskNameBtn").addEventListener("click", editTaskName);
-
-    window.editTaskName = function () {
-        taskNameText.style.display = "none";
-        taskNameInput.style.display = "block";
-        taskNameInput.value = taskNameText.textContent.trim();
-        taskNameInput.focus();
-        document.addEventListener('click', hideInputOnClickOutside);
-    };
-
-    function hideInputOnClickOutside(event) {
-        if (!taskNameInput.contains(event.target) && !taskNameText.contains(event.target)) {
-            taskNameInput.style.display = "none";
-            taskNameText.style.display = "block";
-            notiAlert.style.display = "none";
-            document.removeEventListener('click', hideInputOnClickOutside);
-        }
+    function closeFullView() {
+        fullPageView.classList.remove('show');
+        setTimeout(() => {
+            fullPageView.style.display = 'none';
+        }, 300);
     }
 
-    window.saveTaskName = function () {
-        var taskName = taskNameInput.value.trim();
-        notiAlert.style.display = "none";
+    function openFullView() {
+        fullPageView.style.display = 'block';
+        requestAnimationFrame(() => {
+            fullPageView.classList.add('show');
+        });
+    }
+
+    // Event listeners
+    if (openButton) {
+        openButton.addEventListener('click', openFullView);
+    }
+
+    if (closeButton) {
+        closeButton.addEventListener('click', closeFullView);
+    }
+});
+
+// Task Name Update ✅
+document.addEventListener('DOMContentLoaded', function () {
+    const taskNameText = document.getElementById("taskName-text");
+    const taskNameInput = document.getElementById("taskName");
+    const saveButton = document.getElementById("saveButton");
+    const cancelButton = document.getElementById("cancelButton");
+    const notiAlert = document.getElementById("notiAlert");
+    const updateForm = document.getElementById("updateName");
+
+    let originalTaskName = taskNameText.textContent.trim();
+
+    if (!updateForm) {
+        console.error("Update form not found");
+        return;
+    }
+
+    // Show input field on task name click
+    taskNameText.addEventListener("click", function () {
+        taskNameText.style.display = "none";
+        taskNameInput.style.display = "block";
+        saveButton.style.display = "inline-block";
+        cancelButton.style.display = "inline-block";
+        taskNameInput.focus();
+    });
+
+    // Handle typing in taskName input
+    taskNameInput.addEventListener("input", function () {
+        taskNameInput.style.color = "#000"; // Change color to black when typing
+    });
+
+    // Cancel editing task name
+    cancelButton.addEventListener("click", function () {
+        taskNameInput.style.display = "none";
+        saveButton.style.display = "none";
+        cancelButton.style.display = "none";
+        notiAlert.style.display = "none"; // Hide alert if visible
+        taskNameText.style.display = "block";
+        taskNameInput.value = originalTaskName; // Reset input value to original text
+        taskNameInput.style.color = "#757678"; // Reset color
+    });
+
+    // Save task name on Enter key press
+    taskNameInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            saveTaskName();
+        }
+    });
+
+    // Save task name on button click
+    saveButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        saveTaskName();
+    });
+
+    async function saveTaskName() {
+        const taskName = taskNameInput.value.trim();
+
+        // If task name hasn't changed, revert to original display
+        if (taskName === originalTaskName) {
+            taskNameInput.style.display = "none";
+            saveButton.style.display = "none";
+            cancelButton.style.display = "none";
+            taskNameText.style.display = "block";
+            notiAlert.style.display = "none";
+            return;
+        }
+
+        const taskIdElement = updateForm.querySelector("#taskId");
+
+        if (!taskIdElement) {
+            console.error("Task ID element not found");
+            return;
+        }
+
+        const taskId = taskIdElement.value;
+
+        // Validate input
         if (taskName === "" || !isAlphanumeric(taskName)) {
             notiAlert.style.display = "block";
             return;
         }
-        taskNameText.textContent = taskName;
-        taskNameInput.style.display = "none";
-        taskNameText.style.display = "block";
-        document.removeEventListener('click', hideInputOnClickOutside);
-    };
 
-    taskNameInput.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter') {
-            saveTaskName();
-        }
-    });
-});
-function isAlphanumeric(text) {
-    return /^[a-zA-Z0-9ก-๙]+$/.test(text);
-}
-
-// Subtask form toggles
-function cancelSubtaskNew() {
-    document.getElementById('subtaskNameInputMainNew').value = '';
-    document.getElementById('assigneeInputNew').value = '';
-    document.getElementById('dueDateInputNew').value = '';
-    document.getElementById('subtaskFormMainNew').style.display = 'none';
-    document.getElementById('addSubtaskBtnMainNew').style.display = 'block';
-}
-function showSubtaskInputMainNew() {
-    const subtaskForm = document.getElementById('subtaskFormMainNew');
-    const addSubtaskBtn = document.getElementById('addSubtaskBtnMainNew');
-
-    if (subtaskForm.style.display === 'flex') {
-        subtaskForm.style.display = 'none';
-        addSubtaskBtn.style.display = 'block';
-    } else {
-        addSubtaskBtn.style.display = 'none';
-        subtaskForm.style.display = 'flex';
-    }
-}
-
-document.getElementById('addSubtaskBtnMainNew').addEventListener('click', showSubtaskInputMainNew);
-document.getElementById('cancelSubtaskNew').addEventListener('click', cancelSubtaskNew);
-
-// Check if table has data and toggle visibility
-function checkTableData() {
-    const subtaskTableBody = document.getElementById('subtaskTableBodyNew');
-    const tableContainer = document.getElementById('subtaskTableContainerNew');
-    const formMain = document.getElementById('subtaskFormMainNew');
-
-    if (subtaskTableBody.children.length > 0) {
-        tableContainer.style.display = 'block';
-    } else {
-        tableContainer.style.display = 'none';
-        formMain.style.display = 'none';
-    }
-}
-checkTableData();
-
-// Initialize Flatpickr for Due Date input and apply Thai date formatting
-document.addEventListener('DOMContentLoaded', () => {
-    const dateInput = document.getElementById('dueDateInputNew');
-    const calendarIcon = document.getElementById('calendarIcon');
-    const dueDateWrapper = document.getElementById('dueDateWrapper');
-
-    // Retrieve the main task's due date from a hidden input
-    const mainTaskDueDate = document.getElementById('dueDateInput').value;
-    const maxDate = mainTaskDueDate ? new Date(mainTaskDueDate) : null;
-
-    // Retrieve current user ID from the backend
-    const currentUserId = "<%= currentUserId %>";
-
-    function formatDateToThai(date) {
-        const thaiMonths = [
-            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-        ];
-        return `${date.getDate()} ${thaiMonths[date.getMonth()]}`;
-    }
-
-    const flatpickrInstance = flatpickr(dateInput, {
-        dateFormat: "Y-m-d",
-        locale: "th",
-        minDate: "today",
-        maxDate: maxDate,
-        onChange: function (selectedDates) {
-            if (selectedDates.length > 0) {
-                const formattedDate = formatDateToThai(selectedDates[0]);
-                dueDateWrapper.classList.add('expanded');
-                dateInput.value = formattedDate;
-                dateInput.setAttribute('data-iso-date', selectedDates[0].toISOString());
-            }
-        }
-    });
-
-    calendarIcon.addEventListener('click', () => flatpickrInstance.open());
-
-    window.addSubtaskNew = function () {
-        const subtaskName = document.getElementById('subtaskNameInputMainNew').value.trim();
-        const dueDateInput = dateInput.getAttribute('data-iso-date');
-        const taskId = document.getElementById('taskId').value;
-        const assigneeSelect = document.getElementById('assigneeSelect');
-        const assignee = assigneeSelect ? assigneeSelect.value : '';
-
-        if (!subtaskName || !taskId || !dueDateInput || !assignee) {
-            alert('All fields are required, including assignee.');
-            return;
-        }
-
-        const data = {
-            subTask: subtaskName,
-            dueDate: dueDateInput,
-            taskId: taskId,
-            assignee: assignee
-        };
-
-        fetch('/addSubtask', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.ok ? window.location.reload() : response.json().then(error => alert(error.message)))
-        .catch(() => alert('Internal Server Error'));
-    };
-
-    const addSubtaskButton = document.getElementById('addSubtaskNew');
-    if (addSubtaskButton) addSubtaskButton.addEventListener('click', addSubtaskNew);
-
-    function saveSubtaskState() {
-        const subtaskTableBody = document.getElementById('subtaskTableBodyNew');
-        const subtasks = Array.from(subtaskTableBody.children).map(subtask => ({
-            id: subtask.dataset.subtaskId,
-            status: subtask.querySelector('.checkbox').checked
-        }));
-        localStorage.setItem('subtasks', JSON.stringify(subtasks));
-    }
-
-    function loadSubtaskState() {
-        const subtasks = JSON.parse(localStorage.getItem('subtasks'));
-        if (subtasks) {
-            subtasks.forEach(({ id, status }) => {
-                const subtaskRow = document.querySelector(`tr[data-subtask-id="${id}"]`);
-                if (subtaskRow) {
-                    const checkbox = subtaskRow.querySelector('.checkbox');
-                    const statusElement = subtaskRow.querySelector('.statusWrape');
-                    checkbox.checked = status;
-                    subtaskRow.style.opacity = status ? '0.5' : '1';
-                    statusElement.textContent = status ? 'เสร็จสิ้น' : 'กำลังทำ';
-                    statusElement.classList.toggle('completed', status);
-                }
+        // Send update request via fetch
+        try {
+            const response = await fetch(`/updateName`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ taskId, taskName }),
             });
-            sortSubtasks();
+
+            if (response.status === 200) {
+                location.reload(); 
+            } else {
+                const errorMessage = await response.text();
+                console.error("Error:", errorMessage);
+                notiAlert.style.display = "block";
+                notiAlert.textContent = errorMessage;
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            notiAlert.style.display = "block";
+            notiAlert.textContent = "An error occurred while updating the task.";
         }
     }
 
-    loadSubtaskState();
+    // Helper: Check if input is alphanumeric
+    function isAlphanumeric(text) {
+        return /^[a-zA-Z0-9ก-๙\s]+$/.test(text);
+    }
+});
 
-    document.querySelectorAll('.checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function () {
-            const subtaskRow = this.closest('tr');
-            const subtaskId = subtaskRow.dataset.subtaskId;
+//status setion ✅
+document.addEventListener('DOMContentLoaded', () => {
+    const statusDiv = document.querySelector('.status-div');
+    const dropdownContent = document.querySelector('.dropdown-content');
+    const statusText = document.querySelector('.status-text');
 
-            fetch('/toggleSubtaskStatus', {
-                method: 'PUT',
+    // Mapping statuses to Thai
+    const statusMapping = {
+        toDo: 'ยังไม่ได้ทำ',
+        inProgress: 'กำลังทำ',
+        fix: 'แก้ไข',
+        finished: 'เสร็จสิ้น',
+    };
+
+    // Mapping statuses to colors
+    const statusColors = {
+        toDo: '#919191',
+        inProgress: '#6EACDA',
+        fix: '#FF4C4C',
+        finished: '#4CAF50',
+    };
+
+    // Function to apply styles based on status
+    const applyStatusStyles = (status) => {
+        const color = statusColors[status] || '#FFFFFF';
+        statusDiv.style.backgroundColor = color;
+        statusDiv.style.color = '#FFFFFF'; // Ensure text contrast
+    };
+
+    // Function to update status text to Thai
+    const updateStatusText = (status) => {
+        statusText.textContent = statusMapping[status] || status;
+    };
+
+    // Initial setup for status display
+    const initialStatus = statusDiv.getAttribute('data-status');
+    applyStatusStyles(initialStatus);
+    updateStatusText(initialStatus);
+
+    const toggleDropdown = () => {
+        dropdownContent.style.display = dropdownContent.style.display === 'none' ? 'block' : 'none';
+    };
+
+    // Toggle dropdown visibility
+    statusDiv.addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent event bubbling
+        toggleDropdown();
+    });
+
+    // Hide the dropdown if clicked outside of it
+    document.addEventListener('click', (event) => {
+        if (!statusDiv.contains(event.target)) {
+            dropdownContent.style.display = 'none';
+        }
+    });
+
+    // Handle status change
+    document.querySelectorAll('.status-option').forEach(option => {
+        option.addEventListener('click', function (event) {
+            event.preventDefault();
+            const newStatus = this.getAttribute('data-status');
+            const taskId = statusDiv.getAttribute('data-task-id');
+
+            fetch(`/updateTaskStatus`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subtaskId })
+                body: JSON.stringify({ taskId, newStatus }),
             })
-            .then(response => {
-                if (response.status === 403) {
-                    alert('You are not authorized to change the status of this subtask.');
-                    this.checked = !this.checked; // Revert checkbox state
-                    throw new Error('Unauthorized');
-                }
-                if (!response.ok) throw new Error('Network error');
-                return response.json();
-            })
-            .then(data => {
-                const statusElement = subtaskRow.querySelector('.statusWrape');
-                if (data.status === 'เสร็จสิ้น') {
-                    subtaskRow.style.opacity = '0.4'; // Visually indicate completion
-                    statusElement.textContent = 'เสร็จสิ้น';
-                    statusElement.style.backgroundColor = '#4CAF50'; // Green for completed
-                    statusElement.classList.add('completed');
-                } else {
-                    subtaskRow.style.opacity = '1';
-                    statusElement.textContent = 'กำลังทำ';
-                    statusElement.style.backgroundColor = '#6EACDA'; // Blue for in progress
-                    statusElement.classList.remove('completed');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the UI with the new status
+                        statusDiv.setAttribute('data-status', newStatus);
+                        applyStatusStyles(newStatus);
+                        updateStatusText(newStatus);
+                        dropdownContent.style.display = 'none'; // Close the dropdown
 
-    // Set initial background colors based on the status when the page loads
-    document.querySelectorAll('.statusWrape').forEach(statusElement => {
-        const status = statusElement.textContent.trim();
-        if (status === 'เสร็จสิ้น') {
-            statusElement.style.backgroundColor = '#4CAF50'; // Green for completed
-        } else if (status === 'กำลังทำ') {
-            statusElement.style.backgroundColor = '#6EACDA'; // Blue for in progress
-        }
-    });
-    
-    function sortSubtasks() {
-        const subtaskTableBody = document.getElementById('subtaskTableBodyNew');
-        const subtasks = Array.from(subtaskTableBody.children);
-        const incomplete = subtasks.filter(task => !task.querySelector('.checkbox').checked);
-        const completed = subtasks.filter(task => task.querySelector('.checkbox').checked);
-        subtaskTableBody.innerHTML = '';
-        incomplete.forEach(task => subtaskTableBody.appendChild(task));
-        completed.forEach(task => subtaskTableBody.appendChild(task));
-    }
-});
-
-
-function deleteSubtask(subtaskId, element) {
-    if (confirm('Are you sure you want to delete this subtask?')) {
-        fetch(`/deleteSubtask/${subtaskId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                // Remove the subtask row from the table
-                const row = element.closest('tr');
-                row.parentNode.removeChild(row);
-            } else {
-                return response.json().then(errorData => {
-                    alert(`Failed to delete subtask: ${errorData.message}`);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Internal Server Error');
-        });
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const subtaskForm = document.getElementById('subtaskForm');
-    const addSubtaskInput = document.getElementById('addSubtask');
-    const addSubButton = document.getElementById('addSub-btn');
-    const mainTaskDueDate = document.getElementById('mainTaskDueDate').value; // Fetch main task's due date
-    const taskId = document.getElementById('taskId').value; // Fetch main task's ID
-
-    // Show or hide the subtask form when clicking the button
-    addSubButton.addEventListener('click', function(event) {
-        console.log('Add Subtask button clicked'); // Debug line
-        event.stopPropagation(); // Prevent click from bubbling up
-
-        if (subtaskForm.style.display === 'none' || subtaskForm.style.display === '') {
-            subtaskForm.style.display = 'flex'; 
-            addSubtaskInput.focus();
-            addSubButton.classList.remove('return-animation');
-            addSubButton.classList.add('show-animation');
-
-            // Add event listener to hide the form when clicking outside
-            document.addEventListener('click', hideFormOnClickOutside);
-        } else {
-            hideForm(); // If the form is already visible, hide it
-        }
-    });
-
-    // Hide the form when clicking outside
-    function hideFormOnClickOutside(event) {
-        if (!subtaskForm.contains(event.target) && !addSubButton.contains(event.target)) {
-            hideForm(); // Call the hideForm function
-        }
-    }
-
-    // Function to hide the subtask form
-    function hideForm() {
-        subtaskForm.style.display = 'none';
-        addSubButton.classList.remove('show-animation');
-        addSubtaskInput.value = '';
-        document.removeEventListener('click', hideFormOnClickOutside); // Clean up listener
-    }
-    
-    // Handle adding a new subtask on form submission
-    const addSubtaskForm = document.getElementById('addSubtaskForm');
-    addSubtaskForm.addEventListener('submit', (event) => {
-        event.preventDefault(); // Prevent default form submission
-
-        const subtaskName = addSubtaskInput.value.trim(); // Get value from input
-        const taskId = document.getElementById('taskId').value; // Get task ID
-        const mainTaskDueDate = document.getElementById('mainTaskDueDate').value; // Get due date
-
-        if (!subtaskName) {
-            console.error('Subtask name cannot be empty.');
-            return; // Stop execution if subtask name is empty
-        }
-
-        // Prepare data for the new subtask
-        const data = {
-            taskId: taskId, // Include task ID
-            subTask: subtaskName, // Subtask name
-            dueDate: mainTaskDueDate // Main task's due date
-        };
-
-        // Send POST request to add the subtask
-        fetch('/addSubtask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-            throw new Error('Failed to add subtask');
-        })
-        .then(subtask => {
-            // Optionally log the added subtask
-            console.log('Added Subtask:', subtask);
-            
-            // Reload the page to show new data
-            location.reload();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Internal Server Error');
-        });
-    });
-
-
-    // Event delegation for renaming and deleting subtasks
-    subtaskList.addEventListener('click', (event) => {
-        const target = event.target;
-        
-        // Renaming a subtask
-        if (target.classList.contains('rename-subtask')) {
-            const listItem = target.closest('.itemDetail');
-            const subtaskId = listItem.dataset.subtaskId;
-            const newSubtaskName = prompt("Enter new subtask name:");
-            if (newSubtaskName) {
-                fetch(`/subtask/${subtaskId}/rename`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ newName: newSubtaskName })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to rename subtask');
-                    }
-                    return response.json();
-                })
-                .then(updatedSubtask => {
-                    listItem.querySelector('.subName').textContent = updatedSubtask.subtask_Name; // Update displayed name
-                })
-                .catch(error => console.error('Error:', error));
-            }
-        }
-        
-        // Deleting a subtask
-        if (target.classList.contains('delete-subtask')) {
-            const listItem = target.closest('.itemDetail');
-            const subtaskId = listItem.dataset.subtaskId;
-            if (confirm('Are you sure you want to delete this subtask?')) {
-                fetch(`/subtask/${subtaskId}`, {
-                    method: 'DELETE'
-                })
-                .then(response => {
-                    if (response.ok) {
-                        listItem.remove(); // Remove the item from the list
+                        // Optionally refresh the page on success
+                        window.location.reload();
                     } else {
-                        throw new Error('Failed to delete subtask');
+                        alert(data.message || 'Failed to update status');
                     }
                 })
-                .catch(error => console.error('Error:', error));
-            }
-        }
+                .catch(error => {
+                    console.error('Error during fetch:', error);
+                    alert('An unexpected error occurred.');
+                });
+        });
     });
+
+    // Apply background color to activity log statuses
+    const applyActivityLogStyles = () => {
+        const statusElements = document.querySelectorAll('.previous-status, .new-status');
+        statusElements.forEach(element => {
+            const status = element.dataset.status; // Retrieve the data-status attribute
+            const color = statusColors[status] || '#FFFFFF'; // Default to white if no match
+            element.style.backgroundColor = color;
+            element.style.display = 'inline-block'; 
+            element.style.padding = '5px 10px';
+            element.style.borderRadius = '5px'; 
+            element.style.textAlign = 'center'; 
+            element.style.color = '#FFFFFF'; 
+        });
+    };
+
+    // Apply styles to activity log statuses
+    applyActivityLogStyles();
 });
 
-
-async function showSubtaskFullView(subtaskId) {
-    try {
-        const response = await fetch(`/api/subtask/${subtaskId}`);
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch subtask details');
-        }
-
-        const subtask = await response.json();
-        console.log('Fetched subtask:', subtask);
-
-        // Populate the full view with data from the clicked subtask
-        document.getElementById('subtaskNameText').textContent = subtask.subtask_Name;
-
-        // Update the status text and background color
-        const statusButton = document.getElementById('subtaskStatusText');
-        statusButton.textContent = subtask.subTask_status;
-
-        // Update button color based on status
-        updateStatusButtonColor(statusButton, subtask.subTask_status);
-
-        // Format the due date to Thai format
-        const dueDateElement = document.getElementById('subtaskDueDateText');
-        if (subtask.subTask_dueDate) {
-            const date = new Date(subtask.subTask_dueDate);
-            const thaiFormattedDate = new Intl.DateTimeFormat('th-TH', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-            }).format(date);
-            dueDateElement.textContent = thaiFormattedDate;
-        } else {
-            dueDateElement.textContent = '-';
-        }
-
-        // Optionally set the description if it exists
-        document.getElementById('subtaskDescription').value = subtask.description || '';
-
-        // Set the hidden subtask ID
-        document.getElementById('subtaskId').value = subtaskId;
-
-        // Open the full-page view
-        openSubtaskFullView();
-    } catch (error) {
-        console.error('Error fetching subtask details:', error);
-    }
-}
-
-function closeSubtaskFullView() {
-    const fullPageViewSubtask = document.getElementById('fullPageViewSubtask');
-    fullPageViewSubtask.classList.remove('show');
-    setTimeout(() => {
-        fullPageViewSubtask.style.display = 'none';
-    }, 300);
-}
-
-function openSubtaskFullView() {
-    const fullPageViewSubtask = document.getElementById('fullPageViewSubtask');
-    const detailSection = document.querySelector('.detail');
-
-    // Scroll to the top of the detail section
-    if (detailSection) {
-        detailSection.scrollTop = 0;
-    }
-
-    // Display the full-page view with animation
-    fullPageViewSubtask.style.display = 'block';
-    requestAnimationFrame(() => {
-        fullPageViewSubtask.classList.add('show');
-    });
-}
-
-// Toggle status in the full view page
-async function toggleSubtaskStatusInFullView() {
-    const subtaskId = document.getElementById('subtaskId').value;
-
-    try {
-        const response = await fetch('/toggleSubtaskStatus', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ subtaskId }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to update status');
-        }
-
-        const data = await response.json();
-
-        // Update the status button text and color in the full view page
-        const statusButton = document.getElementById('subtaskStatusText');
-        statusButton.textContent = data.status;
-        updateStatusButtonColor(statusButton, data.status);
-
-        // Sync the change with the corresponding row in the table view
-        const subtaskRow = document.querySelector(`tr[data-subtask-id="${subtaskId}"]`);
-        if (subtaskRow) {
-            const statusElement = subtaskRow.querySelector('.statusWrape');
-            subtaskRow.style.opacity = data.status === 'เสร็จสิ้น' ? '0.4' : '1';
-            statusElement.textContent = data.status;
-
-            if (data.status === 'เสร็จสิ้น') {
-                statusElement.classList.add('completed');
-            } else {
-                statusElement.classList.remove('completed');
-            }
-        }
-
-        // Save the status to localStorage and re-sort subtasks
-        saveSubtaskState();
-        sortSubtasks();
-    } catch (error) {
-        console.error('Error toggling subtask status:', error);
-    }
-}
-
-// New function to update the subtask
-async function updateSubtask() {
-    const subtaskId = document.getElementById('subtaskId').value;
-    const SubtaskName = document.getElementById('subtaskNameText').textContent; // Get the updated name from the text field
-    const subtaskDescription = document.getElementById('subtaskDescription').value; // Get the updated description
-    const subtaskStatus = document.getElementById('subtaskStatusText').textContent; // Get the current status
-
-    try {
-        const response = await fetch(`/updateSubtask`, {
-            method: 'PUT', // Assuming you use PUT for updates
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ subtaskId, SubtaskName, subtaskDescription, subtaskStatus }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            console.log(data.message); // Log success message
-            location.reload(); // Reload the page to reflect the changes
-        } else {
-            console.error('Error updating subtask:', data.message);
-            alert(data.message); // Show error message to the user
-        }
-    } catch (error) {
-        console.error('Error updating subtask:', error);
-        alert('Error updating subtask. Please try again.');
-    }
-}
-
-// Attach the update function to a button or event
-document.getElementById('updateButton').addEventListener('click', updateSubtask);
-
-// Helper function to update the button's background color
-function updateStatusButtonColor(button, status) {
-    button.style.backgroundColor = status === 'กำลังทำ' ? '#1090e0' : '#4CAF50';
-}
-
-// Task priority update script
+// pripriority section ✅
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.taskPriority .dropdown-item').forEach(item => {
-        item.addEventListener('click', async function (e) {
+    const priorityDiv = document.querySelector('.priority-div');
+    const dropdownContent = document.querySelector('#priority-dropdown-content');
+    
+    const priorityMapping = {
+        urgent: { color: '#DE350B', icon: 'fa-angles-up', text: 'ด่วน', textColor: '#DE350B' },
+        normal: { color: '#FFAB00', icon: 'fa-grip-lines', text: 'ปกติ', textColor: '#FFAB00' },
+        low: { color: '#4C9AFF', icon: 'fa-angle-down', text: 'ต่ำ', textColor: '#4C9AFF' },
+    };
+
+    // Show dropdown when clicked
+    priorityDiv.addEventListener('click', (event) => {
+        event.stopPropagation();
+        dropdownContent.style.display = dropdownContent.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Hide dropdown if clicked outside
+    document.addEventListener('click', (event) => {
+        if (!priorityDiv.contains(event.target)) {
+            dropdownContent.style.display = 'none';
+        }
+    });
+
+    // Handle priority selection
+    document.querySelectorAll('.priority-option').forEach(option => {
+        option.addEventListener('click', async function (e) {
             e.preventDefault();
-            console.log('Dropdown item clicked'); // Debugging line
 
             const selectedPriority = this.getAttribute('data-priority');
-            const taskId = document.getElementById('taskId').value;
+            const taskId = priorityDiv.getAttribute('data-task-id');
 
-            document.querySelector('.taskPriority .nav-link').textContent = selectedPriority;
+            // Update the displayed priority text, color, and icon
+            const priorityData = priorityMapping[selectedPriority];
+            document.querySelector('.priority-text').innerHTML = `
+                <i class="fa ${priorityData.icon}"></i>
+                <span style="color: ${priorityData.textColor};">${priorityData.text}</span>
+            `;
 
             try {
-                const response = await fetch('/updateTask', {
+                const response = await fetch('/updateTaskPriority', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ taskId, taskPriority: selectedPriority }),
@@ -605,7 +308,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error('Network response was not ok');
                 }
 
-                window.location.reload(); // Refresh the page on success
+                dropdownContent.style.display = 'none';
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                }
             } catch (error) {
                 console.error('Error updating task priority:', error);
             }
@@ -613,160 +320,578 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Handle form submission (for other fields like taskName, taskDetail)
-document.getElementById('updateTaskForm').addEventListener('submit', async function (event) {
-    event.preventDefault(); 
+// due date section ✅
+document.addEventListener('DOMContentLoaded', function () {
+    // Function to format date to Thai format
+    function formatDateToThai(date) {
+        const thaiMonths = [
+            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+        ];
+        const day = date.getDate();
+        const month = thaiMonths[date.getMonth()];
+        const year = date.getFullYear() + 543; // Convert to Buddhist year
 
-    const formData = new FormData(event.target);
-    
-    try {
-        const response = await fetch('/updateTask', {
-            method: 'POST',
-            body: formData,
+        return `${day} ${month} ${year}`;
+    }
+
+    // Initialize Flatpickr when clicking on the dueDateText
+    document.getElementById('dueDateText').addEventListener('click', function () {
+        const dueDateInput = document.getElementById('dueDateInput');
+
+        flatpickr(dueDateInput, {
+            locale: "th", // Use Thai locale
+            dateFormat: "Y-m-d", // Date format for the input value
+            minDate: "today", // Prevent selection of past dates
+            onChange: function (selectedDates, dateStr) {
+                const selectedDate = new Date(dateStr);
+                document.getElementById('dueDateText').innerText = formatDateToThai(selectedDate); // Update display
+                dueDateInput.value = dateStr; // Set the hidden input's value
+                updateDueDate(dateStr); // Send the new due date to the server
+            }
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to update task');
+        // Open the date picker
+        dueDateInput._flatpickr.open();
+    });
+
+    // Function to send updated due date to server and log activity
+    async function updateDueDate(dueDateValue) {
+        const taskId = document.querySelector('input[name="taskId"]').value;
+        const selectedDate = new Date(dueDateValue);
+        const currentDate = new Date();
+
+        // Remove time part from both dates for accurate comparison
+        selectedDate.setHours(0, 0, 0, 0);
+        currentDate.setHours(0, 0, 0, 0);
+
+        // Check if the selected date is tomorrow
+        const isTomorrow = selectedDate.getTime() === new Date(currentDate.getTime() + 86400000).getTime();
+        let logMessage = '';
+
+        if (isTomorrow) {
+            logMessage = 'วันครบกำหนดของงานถูกเปลี่ยนเป็นวันพรุ่งนี้';
+        } else {
+            // Format the due date to Thai format for the activity log
+            const formattedDueDate = formatDateToThai(selectedDate);
+            logMessage = `วันครบกำหนดของงานถูกเปลี่ยนเป็น ${formattedDueDate}`;
         }
 
-        window.location.reload();  
-    } catch (error) {
-        console.error('Error updating task:', error);
+        try {
+            const response = await fetch('/updateDueDate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ taskId, dueDate: dueDateValue, logMessage }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update due date');
+            }
+
+            // Auto-refresh the page on success
+            window.location.reload();  
+        } catch (error) {
+            console.error(error);
+            alert('Error updating due date. Please try again.');
+        }
     }
 });
 
-async function checkWork() {
-    const taskId = document.getElementById('taskId').value;
-    const statusDiv = document.querySelector('.status-div');
-    let currentStatus = statusDiv.getAttribute('data-status'); // Get current status
-    let newStatus, confirmationMessage;
+// due time section ✅
+document.addEventListener('DOMContentLoaded', () => {
+    const dueTimeSelect = document.getElementById('dueTimeSelect');
+    const dueTimeForm = document.getElementById('updateDueTimeForm');
 
-    if (currentStatus === 'กำลังทำ') {
-        newStatus = 'รอตรวจ'; // Change to 'Pending'
-        confirmationMessage = 'คุณต้องการยืนยันการส่งงานหรือไม่?'; // "You want to confirm the submission?"
-    } else if (currentStatus === 'รอตรวจ') {
-        newStatus = 'กำลังทำ'; // Revert to 'In Progress'
-        confirmationMessage = 'คุณต้องการยกเลิกการส่งงานหรือไม่?'; // "You want to cancel the submission?"
-    } else if (currentStatus === 'แก้ไข') {
-        newStatus = 'รอตรวจ'; // Revert to 'In Progress'
-        confirmationMessage = 'คุณต้องการยืนยันการส่งงานหรือไม่?';
-    } else {
-        console.warn('Unhandled status:', currentStatus);
-        return; // Exit if the status is not handled
-    }
+    dueTimeSelect.addEventListener('change', async () => {
+        const selectedTime = dueTimeSelect.value;
 
-    // Confirm the action
-    const confirmed = confirm(confirmationMessage);
-    if (!confirmed) return; // Exit if the user cancels the confirmation
+        try {
+            const response = await fetch(dueTimeForm.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    taskId: dueTimeForm.querySelector('input[name="taskId"]').value,
+                    dueTime: selectedTime,
+                }),
+            });
 
-    try {
-        const response = await fetch('/updateTask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                taskId,
-                taskStatuses: newStatus // Send the new status to the server
-            })
-        });
+            const result = await response.json();
 
-        const data = await response.json();
-        window.location.reload(); 
-        if (response.ok) {
-            // Update the status in the UI
-            document.querySelector('.status-text').textContent = newStatus;
-            statusDiv.setAttribute('data-status', newStatus);
-            console.log(data.message); // Log success message
-
-            // Optionally, update the background color dynamically
-            updateStatusColor(newStatus);
-        } else {
-            console.error(data.message); // Log error message
+            if (result.success) {
+                // Reload the page to reflect the changes
+                window.location.reload();
+            } else {
+                console.error('Failed to update due time:', result.message);
+                alert('Error updating due time. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error updating due time. Please try again.');
         }
-    } catch (error) {
-        console.error('Error updating task status:', error);
-    }
-}
-
-async function changeTaskStatus(newStatus) {
-    const taskId = document.getElementById('taskId').value;  // Get task ID
-    const statusDiv = document.querySelector('.status-div');
-    const currentStatus = statusDiv.getAttribute('data-status');  // Get current status
-
-    let confirmationMessage;
-
-    // Set confirmation messages for each action
-    if (newStatus === 'แก้ไข') {
-        confirmationMessage = 'คุณต้องการเปลี่ยนสถานะเป็น "แก้ไข" หรือไม่?';  // "Do you want to change the status to 'แก้ไข'?"
-    } else if (newStatus === 'เสร็จสิ้น') {
-        confirmationMessage = 'คุณต้องการอนุมัติงานนี้หรือไม่?';  // "Do you want to approve this task?"
-    } else {
-        console.warn('Unhandled status:', newStatus);
-        return;
-    }
-
-    // Confirm action with the user
-    const confirmed = confirm(confirmationMessage);
-    if (!confirmed) return;
-
-    try {
-        const response = await fetch('/updateTask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                taskId,
-                taskStatuses: newStatus  // Send new status to the server
-            })
-        });
-
-        const data = await response.json();
-        window.location.reload();
-        if (response.ok) {
-            // Update UI with the new status
-            document.querySelector('.status-text').textContent = newStatus;
-            statusDiv.setAttribute('data-status', newStatus);
-            console.log(data.message);  // Log success message
-
-            // Update the background color dynamically
-            updateStatusColor(newStatus);
-
-            window.location.reload();  // Reload the page to reflect changes
-        } else {
-            console.error(data.message);  // Log error if update fails
-        }
-    } catch (error) {
-        console.error('Error updating task status:', error);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    const taskPrioritySelect = document.getElementById('taskPrioritySelect');
-
-    taskPrioritySelect.addEventListener('change', function () {
-        const priority = this.value;
-        const taskId = document.querySelector('input[name="taskId"]').value;
-
-        console.log('Priority selected:', priority); // Check if this prints
-        console.log('Task ID:', taskId); // Check if task ID is correct
-
-        fetch('/updateTaskPriority', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ taskId, taskPriority: priority }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Response data:', data); // Check response in console
-                if (data.success) {
-                    alert('Task priority updated!');
-                } else {
-                    console.error('Error updating priority:', data.message);
-                }
-            })
-            .catch(error => console.error('Request error:', error));
     });
 });
 
+// tags section ✅
+document.addEventListener("DOMContentLoaded", () => {
+    const tagsDisplay = document.getElementById("tagsDisplay");
+    const tagsManagementModal = document.getElementById("tagsManagementModal");
+
+    // Function to toggle the modal's visibility
+    const toggleModal = () => {
+        if (tagsManagementModal.style.display === "block") {
+            tagsManagementModal.style.display = "none"; // Hide modal
+        } else {
+            tagsManagementModal.style.display = "block"; // Show modal
+        }
+    };
+
+    // Show or hide the modal when clicking `tagsDisplay`
+    tagsDisplay.addEventListener("click", toggleModal);
+
+    // Close the modal when clicking outside it
+    window.addEventListener("click", (event) => {
+        if (
+            !tagsDisplay.contains(event.target) && // Not the tagsDisplay
+            !tagsManagementModal.contains(event.target) // Not inside the modal
+        ) {
+            tagsManagementModal.style.display = "none"; // Hide modal
+        }
+    });
+
+    // Prevent modal from closing when interacting inside
+    tagsManagementModal.addEventListener("click", (event) => {
+        event.stopPropagation(); // Prevent click propagation
+    });
+
+    const newTagInput = document.getElementById("newTagInput");
+    const allTagsContainer = document.getElementById("allTagsContainer");
+    const showTaskTags = document.querySelector(".showTaskTags");
+    const visibleTagsContainer = document.querySelector(".visible-tags");
+    const extraTagsIndicator = document.getElementById("extraTagsIndicator");
+
+    const taskId = document.getElementById('task-id').dataset.taskId; 
+
+    // Function to get a random pastel color
+    function getRandomPastelColor() {
+        const hue = Math.floor(Math.random() * 360);
+        const saturation = 70 + Math.random() * 10; // Saturation between 70-80
+        const lightness = 85 + Math.random() * 10; // Lightness between 85-95
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+
+    // Function to create a new tag
+    const createNewTag = async () => {
+        const tagName = newTagInput.value.trim();
+
+        if (!tagName) {
+            alert("Please enter a tag name.");
+            return;
+        }
+
+        const tagColor = getRandomPastelColor();
+
+        try {
+            const response = await fetch(`/tags/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: tagName,
+                    color: tagColor,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                const newTag = result.tag;
+
+                // Add the new tag to the available tags container
+                const tagItem = document.createElement("span");
+                tagItem.classList.add("tag-item");
+                tagItem.style.backgroundColor = newTag.color;
+                tagItem.dataset.id = newTag._id;
+                tagItem.dataset.tagName = newTag.name.toLowerCase();
+                tagItem.innerText = newTag.name;
+
+                allTagsContainer.appendChild(tagItem);
+                newTagInput.value = ""; // Clear the input
+                console.log("New tag created:", newTag);
+            } else {
+                console.error("Failed to create tag:", result.message);
+            }
+        } catch (error) {
+            console.error("Error creating tag:", error);
+        }
+    };
+
+    const createAndAddTagToTask = async (tagName, taskId) => {
+        if (!tagName) {
+            alert("Please enter a tag name.");
+            return;
+        }
+    
+        const tagColor = getRandomPastelColor();
+    
+        try {
+            const response = await fetch(`/tasks/add-tags/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tags: [
+                        {
+                            tagName: tagName,
+                            color: tagColor,
+                        },
+                    ],
+                }),
+            });
+    
+            const result = await response.json();
+    
+            if (response.ok) {
+                console.log("Tag created and added to task:");
+                const tagElement = document.createElement("span");
+                tagElement.classList.add("tag-item");
+                tagElement.style.backgroundColor = tagColor;
+                tagElement.innerText = tagName;
+    
+                // Create the remove button
+                const removeButton = document.createElement("i");
+                removeButton.classList.add("fa-solid", "fa-xmark", "remove-tag");
+                tagElement.appendChild(removeButton);
+    
+                // Append the tag to showTaskTags
+                showTaskTags.appendChild(tagElement);
+    
+                // Add the tag to allTagsContainer if it doesn't exist already
+                const allTags = allTagsContainer.querySelectorAll(".tag-item");
+                const tagExists = [...allTags].some(tag => tag.dataset.tagName === tagName.toLowerCase());
+    
+                if (!tagExists) {
+                    const tagItem = document.createElement("span");
+                    tagItem.classList.add("tag-item");
+                    tagItem.style.backgroundColor = tagColor; // Use the same color
+                    tagItem.dataset.id = result.tag._id;
+                    tagItem.dataset.tagName = result.tag.name.toLowerCase();
+                    tagItem.innerText = result.tag.name;
+    
+                    allTagsContainer.appendChild(tagItem);
+                }
+    
+                // Clear the input field
+                newTagInput.value = "";
+                console.log("New tag added to UI:", tagName);
+            } else {
+                console.error("Failed to create and add tag:", result.message);
+            }
+        } catch (error) {
+            console.error("Error creating and adding tag:", error);
+        }
+    };
+    
+    // Listen for the Enter key to create and add the tag
+    newTagInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            const tagName = newTagInput.value.trim();
+
+            // Create and add the tag to the task
+            createAndAddTagToTask(tagName, taskId);
+
+            // Clear the input field after adding the tag
+            newTagInput.value = "";
+
+            // Reset the real-time search logic to show all tags again
+            resetTagSearch();
+        }
+    });
+
+    // Real-time search for tags
+    newTagInput.addEventListener("input", () => {
+        const searchValue = newTagInput.value.toLowerCase(); // Get the input value and convert to lowercase
+    
+        // Get all tag elements in the container
+        const tagItems = allTagsContainer.querySelectorAll(".tag-item");
+    
+        tagItems.forEach(tag => {
+            const tagName = tag.dataset.tagName; // Get the tag's name from the data attribute
+    
+            // Show or hide tags based on whether their name includes the search value
+            if (tagName.includes(searchValue)) {
+                tag.style.display = "inline-block"; // Show the tag
+            } else {
+                tag.style.display = "none"; // Hide the tag
+            }
+        });
+    });
+
+    const resetTagSearch = () => {
+        // Get all tag elements in the container
+        const tagItems = allTagsContainer.querySelectorAll(".tag-item");
+    
+        tagItems.forEach(tag => {
+            tag.style.display = "inline-block"; // Ensure all tags are visible again
+        });
+    };
+
+    // Function to update the visible tags display
+    const updateVisibleTags = () => {
+        if (!visibleTagsContainer || !extraTagsIndicator) {
+            console.error("Error: visibleTagsContainer or extraTagsIndicator is not defined.");
+            return;
+        }
+
+        const taskTags = [...showTaskTags.children].map(tag => ({
+            tagName: tag.dataset.tagName || tag.innerText.trim(),
+            color: tag.style.backgroundColor,
+        }));
+
+        visibleTagsContainer.innerHTML = '';
+        const visibleTags = taskTags.slice(0, 3);
+        visibleTags.forEach(tag => {
+            const tagElement = document.createElement("span");
+            tagElement.classList.add("tag-item");
+            tagElement.style.backgroundColor = tag.color;
+            tagElement.innerText = tag.tagName;
+
+            visibleTagsContainer.appendChild(tagElement);
+        });
+
+        const extraTagsCount = taskTags.length - 3;
+        extraTagsIndicator.innerText = extraTagsCount > 0 ? `+${extraTagsCount}` : '';
+    };
+
+    // Handle tag selection (on click)
+    allTagsContainer.addEventListener("click", async (e) => {
+        if (e.target && e.target.classList.contains("tag-item")) {
+            const tagElement = e.target;
+            const tagName = tagElement.innerText.trim();
+            const tagColor = tagElement.style.backgroundColor;
+            const tagID = tagElement.dataset.id;
+
+            console.log("Tag clicked:", tagName, tagColor, tagID);
+            console.log("Task ID:", taskId);
+
+            // Check if the tag already exists in `showTaskTags`
+            const taskTags = [...showTaskTags.children].map(tag => tag.dataset.tagName || tag.innerText.trim());
+            if (!taskTags.includes(tagName)) {
+                const tagSpan = document.createElement("span");
+                tagSpan.classList.add("tag-item");
+                tagSpan.style.backgroundColor = tagColor;
+                tagSpan.dataset.tagName = tagName;
+                tagSpan.dataset.id = tagID;
+                tagSpan.innerText = tagName;
+
+                const removeButton = document.createElement("i");
+                removeButton.classList.add("fa-solid", "fa-xmark", "remove-tag");
+                tagSpan.appendChild(removeButton);
+
+                showTaskTags.appendChild(tagSpan);
+                console.log("Added tag to task:", tagName);
+                
+                tagElement.remove();
+                updateVisibleTags();
+
+                try {
+                    const response = await fetch(`/tasks/add-tags/${taskId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            tags: [{
+                                _id: tagID,
+                                tagName: tagName,
+                                color: tagColor,
+                            }],
+                        }),
+                    });
+
+                    const result = await response.json();
+                } catch (error) {
+                    console.error("Error adding tag:", error);
+                }
+            } else {
+                console.log("Tag is already added to the task.");
+            }
+        }
+    });
+
+    // Handle tag removal (on click of the "X" icon)
+    showTaskTags.addEventListener("click", async (e) => {
+        if (e.target && e.target.classList.contains("remove-tag")) {
+            const tagElement = e.target.closest(".tag-item");
+            const tagID = tagElement.dataset.id;
+            const tagName = tagElement.innerText;
+            const tagColor = tagElement.style.backgroundColor;
+
+            console.log("Removing tag:", tagName);
+
+            // Remove tag from task in UI
+            tagElement.remove();
+
+            // Update the visible tags display
+            updateVisibleTags();
+
+            try {
+                const response = await fetch(`/tasks/remove-tag/${taskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        tagId: tagID
+                    }),
+                });
+
+                const result = await response.json();
+                console.log("Tag removed from task:", result);
+
+                // Optionally: Add the removed tag back to the available tags list
+                const allTags = document.querySelectorAll("#allTagsContainer .tag-item");
+                const tagAlreadyExists = [...allTags].some(tag => tag.dataset.id === tagID);
+
+                if (!tagAlreadyExists) {
+                    // Create a tag element and append it to the available tags container
+                    const tagItem = document.createElement("span");
+                    tagItem.classList.add("tag-item");
+                    tagItem.style.backgroundColor = tagColor; // Use the same color
+                    tagItem.dataset.id = tagID;
+                    tagItem.innerText = tagName;
+
+                    allTagsContainer.appendChild(tagItem);
+                    console.log("Tag added back to the available tags list");
+                }
+            } catch (error) {
+                console.error("Error removing tag:", error);
+            }
+        }
+    });
+
+    // Handle creating a new tag when the button is clicked
+    const createTagButton = document.getElementById("createTagButton");
+    createTagButton.addEventListener("click", createNewTag);
+});
+
+// User section
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchAssigned');
+    const assignedItems = document.querySelectorAll('.assigned-item');
+    const allAssignedContainer = document.getElementById("allAssignedContainer");
+
+    // Search functionality for assigned users
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase();
+        assignedItems.forEach(item => {
+            const username = item.querySelector('#assignedName').textContent.toLowerCase();
+            const email = item.querySelector('#assignedEmail') ? item.querySelector('#assignedEmail').textContent.toLowerCase() : '';
+            if (username.includes(query) || email.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    // Assign user to task functionality
+    allAssignedContainer.addEventListener("click", async (e) => {
+        const assignedItem = e.target.closest(".assigned-item");
+
+        if (!assignedItem) return;
+
+        const userId = assignedItem.dataset.userId; // Assume userId is stored in the dataset
+        const taskId = document.getElementById("task-id").dataset.taskId;
+
+        try {
+            const response = await fetch("/tasks/assign-user", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ taskId, userId }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("User assigned successfully!");
+                // Optional: Update UI dynamically
+            } else {
+                alert(result.error || "An error occurred.");
+            }
+        } catch (error) {
+            console.error("Error assigning user:", error);
+            alert("Failed to assign user. Please try again.");
+        }
+    });
+
+    // Remove user from task functionality
+    document.querySelectorAll('.remove-user-btn').forEach(button => {
+        button.addEventListener('click', async (event) => {
+            const userId = event.target.dataset.userId;
+            const taskId = document.getElementById('task-id').dataset.taskId;
+
+            if (confirm('Are you sure you want to remove this user from the task?')) {
+                try {
+                    const response = await fetch('/tasks/remove-user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ taskId, userId }),
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message);
+                        location.reload(); 
+                    } else {
+                        alert(result.error);
+                    }
+                } catch (error) {
+                    console.error('Error removing user:', error);
+                    alert('An error occurred while removing the user.');
+                }
+            }
+        });
+    });
+});
+
+
+// Clear Activity Log ✅
+document.getElementById('clearLogsButton').addEventListener('click', async () => {
+    const taskId = document.getElementById('clearLogsButton').dataset.taskId;  // Get taskId from button's data attribute
+
+    if (!taskId) {
+        console.error('Task ID is missing.');
+        return;
+    }
+
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมทั้งหมด?')) {
+        try {
+            const response = await fetch(`/tasks/${taskId}/clearLogs`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.status === 200) {
+                location.reload(); // Refresh the page after clearing logs
+            } else {
+                const errorMessage = await response.text();
+                alert(`Error: ${errorMessage}`);
+            }
+        } catch (error) {
+            console.error('Error clearing logs:', error);
+            alert('เกิดข้อผิดพลาดในการลบกิจกรรม');
+        }
+    }
+});

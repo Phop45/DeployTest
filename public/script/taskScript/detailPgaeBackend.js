@@ -1,151 +1,522 @@
-// Close button event
-document.getElementById('close_btn').addEventListener('click', function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const spacesId = urlParams.get('spacesId');
-    window.location.href = `/space/item/${spacesId}/task_list`;
-});
 
-/// Due Date
-// Function to convert date to Thai format
-function formatDateToThai(date) {
-    const thaiMonths = [
-        'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-    ];
-    const day = date.getDate();
-    const month = thaiMonths[date.getMonth()];
-    const year = date.getFullYear() + 543; // Convert to Buddhist year
+// Subtask Form Toggles
+function cancelSubtaskNew() {
+    document.getElementById('subtaskNameInputMainNew').value = '';
+    document.getElementById('assigneeInputNew').value = '';
+    document.getElementById('dueDateInputNew').value = '';
+    document.getElementById('subtaskFormMainNew').style.display = 'none';
+    document.getElementById('addSubtaskBtnMainNew').style.display = 'block';
+}
+function showSubtaskInputMainNew() {
+    const subtaskForm = document.getElementById('subtaskFormMainNew');
+    const addSubtaskBtn = document.getElementById('addSubtaskBtnMainNew');
 
-    return `${day} ${month} ${year}`;
+    if (subtaskForm.style.display === 'flex') {
+        subtaskForm.style.display = 'none';
+        addSubtaskBtn.style.display = 'block';
+    } else {
+        addSubtaskBtn.style.display = 'none';
+        subtaskForm.style.display = 'flex';
+    }
 }
 
-// Initialize Flatpickr when clicking on the dueDateText
-document.getElementById('dueDateText').addEventListener('click', function () {
-    const dueDateInput = document.getElementById('dueDateInput');
+document.getElementById('addSubtaskBtnMainNew').addEventListener('click', showSubtaskInputMainNew);
+document.getElementById('cancelSubtaskNew').addEventListener('click', cancelSubtaskNew);
 
-    flatpickr(dueDateInput, {
-        locale: "th", // Use Thai locale
-        dateFormat: "Y-m-d", // Date format for the input value
-        minDate: "today", // Prevent selection of past dates
-        onChange: function (selectedDates, dateStr) {
-            const selectedDate = new Date(dateStr);
-            document.getElementById('dueDateText').innerText = formatDateToThai(selectedDate); // Update display
-            dueDateInput.value = dateStr; // Set the hidden input's value
-            updateDueDate(dateStr); // Send the new due date to the server
+// Check if table has data and toggle visibility
+function checkTableData() {
+    const subtaskTableBody = document.getElementById('subtaskTableBodyNew');
+    const tableContainer = document.getElementById('subtaskTableContainerNew');
+    const formMain = document.getElementById('subtaskFormMainNew');
+
+    if (subtaskTableBody.children.length > 0) {
+        tableContainer.style.display = 'block';
+    } else {
+        tableContainer.style.display = 'none';
+        formMain.style.display = 'none';
+    }
+}
+checkTableData();
+
+// Initialize Flatpickr for Due Date input and apply Thai date formatting
+document.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.getElementById('dueDateInputNew');
+    const calendarIcon = document.getElementById('calendarIcon');
+    const dueDateWrapper = document.getElementById('dueDateWrapper');
+
+    // Retrieve the main task's due date from a hidden input
+    const mainTaskDueDate = document.getElementById('dueDateInput').value;
+    const maxDate = mainTaskDueDate ? new Date(mainTaskDueDate) : null;
+
+    // Retrieve current user ID from the backend
+    const currentUserId = "<%= currentUserId %>";
+
+    function formatDateToThai(date) {
+        const thaiMonths = [
+            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+        ];
+        return `${date.getDate()} ${thaiMonths[date.getMonth()]}`;
+    }
+
+    const flatpickrInstance = flatpickr(dateInput, {
+        dateFormat: "Y-m-d",
+        locale: "th",
+        minDate: "today",
+        maxDate: maxDate,
+        onChange: function (selectedDates) {
+            if (selectedDates.length > 0) {
+                const formattedDate = formatDateToThai(selectedDates[0]);
+                dueDateWrapper.classList.add('expanded');
+                dateInput.value = formattedDate;
+                dateInput.setAttribute('data-iso-date', selectedDates[0].toISOString());
+            }
         }
     });
 
-    // Open the date picker
-    dueDateInput._flatpickr.open();
-});
+    calendarIcon.addEventListener('click', () => flatpickrInstance.open());
 
-// Function to send updated due date to server and log activity
-async function updateDueDate(dueDateValue) {
-    const taskId = document.querySelector('input[name="taskId"]').value;
-    const selectedDate = new Date(dueDateValue);
-    const currentDate = new Date();
+    window.addSubtaskNew = function () {
+        const subtaskName = document.getElementById('subtaskNameInputMainNew').value.trim();
+        const dueDateInput = dateInput.getAttribute('data-iso-date');
+        const taskId = document.getElementById('taskId').value;
+        const assigneeSelect = document.getElementById('assigneeSelect');
+        const assignee = assigneeSelect ? assigneeSelect.value : '';
 
-    // Remove time part from both dates for accurate comparison
-    selectedDate.setHours(0, 0, 0, 0);
-    currentDate.setHours(0, 0, 0, 0);
-
-    // Check if the selected date is tomorrow
-    const isTomorrow = selectedDate.getTime() === new Date(currentDate.getTime() + 86400000).getTime();
-    let logMessage = '';
-
-    if (isTomorrow) {
-        logMessage = 'วันครบกำหนดของงานถูกเปลี่ยนเป็นวันพรุ่งนี้';
-    } else {
-        // Format the due date to Thai format for the activity log
-        const formattedDueDate = formatDateToThai(selectedDate);
-        logMessage = `วันครบกำหนดของงานถูกเปลี่ยนเป็น ${formattedDueDate}`;
-    }
-
-    try {
-        const response = await fetch('/updateDueDate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ taskId, dueDate: dueDateValue, logMessage }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to update due date');
+        if (!subtaskName || !taskId || !dueDateInput || !assignee) {
+            alert('All fields are required, including assignee.');
+            return;
         }
 
-        // Auto-refresh the page on success
-        window.location.reload();  
-    } catch (error) {
-        console.error(error);
-        alert('Error updating due date. Please try again.');
+        const data = {
+            subTask: subtaskName,
+            dueDate: dueDateInput,
+            taskId: taskId,
+            assignee: assignee
+        };
+
+        fetch('/addSubtask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.ok ? window.location.reload() : response.json().then(error => alert(error.message)))
+        .catch(() => alert('Internal Server Error'));
+    };
+
+    const addSubtaskButton = document.getElementById('addSubtaskNew');
+    if (addSubtaskButton) addSubtaskButton.addEventListener('click', addSubtaskNew);
+
+    function saveSubtaskState() {
+        const subtaskTableBody = document.getElementById('subtaskTableBodyNew');
+        const subtasks = Array.from(subtaskTableBody.children).map(subtask => ({
+            id: subtask.dataset.subtaskId,
+            status: subtask.querySelector('.checkbox').checked
+        }));
+        localStorage.setItem('subtasks', JSON.stringify(subtasks));
     }
-}
 
-/// Due Time
-// Function to format time to 24-hour format
-function formatTimeTo24Hour(time) {
-    const hours = time.getHours().toString().padStart(2, '0');
-    const minutes = time.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-}
+    function loadSubtaskState() {
+        const subtasks = JSON.parse(localStorage.getItem('subtasks'));
+        if (subtasks) {
+            subtasks.forEach(({ id, status }) => {
+                const subtaskRow = document.querySelector(`tr[data-subtask-id="${id}"]`);
+                if (subtaskRow) {
+                    const checkbox = subtaskRow.querySelector('.checkbox');
+                    const statusElement = subtaskRow.querySelector('.statusWrape');
+                    checkbox.checked = status;
+                    subtaskRow.style.opacity = status ? '0.5' : '1';
+                    statusElement.textContent = status ? 'เสร็จสิ้น' : 'กำลังทำ';
+                    statusElement.classList.toggle('completed', status);
+                }
+            });
+            sortSubtasks();
+        }
+    }
 
-// Function to send updated due time to server and log activity
-async function updateDueTime(dueTimeValue) {
-    const taskId = document.getElementById('taskId').value;
-    const selectedTime = new Date(`1970-01-01T${dueTimeValue}:00Z`); // Parse time value
+    loadSubtaskState();
 
-    let logMessage = '';
+    document.querySelectorAll('.checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            const subtaskRow = this.closest('tr');
+            const subtaskId = subtaskRow.dataset.subtaskId;
+
+            fetch('/toggleSubtaskStatus', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subtaskId })
+            })
+            .then(response => {
+                if (response.status === 403) {
+                    alert('You are not authorized to change the status of this subtask.');
+                    this.checked = !this.checked; // Revert checkbox state
+                    throw new Error('Unauthorized');
+                }
+                if (!response.ok) throw new Error('Network error');
+                return response.json();
+            })
+            .then(data => {
+                const statusElement = subtaskRow.querySelector('.statusWrape');
+                if (data.status === 'เสร็จสิ้น') {
+                    subtaskRow.style.opacity = '0.4'; // Visually indicate completion
+                    statusElement.textContent = 'เสร็จสิ้น';
+                    statusElement.style.backgroundColor = '#4CAF50'; // Green for completed
+                    statusElement.classList.add('completed');
+                } else {
+                    subtaskRow.style.opacity = '1';
+                    statusElement.textContent = 'กำลังทำ';
+                    statusElement.style.backgroundColor = '#6EACDA'; // Blue for in progress
+                    statusElement.classList.remove('completed');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+    // Set initial background colors based on the status when the page loads
+    document.querySelectorAll('.statusWrape').forEach(statusElement => {
+        const status = statusElement.textContent.trim();
+        if (status === 'เสร็จสิ้น') {
+            statusElement.style.backgroundColor = '#4CAF50'; // Green for completed
+        } else if (status === 'กำลังทำ') {
+            statusElement.style.backgroundColor = '#6EACDA'; // Blue for in progress
+        }
+    });
     
-    if (dueTimeValue) {
-        // Format the time for the log
-        const formattedTime = formatTimeTo24Hour(selectedTime);
-        logMessage = `เวลาครบกำหนดของงานถูกเปลี่ยนเป็น ${formattedTime}`;
-    } else {
-        logMessage = 'งานนี้ไม่มีเวลาครบกำหนด (ตลอดทั้งวัน)';
+    function sortSubtasks() {
+        const subtaskTableBody = document.getElementById('subtaskTableBodyNew');
+        const subtasks = Array.from(subtaskTableBody.children);
+        const incomplete = subtasks.filter(task => !task.querySelector('.checkbox').checked);
+        const completed = subtasks.filter(task => task.querySelector('.checkbox').checked);
+        subtaskTableBody.innerHTML = '';
+        incomplete.forEach(task => subtaskTableBody.appendChild(task));
+        completed.forEach(task => subtaskTableBody.appendChild(task));
     }
+});
 
-    try {
-        const response = await fetch('/updateDueTime', {
-            method: 'POST',
+
+function deleteSubtask(subtaskId, element) {
+    if (confirm('Are you sure you want to delete this subtask?')) {
+        fetch(`/deleteSubtask/${subtaskId}`, {
+            method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ taskId, dueTime: dueTimeValue, logMessage }),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Remove the subtask row from the table
+                const row = element.closest('tr');
+                row.parentNode.removeChild(row);
+            } else {
+                return response.json().then(errorData => {
+                    alert(`Failed to delete subtask: ${errorData.message}`);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Internal Server Error');
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to update due time');
-        }
-
-        // Auto-refresh the page on success
-        window.location.reload();  
-    } catch (error) {
-        console.error(error);
-        alert('Error updating due time. Please try again.');
     }
 }
 
-document.getElementById('dueTimeSelect').addEventListener('change', function() {
-    const dueTimeForm = document.getElementById('updateDueTimeForm');
+document.addEventListener('DOMContentLoaded', () => {
+    const subtaskForm = document.getElementById('subtaskForm');
+    const addSubtaskInput = document.getElementById('addSubtask');
+    const addSubButton = document.getElementById('addSub-btn');
+    const mainTaskDueDate = document.getElementById('mainTaskDueDate').value; // Fetch main task's due date
+    const taskId = document.getElementById('taskId').value; // Fetch main task's ID
 
-    fetch(dueTimeForm.action, {
-        method: dueTimeForm.method,
-        body: new URLSearchParams(new FormData(dueTimeForm)),
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-    })
-    .then(response => response.json())  // Handle the JSON response from the backend
-    .then(data => {
-        if (data.success) {
-            // If the request is successful, reload the page
-            window.location.reload();
+    // Show or hide the subtask form when clicking the button
+    addSubButton.addEventListener('click', function(event) {
+        console.log('Add Subtask button clicked'); // Debug line
+        event.stopPropagation(); // Prevent click from bubbling up
+
+        if (subtaskForm.style.display === 'none' || subtaskForm.style.display === '') {
+            subtaskForm.style.display = 'flex'; 
+            addSubtaskInput.focus();
+            addSubButton.classList.remove('return-animation');
+            addSubButton.classList.add('show-animation');
+
+            // Add event listener to hide the form when clicking outside
+            document.addEventListener('click', hideFormOnClickOutside);
+        } else {
+            hideForm(); // If the form is already visible, hide it
         }
-    })
-    .catch(error => console.error('Error:', error));
+    });
+
+    // Hide the form when clicking outside
+    function hideFormOnClickOutside(event) {
+        if (!subtaskForm.contains(event.target) && !addSubButton.contains(event.target)) {
+            hideForm(); // Call the hideForm function
+        }
+    }
+
+    // Function to hide the subtask form
+    function hideForm() {
+        subtaskForm.style.display = 'none';
+        addSubButton.classList.remove('show-animation');
+        addSubtaskInput.value = '';
+        document.removeEventListener('click', hideFormOnClickOutside); // Clean up listener
+    }
+    
+    // Handle adding a new subtask on form submission
+    const addSubtaskForm = document.getElementById('addSubtaskForm');
+    addSubtaskForm.addEventListener('submit', (event) => {
+        event.preventDefault(); // Prevent default form submission
+
+        const subtaskName = addSubtaskInput.value.trim(); // Get value from input
+        const taskId = document.getElementById('taskId').value; // Get task ID
+        const mainTaskDueDate = document.getElementById('mainTaskDueDate').value; // Get due date
+
+        if (!subtaskName) {
+            console.error('Subtask name cannot be empty.');
+            return; // Stop execution if subtask name is empty
+        }
+
+        // Prepare data for the new subtask
+        const data = {
+            taskId: taskId, // Include task ID
+            subTask: subtaskName, // Subtask name
+            dueDate: mainTaskDueDate // Main task's due date
+        };
+
+        // Send POST request to add the subtask
+        fetch('/addSubtask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Failed to add subtask');
+        })
+        .then(subtask => {
+            // Optionally log the added subtask
+            console.log('Added Subtask:', subtask);
+            
+            // Reload the page to show new data
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Internal Server Error');
+        });
+    });
+
+
+    // Event delegation for renaming and deleting subtasks
+    subtaskList.addEventListener('click', (event) => {
+        const target = event.target;
+        
+        // Renaming a subtask
+        if (target.classList.contains('rename-subtask')) {
+            const listItem = target.closest('.itemDetail');
+            const subtaskId = listItem.dataset.subtaskId;
+            const newSubtaskName = prompt("Enter new subtask name:");
+            if (newSubtaskName) {
+                fetch(`/subtask/${subtaskId}/rename`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ newName: newSubtaskName })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to rename subtask');
+                    }
+                    return response.json();
+                })
+                .then(updatedSubtask => {
+                    listItem.querySelector('.subName').textContent = updatedSubtask.subtask_Name; // Update displayed name
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+        
+        // Deleting a subtask
+        if (target.classList.contains('delete-subtask')) {
+            const listItem = target.closest('.itemDetail');
+            const subtaskId = listItem.dataset.subtaskId;
+            if (confirm('Are you sure you want to delete this subtask?')) {
+                fetch(`/subtask/${subtaskId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        listItem.remove(); // Remove the item from the list
+                    } else {
+                        throw new Error('Failed to delete subtask');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    });
 });
 
+async function showSubtaskFullView(subtaskId) {
+    try {
+        const response = await fetch(`/api/subtask/${subtaskId}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch subtask details');
+        }
+
+        const subtask = await response.json();
+        console.log('Fetched subtask:', subtask);
+
+        // Populate the full view with data from the clicked subtask
+        document.getElementById('subtaskNameText').textContent = subtask.subtask_Name;
+
+        // Update the status text and background color
+        const statusButton = document.getElementById('subtaskStatusText');
+        statusButton.textContent = subtask.subTask_status;
+
+        // Update button color based on status
+        updateStatusButtonColor(statusButton, subtask.subTask_status);
+
+        // Format the due date to Thai format
+        const dueDateElement = document.getElementById('subtaskDueDateText');
+        if (subtask.subTask_dueDate) {
+            const date = new Date(subtask.subTask_dueDate);
+            const thaiFormattedDate = new Intl.DateTimeFormat('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            }).format(date);
+            dueDateElement.textContent = thaiFormattedDate;
+        } else {
+            dueDateElement.textContent = '-';
+        }
+
+        // Optionally set the description if it exists
+        document.getElementById('subtaskDescription').value = subtask.description || '';
+
+        // Set the hidden subtask ID
+        document.getElementById('subtaskId').value = subtaskId;
+
+        // Open the full-page view
+        openSubtaskFullView();
+    } catch (error) {
+        console.error('Error fetching subtask details:', error);
+    }
+}
+
+function closeSubtaskFullView() {
+    const fullPageViewSubtask = document.getElementById('fullPageViewSubtask');
+    fullPageViewSubtask.classList.remove('show');
+    setTimeout(() => {
+        fullPageViewSubtask.style.display = 'none';
+    }, 300);
+}
+
+function openSubtaskFullView() {
+    const fullPageViewSubtask = document.getElementById('fullPageViewSubtask');
+    const detailSection = document.querySelector('.detail');
+
+    // Scroll to the top of the detail section
+    if (detailSection) {
+        detailSection.scrollTop = 0;
+    }
+
+    // Display the full-page view with animation
+    fullPageViewSubtask.style.display = 'block';
+    requestAnimationFrame(() => {
+        fullPageViewSubtask.classList.add('show');
+    });
+}
+
+// Toggle status in the full view page
+async function toggleSubtaskStatusInFullView() {
+    const subtaskId = document.getElementById('subtaskId').value;
+
+    try {
+        const response = await fetch('/toggleSubtaskStatus', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ subtaskId }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update status');
+        }
+
+        const data = await response.json();
+
+        // Update the status button text and color in the full view page
+        const statusButton = document.getElementById('subtaskStatusText');
+        statusButton.textContent = data.status;
+        updateStatusButtonColor(statusButton, data.status);
+
+        // Sync the change with the corresponding row in the table view
+        const subtaskRow = document.querySelector(`tr[data-subtask-id="${subtaskId}"]`);
+        if (subtaskRow) {
+            const statusElement = subtaskRow.querySelector('.statusWrape');
+            subtaskRow.style.opacity = data.status === 'เสร็จสิ้น' ? '0.4' : '1';
+            statusElement.textContent = data.status;
+
+            if (data.status === 'เสร็จสิ้น') {
+                statusElement.classList.add('completed');
+            } else {
+                statusElement.classList.remove('completed');
+            }
+        }
+
+        // Save the status to localStorage and re-sort subtasks
+        saveSubtaskState();
+        sortSubtasks();
+    } catch (error) {
+        console.error('Error toggling subtask status:', error);
+    }
+}
+
+// New function to update the subtask
+async function updateSubtask() {
+    const subtaskId = document.getElementById('subtaskId').value;
+    const SubtaskName = document.getElementById('subtaskNameText').textContent; // Get the updated name from the text field
+    const subtaskDescription = document.getElementById('subtaskDescription').value; // Get the updated description
+    const subtaskStatus = document.getElementById('subtaskStatusText').textContent; // Get the current status
+
+    try {
+        const response = await fetch(`/updateSubtask`, {
+            method: 'PUT', // Assuming you use PUT for updates
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ subtaskId, SubtaskName, subtaskDescription, subtaskStatus }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            console.log(data.message); // Log success message
+            location.reload(); // Reload the page to reflect the changes
+        } else {
+            console.error('Error updating subtask:', data.message);
+            alert(data.message); // Show error message to the user
+        }
+    } catch (error) {
+        console.error('Error updating subtask:', error);
+        alert('Error updating subtask. Please try again.');
+    }
+}
+
+// Attach the update function to a button or event
+document.getElementById('updateButton').addEventListener('click', updateSubtask);
+
+// Helper function to update the button's background color
+function updateStatusButtonColor(button, status) {
+    button.style.backgroundColor = status === 'กำลังทำ' ? '#1090e0' : '#4CAF50';
+}
 
 // Handle form submission (for other fields like taskName, taskDetail)
 document.getElementById('updateTaskForm').addEventListener('submit', async function (event) {
@@ -168,3 +539,57 @@ document.getElementById('updateTaskForm').addEventListener('submit', async funct
         console.error('Error updating task:', error);
     }
 });
+
+async function checkWork() {
+    const taskId = document.getElementById('taskId').value;
+    const statusDiv = document.querySelector('.status-div');
+    let currentStatus = statusDiv.getAttribute('data-status'); // Get current status
+    let newStatus, confirmationMessage;
+
+    if (currentStatus === 'กำลังทำ') {
+        newStatus = 'รอตรวจ'; // Change to 'Pending'
+        confirmationMessage = 'คุณต้องการยืนยันการส่งงานหรือไม่?'; // "You want to confirm the submission?"
+    } else if (currentStatus === 'รอตรวจ') {
+        newStatus = 'กำลังทำ'; // Revert to 'In Progress'
+        confirmationMessage = 'คุณต้องการยกเลิกการส่งงานหรือไม่?'; // "You want to cancel the submission?"
+    } else if (currentStatus === 'แก้ไข') {
+        newStatus = 'รอตรวจ'; // Revert to 'In Progress'
+        confirmationMessage = 'คุณต้องการยืนยันการส่งงานหรือไม่?';
+    } else {
+        console.warn('Unhandled status:', currentStatus);
+        return; // Exit if the status is not handled
+    }
+
+    // Confirm the action
+    const confirmed = confirm(confirmationMessage);
+    if (!confirmed) return; // Exit if the user cancels the confirmation
+
+    try {
+        const response = await fetch('/updateTask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                taskId,
+                taskStatuses: newStatus // Send the new status to the server
+            })
+        });
+
+        const data = await response.json();
+        window.location.reload(); 
+        if (response.ok) {
+            // Update the status in the UI
+            document.querySelector('.status-text').textContent = newStatus;
+            statusDiv.setAttribute('data-status', newStatus);
+            console.log(data.message); // Log success message
+
+            // Optionally, update the background color dynamically
+            updateStatusColor(newStatus);
+        } else {
+            console.error(data.message); // Log error message
+        }
+    } catch (error) {
+        console.error('Error updating task status:', error);
+    }
+}

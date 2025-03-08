@@ -243,38 +243,28 @@ document.addEventListener('DOMContentLoaded', async function () {
         const matchingTags = existingTags.filter(tag =>
             tag.name.toLowerCase().includes(searchValue)
         );
-
+    
         if (matchingTags.length > 0) {
             matchingTags.forEach(tag => {
-                // Create tag container
                 const tagElement = document.createElement('div');
                 tagElement.classList.add('tag');
-
-                // Create the icon element
-                const iconElement = document.createElement('i');
-                iconElement.classList.add('fa-solid', 'fa-tags');
-
-                // Create the text node for the tag name
-                const tagNameElement = document.createElement('span');
-                tagNameElement.textContent = tag.name;
-
-                // Append icon and text to the tag element
-                tagElement.appendChild(iconElement);
-                tagElement.appendChild(tagNameElement);
-
-                // Add click event to select the tag
-                tagElement.addEventListener('click', function () {
-                    if (!selectedTags.includes(tag.name)) {
-                        selectedTags.push(tag.name);
+                tagElement.innerHTML = `
+                    <i class="fa-solid fa-tags"></i>
+                    <span>${tag.name}</span>
+                `;
+                tagElement.addEventListener('click', () => {
+                    if (!selectedTags.includes(tag.name.toLowerCase())) {
+                        selectedTags.push(tag.name.toLowerCase());
                         renderSelectedTags();
                     }
                 });
-
-                // Append the tag element to the container
                 tagsContainer.appendChild(tagElement);
             });
+        } else {
+            noMatch.style.display = 'block';
         }
     }
+    
 
 
     // Handle search input

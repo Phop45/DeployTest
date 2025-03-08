@@ -38,6 +38,12 @@ const extractTaskParameters = async (tasks) => {
 
   return { taskNames, taskDetail, taskStatuses, taskTypes, dueDate, dueTime, createdAt, taskPriority, taskTag };
 };
+function getRandomPastelColor() {
+  const hue = Math.floor(Math.random() * 360);
+  const saturation = 70 + Math.random() * 10; // Saturation between 70-80
+  const lightness = 85 + Math.random() * 10; // Lightness between 85-95
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
 
 /// create task controller
 exports.createTask = async (req, res) => {
@@ -54,10 +60,7 @@ exports.createTask = async (req, res) => {
       statusId, 
       assignedUsers = []
     } = req.body;
-            
-    console.log("📥 ข้อมูลที่ได้รับจากฟอร์ม:", req.body); 
 
-    // Validate and assign the `project` (spaceId)
     if (!mongoose.Types.ObjectId.isValid(spaceId)) {
       return res.status(400).send("Invalid space ID.");
     }
@@ -93,7 +96,6 @@ exports.createTask = async (req, res) => {
       const userIds = assignedUsers.split(',');
       for (const userId of userIds) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-          console.log(`Skipping invalid user ID: ${userId}`);
           continue;
         }
         validAssignedUsers.push(mongoose.Types.ObjectId(userId));
@@ -101,16 +103,20 @@ exports.createTask = async (req, res) => {
     }
 
     // Prepare tags
-    const tags = taskTag ? taskTag.split(',') : [];
+    const tags = taskTag ? taskTag.split(',').map(tag => tag.trim().toLowerCase()) : [];
     const userTags = [];
     for (const tag of tags) {
-      const trimmedTag = tag.trim();
-      let existingTag = await Tag.findOne({ name: trimmedTag, user: req.user.id });
-      if (!existingTag) {
-        existingTag = new Tag({ name: trimmedTag, user: req.user.id });
-        await existingTag.save();
-      }
-      userTags.push(existingTag.name);
+        let existingTag = await Tag.findOne({ name: tag, user: userId });
+        if (!existingTag) {
+            const pastelColor = getRandomPastelColor(); // Generate a random pastel color
+            existingTag = new Tag({ name: tag, user: userId, color: pastelColor });
+            await existingTag.save();
+        }
+        userTags.push({
+            _id: existingTag._id,
+            tagName: existingTag.name,
+            color: existingTag.color, 
+        }); 
     }
 
     // Parse and validate dates
@@ -146,7 +152,7 @@ exports.createTask = async (req, res) => {
       taskName,
       dueDate: parsedDueDate,
       startDate: parsedStartDate,
-      taskTag: userTags,
+      taskTags: userTags,
       taskDetail,
       taskType,
       taskPriority,
@@ -197,7 +203,6 @@ exports.addTask = async (req, res) => {
 
     await newTask.save();
     res.redirect(`/space/item/${req.body.spaceId}`);
-    console.log(newTask);
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");

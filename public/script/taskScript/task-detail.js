@@ -1,5 +1,4 @@
 // Task status update
-// Task status update
 document.querySelectorAll('.taskStatuses .dropdown-item').forEach(item => {
     item.addEventListener('click', async function (e) {
         e.preventDefault();
