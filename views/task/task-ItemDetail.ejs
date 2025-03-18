@@ -51,19 +51,24 @@
                             </button>
                         </div>
                     </form>
-        
-                    <div class="checkTask" style="display: none;">
-                        <button type="button" id="checkTask" onclick="checkWork()">
-                            <span>ส่งงาน</span>
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </button>
-                    </div>
                 </div>
         
                 <!-- Task Name -->
         
                 <!-- Task Detail -->
                 <div class="detailSec">
+                    <div class="detailHeader">
+                        <div class="headerFirst">
+                            <h1 class="detailText">รายละเอียด</h1>
+                            <div class="task-summary hidden">
+                                <p>สถานะ, ผู้รับผิดชอบ, ความสำคัญ, แท็กงาน, วันครบกำหนด, เวลาครบกำหนด</p>
+                            </div>
+                        </div>
+                        
+                        <span class="moreIcon">
+                            <i class="fa-solid fa-chevron-up"></i>
+                        </span>
+                    </div>
                     <div class="grid-container">
                         <!-- status ✅ -->
                         <div class="grid-item topic status">
@@ -71,7 +76,7 @@
                                 <i class="fa-solid fa-circle-half-stroke"></i>
                                 สถานะ
                             </div>
-                            <div class="detail-data" id="detail-data-status">
+                            <div class="detail-data statusWrap" id="detail-data-status">
                                 <div class="status-div" data-task-id="<%= task._id %>" data-status="<%= taskStatus %>">
                                     <span class="status-text"><%= taskStatus %></span>
                                 </div>
@@ -91,44 +96,58 @@
                                 <i class="fa-regular fa-circle-user"></i>
                                 ผู้รับผิดชอบ
                             </div>
-                            <div class="detail-data" style="display: flex; gap: 10px;">
+                            <div class="detail-data" id="assignedDisplay" data-toggle="modal">
                                 <% if (assignedUsers.length > 0) { %>
                                     <% assignedUsers.forEach(user => { %>
                                         <div class="user-profile" style="position: relative;">
-                                            <img src="<%= user.profileImage %>" width="40px" height="40px" style="border-radius: 50%; cursor: pointer;"
-                                                onerror="this.onerror=null; this.src='/public/img/profileImage/userDefault.jpg';">
+                                            <img src="<%= user.profileImage %>" 
+                                                 alt="User Profile" 
+                                                 width="40px" 
+                                                 height="40px" 
+                                                 style="border-radius: 50%; cursor: pointer;"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="fallback-profile" style="display: none;">
+                                                <span><%= user.username[0] %></span>
+                                            </div>
                                             <span class="username-tooltip">
                                                 <%= user.username %>
                                             </span>
                                             <button class="remove-user-btn" data-user-id="<%= user._id %>" title="Remove User">
-                                                &times;
+                                                <i class="fa-solid fa-xmark" style=" margin-top: 3px; margin-left: 1px;"></i>
                                             </button>
                                         </div>
                                     <% }) %>
                                 <% } else { %>
                                     <span>ไม่มีผู้รับผิดชอบ</span>
                                 <% } %>
-                            </div>
-                            <!-- Hidden modal initially -->
-                            <div id="assignedManagementModal" class="hidden">
-                                <div class="modal-content">
-                                    <div class="modal-body">
-                                        <div id="task-id" data-task-id="<%= task._id %>" style="display:none;"></div>
-                                        <div class="add-new-assigned">
-                                            <input type="text" id="searchAssigned" placeholder="Search User" />
-                                        </div>
-                                        <div class="showAllAssigned" id="allAssignedContainer">
-                                            <% spaceUsers.forEach(user => { %>
-                                                <div class="assigned-item" data-user-id="<%= user._id %>">
-                                                    <img src="<%= user.profileImage || '/public/img/profileImage/userDefault.jpg' %>" 
-                                                         alt="<%= user.firstName %>" 
-                                                         width="40px" 
-                                                         height="40px"
-                                                         style="border-radius: 50%;" />
-                                                    <span id="assignedName"><%= user.username %></span>
-                                                    <span id="assignedEmail"><%= user.googleEmail %></span>
-                                                </div>
-                                            <% }) %>
+
+                                <!-- Hidden modal initially -->
+                                <div id="assignedManagementModal" class="hidden">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <div id="task-id" data-task-id="<%= task._id %>" style="display:none;"></div>
+                                            <div class="add-new-assigned">
+                                                <input type="text" id="searchAssigned" placeholder="ค้นหาสมาชิก" />
+                                            </div>
+                                            <div class="showAllAssigned" id="allAssignedContainer">
+                                                <% spaceUsers.forEach(user => { %>
+                                                    <div class="assigned-item" data-user-id="<%= user._id %>">
+                                                        <img src="<%= user.profileImage %>" 
+                                                             alt="<%= user.firstName %>" 
+                                                             width="40px" 
+                                                             height="40px"
+                                                             style="border-radius: 50%;" 
+                                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
+                                                        <div class="fallback-profile-modal" style="display: none;">
+                                                            <span><%= user.firstName[0] %></span>
+                                                        </div>
+                                                        <div class="userInfo">
+                                                            <span id="assignedName"><%= user.username %></span>
+                                                            <span id="assignedEmail"><%= user.googleEmail %></span>
+                                                        </div>
+                                                    </div>
+                                                <% }) %>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -143,24 +162,24 @@
                                 ความสำคัญ
                             </div>
                         
-                            <div class="detail-data" id="detail-data-priority">
+                            <div class="detail-data priWrap" id="detail-data-priority">
                                 <div class="priority-div" data-task-id="<%= task._id %>" data-priority="<%= taskPriority %>">
                                     <span class="priority-text" style="color: <%= priorityMapping[taskPriority].textColor %>;">
-                                        <i class="fa <%= priorityMapping[taskPriority].icon %>"></i>
+                                        <i class="fa <%= priorityMapping[taskPriority].icon %>" id="priIcon"></i>
                                         <%= priorityMapping[taskPriority].text %>
                                     </span>
                                 </div>
                                 <div class="dropdown-content" id="priority-dropdown-content" style="display: none;">
                                     <a href="#" class="priority-option" data-priority="urgent">
-                                        <i class="fa-solid fa-angles-up"></i>
+                                        <i class="fa-solid fa-angles-up" id="priIcon"></i>
                                         ด่วน
                                     </a>
                                     <a href="#" class="priority-option" data-priority="normal">
-                                        <i class="fa-solid fa-grip-lines"></i>
+                                        <i class="fa-solid fa-grip-lines" id="priIcon"></i>
                                         ปกติ
                                     </a>
                                     <a href="#" class="priority-option" data-priority="low">
-                                        <i class="fa-solid fa-angle-down"></i>
+                                        <i class="fa-solid fa-angle-down" id="priIcon"></i>
                                         ต่ำ
                                     </a>
                                 </div>
@@ -177,16 +196,20 @@
                             <div class="detail-data" id="tagsDisplay">
                                 <div id="tagsDisplay">
                                     <div class="visible-tags">
-                                        <% const visibleTags = taskTags.slice(0, 3); %>
-                                        <% visibleTags.forEach(tag => { %>
-                                            <span class="tag-item" style="background-color: <%= tag.color %>;" data-id="<%= tag._id %>">
-                                                <%= tag.tagName %>
-                                            </span>
-                                        <% }); %>
+                                        <% if (taskTags.length > 0) { %>
+                                            <% const visibleTags = taskTags.slice(0, 3); %>
+                                            <% visibleTags.forEach(tag => { %>
+                                                <span class="tag-item" style="background-color: <%= tag.color %>;" data-id="<%= tag._id %>">
+                                                    <%= tag.tagName %>
+                                                </span>
+                                            <% }); %>
+                                        <% } else { %>
+                                            <span class="no-tags-message">ไม่มีแท็กงาน</span>
+                                        <% } %>
                                     </div>
-                                    <div class="extra-tags">
-                                        <% const extraTagsCount = taskTags.length - 3; %>
-                                        <% if (extraTagsCount > 0) { %>
+                                    <div class="extra-tags" style="<%= taskTags.length > 3 ? '' : 'display: none;' %>">
+                                        <% if (taskTags.length > 3) { %>
+                                            <% const extraTagsCount = taskTags.length - 3; %>
                                             <span id="extraTagsIndicator">+<%= extraTagsCount %></span>
                                         <% } %>
                                     </div>
@@ -204,7 +227,7 @@
                                                             </span>                                            
                                                         <% }); %>
                                                     <% } else { %>
-                                                        <p>No tags assigned to this task.</p>
+                                                        <p style="margin-bottom: 0; padding-top: 10px; ">ไม่มีแท็กที่กำหนดให้กับงานนี้.</p>
                                                     <% } %>
                                                 </div>
                                             </div>
@@ -246,10 +269,14 @@
                                     <%= dueDate ? new Date(dueDate).toLocaleDateString('th-TH', { day: 'numeric' , month: 'long' ,
                                         year: 'numeric' }) : 'ไม่มีวันครบกำหนด' %>
                                 </div>
-                                <input type="text" id="dueDateInput" name="dueDate"
-                                    value=" <%= dueDate && !isNaN(new Date(dueDate).getTime()) ? 
-                                            new Date(new Date(dueDate).getTime() - new Date(dueDate).getTimezoneOffset() * 60000).toISOString().split('T')[0] : '' %>"
-                                    class="flatpickr-input" style="visibility: hidden; position: absolute; ">
+                                <input 
+                                    type="text" 
+                                    id="dueDateInput" 
+                                    name="dueDate"
+                                    value="<%= dueDate && !isNaN(new Date(dueDate).getTime()) ? 
+                                           new Date(new Date(dueDate).getTime() - new Date(dueDate).getTimezoneOffset() * 60000).toISOString().split('T')[0] : '' %>"
+                                    class="flatpickr-input"
+                                    style="visibility: hidden; position: absolute;">
                                 <input type="hidden" name="taskId" value="<%= task._id %>">
                             </form>
                         </div>
@@ -258,7 +285,7 @@
                         <!-- dueTime ✅ -->
                         <div class="grid-item topic dueTime">
                             <div class="detail-name">
-                                <i class="fa-regular fa-clock" style="margin-right: 5px;"></i>
+                                <i class="fa-regular fa-clock"></i>
                                 เวลาครบกำหนด
                             </div>
                             <div class="detail-data">
@@ -297,70 +324,6 @@
                     </div>
                 </div>
                 <!-- Task Description -->
-        
-        
-                <div class="attachments-section">
-                    <h3><i class="fa-solid fa-paperclip" style="padding-right: 10px;"></i> แนบไฟล์</h3>
-                    <form action="/uploadDocument/<%= task._id %>?spaceId=<%= spaceId %>" method="POST"
-                        enctype="multipart/form-data" id="uploadInput">
-                        <div class="attachment">
-                            <div id="attach">
-                                <label class="attachmentLabel" for="fileUpload">เลือกไฟล์</label>
-                                <input type="file" id="fileUpload" name="documents" multiple
-                                    accept=".jpg, .jpeg, .png, .docx, .doc, .pdf" />
-                                <span id="fileName">ไม่ได้เลือกไฟล์ใด</span>
-                            </div>
-                            <button type="submit" class="btn btn-primary">อัพโหลด</button>
-                        </div>
-                        <p class="file_input_help"" id=" file_input_help">
-                            jpg, jpeg, png, docx, doc, pdf (ไม่เกิน 5 MB).
-                        </p>
-                    </form>
-                    <div class="fileItemSec">
-                        <% if (attachments.length> 0) { %>
-                            <ul id="fileItemlist">
-                                <% task.attachments.forEach(attachment=> { %>
-                                    <li id="fileItem">
-                                        <% const ext=attachment.originalName.split('.').pop().toLowerCase(); %>
-                                            <div class="file-content">
-                                                <a href="/docUploads/<%= attachment.fileName %>"
-                                                    download="<%= attachment.originalName %>" class="download-link">
-                                                    <% if (ext==='pdf' ) { %>
-                                                        <i class="fa-solid fa-file-pdf" style="color: #d9534f;"></i>
-                                                        <% } else if (['doc', 'docx' ].includes(ext)) { %>
-                                                            <i class="fa-solid fa-file-word" style="color: #337ab7;"></i>
-                                                            <% } else if (['jpg', 'jpeg' , 'png' ].includes(ext)) { %>
-                                                                <i class="fa-solid fa-file-image" style="color: #5cb85c;"></i>
-                                                                <% } else { %>
-                                                                    <i class="fa-solid fa-file" style="color: #6c757d;"></i>
-                                                                    <% } %>
-                                                                        <div class="fileName">
-                                                                            <span class="file-text">
-                                                                                <%= attachment.originalName %>
-                                                                            </span>
-                                                                        </div>
-                                                </a>
-                                            </div>
-        
-                                            <div class="fileWrap">
-                                                <div class="file-time" data-uploaded="<%= attachment.uploadedAt %>">
-                                                    <span class="time-text"></span>
-                                                </div>
-                                                <!-- Delete button with data-id for file reference -->
-                                                <div class="deleteFile" data-id="<%= attachment._id %>">
-                                                    <i class="fa-solid fa-trash-can"></i>
-                                                </div>
-                                            </div>
-        
-                                    </li>
-                                    <% }) %>
-        
-                                        <% } else { %>
-                                            <p id="noFile">ไม่มีไฟล์ที่อัปโหลด</p>
-                                            <% } %>
-                            </ul>
-                    </div>
-                </div>
         
                 <div class="subtaskSec">
                     <h1 class="subText"><i class="fa-solid fa-list-check" style="padding-right: 10px;"></i> งานย่อย</h1>
@@ -465,6 +428,68 @@
                     <button id="addSubtaskBtnMainNew" class="add-subtask-btn-detail">+ เพิ่มงานย่อยใหม่</button>
                 </div>
         
+                <div class="attachments-section">
+                    <h3><i class="fa-solid fa-paperclip" style="padding-right: 10px;"></i> แนบไฟล์</h3>
+                    <form action="/uploadDocument/<%= task._id %>?spaceId=<%= spaceId %>" method="POST"
+                        enctype="multipart/form-data" id="uploadInput">
+                        <div class="attachment">
+                            <div id="attach">
+                                <label class="attachmentLabel" for="fileUpload">เลือกไฟล์</label>
+                                <input type="file" id="fileUpload" name="documents" multiple
+                                    accept=".jpg, .jpeg, .png, .docx, .doc, .pdf" />
+                                <span id="fileName">ไม่ได้เลือกไฟล์ใด</span>
+                            </div>
+                            <button type="submit" class="btn btn-primary">อัพโหลด</button>
+                        </div>
+                        <p class="file_input_help"" id=" file_input_help">
+                            jpg, jpeg, png, docx, doc, pdf (ไม่เกิน 5 MB).
+                        </p>
+                    </form>
+                    <div class="fileItemSec">
+                        <% if (attachments.length> 0) { %>
+                            <ul id="fileItemlist">
+                                <% task.attachments.forEach(attachment=> { %>
+                                    <li id="fileItem">
+                                        <% const ext=attachment.originalName.split('.').pop().toLowerCase(); %>
+                                            <div class="file-content">
+                                                <a href="/docUploads/<%= attachment.fileName %>"
+                                                    download="<%= attachment.originalName %>" class="download-link">
+                                                    <% if (ext==='pdf' ) { %>
+                                                        <i class="fa-solid fa-file-pdf" style="color: #d9534f;"></i>
+                                                        <% } else if (['doc', 'docx' ].includes(ext)) { %>
+                                                            <i class="fa-solid fa-file-word" style="color: #337ab7;"></i>
+                                                            <% } else if (['jpg', 'jpeg' , 'png' ].includes(ext)) { %>
+                                                                <i class="fa-solid fa-file-image" style="color: #5cb85c;"></i>
+                                                                <% } else { %>
+                                                                    <i class="fa-solid fa-file" style="color: #6c757d;"></i>
+                                                                    <% } %>
+                                                                        <div class="fileName">
+                                                                            <span class="file-text">
+                                                                                <%= attachment.originalName %>
+                                                                            </span>
+                                                                        </div>
+                                                </a>
+                                            </div>
+        
+                                            <div class="fileWrap">
+                                                <div class="file-time" data-uploaded="<%= attachment.uploadedAt %>">
+                                                    <span class="time-text"></span>
+                                                </div>
+                                                <!-- Delete button with data-id for file reference -->
+                                                <div class="deleteFile" data-id="<%= attachment._id %>">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </div>
+                                            </div>
+        
+                                    </li>
+                                    <% }) %>
+        
+                                        <% } else { %>
+                                            <p id="noFile">ไม่มีไฟล์ที่อัปโหลด</p>
+                                            <% } %>
+                            </ul>
+                    </div>
+                </div>
         
                 <!-- Full detail Page View -->
                 <div class="full-page-view" id="fullPageView">
@@ -544,7 +569,7 @@
             <div class="activity">
                 <div class="textTopic">
                     <h1>กิจกรรมที่เกิดขึ้น</h1>
-                    <button id="clearLogsButton" data-task-id="<%= task._id %>">Clear</button>
+                    <button id="clearLogsButton" data-task-id="<%= task._id %>">เครียร์แจ้งเตือน</button>
                 </div>
         
                 <div class="messageAct">
@@ -557,144 +582,196 @@
                                 const newValue = details.newValue || 'ไม่ทราบ'; %>
 
                                 <div class="log-entry">
-                                    <% if (details.fieldChanged === 'taskName') { %>
-                                        <p id="nameLog">
-                                            <%= log.details.whoChange %> ได้เปลี่ยนชื่องานจาก: 
-                                            <span class="previous-name">"<%= details.oldValue %>"</span> เป็น 
-                                            <span class="new-name">"<%= details.newValue %>"</span>
-                                        </p>
-                                    <% } 
-                                    else if (details.fieldChanged === 'status') { %>
-                                        <p id="statusLog">
-                                            <%= log.details.whoChange %> ได้เปลี่ยนสถานะของงาน: 
-                                            <span class="previous-status" data-status="<%= details.oldValue %>">
-                                                <%= statusMapping[details.oldValue] || details.oldValue %>
-                                            </span> 
-                                            <i class="fa-solid fa-arrow-right toArrow"></i>
-                                            <span class="new-status" data-status="<%= details.newValue %>">
-                                                <%= statusMapping[details.newValue] || details.newValue %>
-                                            </span>
-                                        </p>
-                                    <% } 
-                                    else if (details.fieldChanged === 'priority') { %>
-                                        <p id="prorityLog">
-                                            <%= log.details.whoChange %> ได้เปลี่ยนความสำคัญของงานจาก:
-                                            <span class="previous-priority" data-priority="<%= oldValue %>" style="color: <%= priorityMapping[oldValue] ? priorityMapping[oldValue].color : '#000000' %>;">
-                                                <i class="fa-solid <%= priorityMapping[oldValue] ? priorityMapping[oldValue].icon : '' %>"></i>
-                                                <%= priorityMapping[oldValue] ? priorityMapping[oldValue].text : oldValue %>
-                                            </span> 
-                                            <i class="fa-solid fa-arrow-right toArrow"></i>
-                                            <span class="new-priority" data-priority="<%= newValue %>" style="color: <%= priorityMapping[newValue] ? priorityMapping[newValue].color : '#000000' %>;">
-                                                <i class="fa-solid <%= priorityMapping[newValue] ? priorityMapping[newValue].icon : '' %>"></i>
-                                                <%= priorityMapping[newValue] ? priorityMapping[newValue].text : newValue %>
-                                            </span>
-                                        </p>
-                                    <% } 
-                                    else if (details.fieldChanged === 'dueDate') { %>
-                                        <p id="dueDateLog">
-                                            <%= log.details.whoChange %> ได้เปลี่ยนวันครบกำหนดของงานจาก:
-                                            <span class="previous-dueDate">
-                                                <%= oldValue %>
-                                            </span>
-                                            <i class="fa-solid fa-arrow-right toArrow"></i>
-                                            <span class="new-dueDate">
-                                                <%= newValue %>
-                                            </span>
-                                        </p>
-                                    <% } 
-                                    else if (details.fieldChanged === 'dueTime') { %>
-                                        <p id="dueTimeLog">
-                                            <%= log.details.whoChange %> ได้เปลี่ยนเวลาครบกำหนดของงานจาก:
-                                            <span class="previous-dueTime">
-                                                <%= oldValue === 'ตลอดทั้งวัน' ? oldValue : `${oldValue} น.` %>
-                                            </span>
-                                            เป็น
-                                            <span class="new-dueTime">
-                                                <%= newValue === 'ตลอดทั้งวัน' ? newValue : `${newValue} น.` %>
-                                            </span>
-                                        </p>
-                                    <% } 
-                                    else if (details.fieldChanged === 'taskTags') { %>
-                                        <p id="dueTimeLog">
-                                            <%= log.details.whoChange %> ได้เพิ่มแท็กชื่อ:
-                                            <span class="new-tags">
-                                                <%= newValue %>
-                                            </span>
-                                        </p>
-                                    <% } 
-                                    else if (details.fieldChanged === 'tagsRemove') { %>
-                                        <p id="dueTimeLog">
-                                            <%= log.details.whoChange %> ได้ลบแท็กชื่อ:
-                                            <span class="new-tags">
-                                                <%= oldValue %>
-                                            </span>
-                                        </p>
-                                    <% } 
-                                    else if (details.fieldChanged === 'assignedUsers') { %>
-                                        <div id="assignedLog">
-                                            <%= log.details.whoChange %> ได้เพิ่มสมาชิก:
-                                            <div class="assigned-member">
-                                                <% if (log.userId?.profileImage) { %>
-                                                    <img src="<%= log.userId.profileImage %>" 
-                                                         alt="<%= log.details.newValue %>" 
-                                                         width="40px" 
-                                                         height="40px" 
-                                                         style="border-radius: 50%; margin-right: 8px;" 
-                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                    <div class="log-entry-detail">
+                                        <!-- Display user profile image -->
+                                        <div class="user-profile-log">
+                                            <% if (log.createdBy?.profileImage) { %>
+                                                <img src="<%= log.createdBy.profileImage %>" alt="<%= log.createdBy.firstName %>"
+                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                                                 <% } %>
-                                                <div class="fallback-circle" 
-                                                     style="display: <%= log.userId?.profileImage ? 'none' : 'flex' %>;
-                                                            width: 40px; height: 40px; 
-                                                            border-radius: 50%; background-color: #ccc; 
-                                                            align-items: center; justify-content: center; 
-                                                            font-weight: bold; font-size: 16px; 
-                                                            color: #fff; margin-right: 8px;">
-                                                    <%= log.details.newValue?.charAt(0).toUpperCase() || '?' %>
+                                                <div class="fallback-circle-activitylog" style="display: <%= log.createdBy?.profileImage ? 'none' : 'flex' %>;"">
+                                                    <%= log.createdBy?.firstName?.charAt(0).toUpperCase() || '?' %>
                                                 </div>
-                                                <span class="new-member-name">
-                                                    <%= log.details.newValue %>
-                                                </span>
-                                            </div>                                            
                                         </div>
-                                    <% } 
-                                    else if (details.fieldChanged === 'removeAssignedUsers') { %>
-                                        <div id="assignedLog">
-                                            <%= log.details.whoChange %> ได้ลบสมาชิก:
-                                            <div class="assigned-member">
-                                                <% if (log.userId?.profileImage) { %>
-                                                    <img src="<%= log.userId.profileImage %>" 
-                                                         alt="<%= log.details.oldValue %>" 
-                                                         width="40px" 
-                                                         height="40px" 
-                                                         style="border-radius: 50%; margin-right: 8px;" 
-                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                                                <% } %>
-                                                <div class="fallback-circle" 
-                                                     style="display: <%= log.userId?.profileImage ? 'none' : 'flex' %>;
-                                                            width: 40px; height: 40px; 
-                                                            border-radius: 50%; background-color: #ccc; 
-                                                            align-items: center; justify-content: center; 
-                                                            font-weight: bold; font-size: 16px; 
-                                                            color: #fff; margin-right: 8px;">
-                                                    <%= log.details.oldValue?.charAt(0).toUpperCase() || '?' %>
+
+                                        <!-- Log details -->
+                                        <% if (details.fieldChanged === 'taskName') { %>
+                                            <div class="nameLog">
+                                                <p id="logText">
+                                                    <span id="whoChange">
+                                                        <%= details.whoChange %>
+                                                    </span> ได้อัพเดตชื่อของานใหม่
+                                                </p>
+                                                <div class="logDetail">
+                                                    <span class="previous-name">"<%= oldValue %>"</span>  เป็น  
+                                                    <span class="new-name">"<%= newValue %>"</span>
                                                 </div>
-                                                <span class="new-member-name">
-                                                    <%= log.details.oldValue %>
+                                            </div>
+                                        <% } 
+                                        else if (details.fieldChanged === 'status') { %>
+                                            <div class="statusLog">
+                                                <p id="logText">
+                                                    <span id="whoChange">
+                                                        <%= details.whoChange %>
+                                                    </span> ได้เปลี่ยนสถานะของงาน
+                                                </p>
+                                                <div class="logDetail">
+                                                    <span class="previous-status" data-status="<%= details.oldValue %>">
+                                                        <%= statusMapping[details.oldValue] || details.oldValue %>
+                                                    </span>
+                                                    <i class="fa-solid fa-arrow-right toArrow"></i>
+                                                    <span class="new-status" data-status="<%= details.newValue %>">
+                                                        <%= statusMapping[details.newValue] || details.newValue %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                        <% } 
+                                        else if (details.fieldChanged === 'priority') { %>
+                                            <div class="prorityLog">
+                                                <p id="logText">
+                                                    <span id="whoChange">
+                                                        <%= details.whoChange %>
+                                                    </span> ได้เปลี่ยนความสำคัญของงาน
+                                                </p>
+                                                    <div class="logDetail">
+                                                        <span class="previous-priority" data-priority="<%= oldValue %>" style="color: <%= priorityMapping[oldValue] ? priorityMapping[oldValue].color : '#000000' %>;">
+                                                            <i class="fa-solid logPriIcon <%= priorityMapping[oldValue] ? priorityMapping[oldValue].icon : '' %>"></i>
+                                                            <%= priorityMapping[oldValue] ? priorityMapping[oldValue].text : oldValue %>
+                                                        </span> 
+                                                        <i class="fa-solid fa-arrow-right toArrow"></i>
+                                                        <span class="new-priority" data-priority="<%= newValue %>" style="color: <%= priorityMapping[newValue] ? priorityMapping[newValue].color : '#000000' %>;">
+                                                            <i class="fa-solid logPriIcon <%= priorityMapping[newValue] ? priorityMapping[newValue].icon : '' %>"></i>
+                                                            <%= priorityMapping[newValue] ? priorityMapping[newValue].text : newValue %>
+                                                        </span>
+                                                    </div>
+                                            </div>
+                                            
+                                        <% } 
+                                        else if (details.fieldChanged === 'dueDate') { %>
+                                            <div class="dueDateLog">
+                                                <p id="logText">
+                                                    <span id="whoChange">
+                                                        <%= details.whoChange %>
+                                                    </span> ได้เปลี่ยนวันครบกำหนดของงาน
+                                                </p>
+                                                <div class="logDetail">
+                                                    <span class="previous-dueDate">
+                                                        <%= oldValue %>
+                                                    </span>
+                                                    <i class="fa-solid fa-arrow-right toArrow"></i>
+                                                    <span class="new-dueDate">
+                                                        <%= newValue %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        <% } 
+                                        else if (details.fieldChanged === 'dueTime') { %>
+                                            <div class="dueTimeLog">
+                                                <p id="logText">
+                                                    <span id="whoChange">
+                                                        <%= details.whoChange %>
+                                                    </span> ได้เปลี่ยนเวลาครบกำหนดของงาน
+                                                </p>
+                                                <div class="logDetail">
+                                                    <span class="previous-dueTime">
+                                                        <%= oldValue === 'ตลอดทั้งวัน' ? oldValue : `${oldValue} น.` %>
+                                                    </span>
+                                                    เป็น
+                                                    <span class="new-dueTime">
+                                                        <%= newValue === 'ตลอดทั้งวัน' ? newValue : `${newValue} น.` %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        <% } 
+                                        else if (details.fieldChanged === 'taskTags') { %>
+                                            <div class="dueTimeLog">
+                                                <p id="logText">
+                                                    <span id="whoChange">
+                                                        <%= details.whoChange %>
+                                                    </span>  ได้เพิ่มแท็กใหม่
+                                                </p>
+                                                <div class="logDetail">
+                                                    <span class="new-tags">
+                                                        <%= newValue %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        <% } 
+                                        else if (details.fieldChanged === 'tagsRemove') { %>
+                                            <p id="dueTimeLog">
+                                                <%= log.details.whoChange %> ได้ลบแท็กชื่อ:
+                                                <span class="new-tags">
+                                                    <%= oldValue %>
                                                 </span>
-                                            </div>                                            
-                                        </div>
-                                    <% } 
-                                    else { %>
-                                        <p><%- log.text %></p>
-                                    <% } %>
+                                            </p>
+                                        <% } 
+                                        else if (details.fieldChanged === 'assignedUsers') { %>
+                                            <div id="assignedLog">
+                                                <%= log.details.whoChange %> ได้เพิ่มสมาชิก:
+                                                <div class="assigned-member">
+                                                    <% if (log.userId?.profileImage) { %>
+                                                        <img src="<%= log.userId.profileImage %>" 
+                                                            alt="<%= log.details.newValue %>" 
+                                                            width="40px" 
+                                                            height="40px" 
+                                                            style="border-radius: 50%; margin-right: 8px;" 
+                                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                                    <% } %>
+                                                    <div class="fallback-circle" 
+                                                        style="display: <%= log.userId?.profileImage ? 'none' : 'flex' %>;
+                                                                width: 40px; height: 40px; 
+                                                                border-radius: 50%; background-color: #ccc; 
+                                                                align-items: center; justify-content: center; 
+                                                                font-weight: bold; font-size: 16px; 
+                                                                color: #fff; margin-right: 8px;">
+                                                        <%= log.details.newValue?.charAt(0).toUpperCase() || '?' %>
+                                                    </div>
+                                                    <span class="new-member-name">
+                                                        <%= log.details.newValue %>
+                                                    </span>
+                                                </div>                                            
+                                            </div>
+                                        <% } 
+                                        else if (details.fieldChanged === 'removeAssignedUsers') { %>
+                                            <div id="assignedLog">
+                                                <%= log.details.whoChange %> ได้ลบสมาชิก:
+                                                <div class="assigned-member">
+                                                    <% if (log.userId?.profileImage) { %>
+                                                        <img src="<%= log.userId.profileImage %>" 
+                                                            alt="<%= log.details.oldValue %>" 
+                                                            width="40px" 
+                                                            height="40px" 
+                                                            style="border-radius: 50%; margin-right: 8px;" 
+                                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                                    <% } %>
+                                                    <div class="fallback-circle" 
+                                                        style="display: <%= log.userId?.profileImage ? 'none' : 'flex' %>;
+                                                                width: 40px; height: 40px; 
+                                                                border-radius: 50%; background-color: #ccc; 
+                                                                align-items: center; justify-content: center; 
+                                                                font-weight: bold; font-size: 16px; 
+                                                                color: #fff; margin-right: 8px;">
+                                                        <%= log.details.oldValue?.charAt(0).toUpperCase() || '?' %>
+                                                    </div>
+                                                    <span class="new-member-name">
+                                                        <%= log.details.oldValue %>
+                                                    </span>
+                                                </div>                                            
+                                            </div>
+                                        <% } 
+                                        else { %>
+                                            <p><%- log.text %></p>
+                                        <% } %>
+                                    </div>
                                     <p id="timeLog">
+                                        <i class="fa-solid fa-clock-rotate-left"></i>
                                         เมื่อ: <%= new Date(log.createdAt).toLocaleString('th-TH', {
-                                            year: 'numeric',
-                                            month: 'short',
+                                            month: 'long',
                                             day: 'numeric',
                                             hour: '2-digit',
                                             minute: '2-digit'
-                                        }) %>
+                                        }) %> น.
                                     </p>
                                 </div>
                         <% }) %>
@@ -759,15 +836,16 @@
         });
         
         // subtask section
-        document.getElementById('addSubtaskNew').addEventListener('click', () => {
+        document.getElementById('addSubtaskNew').addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default form submission
             const assigneeSelect = document.getElementById('assigneeSelect');
             const subtaskForm = document.getElementById('subtaskFormMainNew');
-        
+            
             if (!assigneeSelect.value) {
                 alert('Please select an assignee.');
             } else if (subtaskForm.checkValidity()) {
                 console.log("Submitting with assignee:", assigneeSelect.value);
-                subtaskForm.submit();
+                subtaskForm.submit(); // Submit the form
             }
         });
         document.addEventListener('DOMContentLoaded', () => {

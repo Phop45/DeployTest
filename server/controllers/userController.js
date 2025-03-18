@@ -1,6 +1,4 @@
-const Subject = require("../models/Subject");
 const User = require("../models/User");
-const mongoose = require("mongoose");
 
 exports.allUsers = async (req, res) => {
     try {

@@ -27,82 +27,86 @@
                 <% }); %>
             <% } %>
 
-            <div class="input-box">
-                <span class="span-text">ชื่อ:</span>
-                <input
-                    type="text"
-                    id="firstName"
-                    name="firstName"
-                    placeholder="ชื่อผู้ใช้"
-                    value="<%= firstName %>"
-                    required
-                />
-                <i class="fa fa-user"></i>
-            </div>
+            <div class="formContent">
+                <div class="userName">
+                    <div class="input-box">
+                        <span class="span-text">ชื่อ:</span>
+                        <input
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            placeholder="ชื่อ"
+                            value="<%= firstName %>"
+                            required
+                        />
+                    </div>
+        
+                    <div class="input-box">
+                        <span class="span-text">นามสกุล:</span>
+                        <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            placeholder="นามสกุล"
+                            value="<%= lastName %>"
+                            required
+                        />
+                    </div>    
+                </div>
+                
+                <div class="input-box">
+                    <span class="span-text">รหัสผ่าน:</span>
+                    <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        placeholder="รหัสผ่าน"
+                        value="<%= password %>"
+                        minlength="8"
+                        required
+                    />
+                    <i
+                        class="password-toggle-icon fas fa-eye"
+                        aria-label="Toggle password visibility"
+                        data-toggle="password"
+                        data-target="password"
+                        style="top: 57%;"
+                    ></i>
 
-            <div class="input-box">
-                <span class="span-text">นามสกุล:</span>
-                <input
-                    type="text"
-                    id="lastName"
-                    name="lastName"
-                    placeholder="ชื่อผู้ใช้"
-                    value="<%= lastName %>"
-                    required
-                />
-                <i class="fa fa-user"></i>
-            </div>
-
-            <div class="input-box">
-                <span class="span-text">รหัสผ่าน:</span>
-                <input
-                    type="password"
-                    name="password"
-                    id="password"
-                    placeholder="รหัสผ่าน"
-                    value="<%= password %>"
-                    minlength="8"
-                    required
-                />
-                <i
-                    class="password-toggle-icon fas fa-eye"
-                    aria-label="Toggle password visibility"
-                    data-toggle="password"
-                    data-target="password"
-                ></i>
-            </div>
-            <div class="despass">*รหัสผ่านต้องมีอักขระ 8 ตัวขึ้นไป</div>
-
-            <div class="input-box">
-                <span class="span-text">ยืนยันรหัสผ่าน:</span>
-                <input
-                    type="password"
-                    name="confirmPassword"
-                    id="confirmPassword"
-                    placeholder="ยืนยันรหัสผ่าน"
-                    value="<%= confirmPassword %>"
-                    minlength="8"
-                    required
-                />
-                <i
-                    class="password-toggle-icon fas fa-eye"
-                    aria-label="Toggle password visibility"
-                    data-toggle="password"
-                    data-target="confirmPassword"
-                ></i>
-            </div>
-
-            <div class="input-box">
-                <span class="span-text">อีเมล:</span>
-                <input
-                    type="email"
-                    id="googleEmail"
-                    name="googleEmail"
-                    placeholder="อีเมล"
-                    value="<%= googleEmail %>"
-                    required
-                />
-                <i class="fa fa-envelope"></i>
+                    <div class="despass">*รหัสผ่านต้องมีอักขระ 8 ตัวขึ้นไป</div>
+                </div>
+    
+                <div class="input-box">
+                    <span class="span-text">ยืนยันรหัสผ่าน:</span>
+                    <input
+                        type="password"
+                        name="confirmPassword"
+                        id="confirmPassword"
+                        placeholder="ยืนยันรหัสผ่าน"
+                        value="<%= confirmPassword %>"
+                        minlength="8"
+                        required
+                    />
+                    <i
+                        class="password-toggle-icon fas fa-eye"
+                        aria-label="Toggle password visibility"
+                        data-toggle="password"
+                        data-target="confirmPassword"
+                    ></i>
+                </div>
+    
+                <div class="input-box">
+                    <span class="span-text">อีเมล:</span>
+                    <input
+                        type="email"
+                        id="googleEmail"
+                        name="googleEmail"
+                        placeholder="อีเมล"
+                        value="<%= googleEmail %>"
+                        required
+                    />
+                    <i class="fa fa-envelope"></i>
+                </div>
             </div>
 
             <input type="submit" class="btn" value="สมัครสมาชิก" />

@@ -1,0 +1,329 @@
+<div class="container-fluid dashboard-container">
+    <div class="row">
+      <div class="col-12">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <p class="welcome-text">Welcome back, <%= user.name %>!</p>
+      </div>
+    </div>
+  
+    <!-- Task Summary Statistics -->
+    <div class="row mt-4 stats-row">
+      <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+          <div class="stat-icon bg-primary">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="stat-content">
+            <h5>Total Tasks</h5>
+            <h2><%= taskStatusCounts.total || 0 %></h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+          <div class="stat-icon bg-info">
+            <i class="fas fa-spinner"></i>
+          </div>
+          <div class="stat-content">
+            <h5>In Progress</h5>
+            <h2><%= taskStatusCounts.inProgress || 0 %></h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+          <div class="stat-icon bg-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-content">
+            <h5>Needs Fix</h5>
+            <h2><%= taskStatusCounts.fix || 0 %></h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+          <div class="stat-icon bg-success">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h5>Completed</h5>
+            <h2><%= taskStatusCounts.finished || 0 %></h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Main Dashboard Content -->
+    <div class="row mt-4">
+      <!-- Recent Tasks Column -->
+      <div class="col-lg-7 col-md-12">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h4><i class="fas fa-clipboard-list me-2"></i>Recent Tasks</h4>
+          </div>
+          <div class="card-body">
+            <% if (recentTasks && recentTasks.length > 0) { %>
+              <div class="recent-tasks-list">
+                <% recentTasks.forEach(task => { %>
+                  <a href="/task/<%= task._id %>" class="task-item">
+                    <div class="task-status-indicator <%= task.taskStatus %>"></div>
+                    <div class="task-content">
+                      <h5 class="task-title"><%= task.taskName %></h5>
+                      <div class="task-meta">
+                        <span class="project-name"><%= task.project.projectName %></span>
+                        <% if (task.dueDate) { %>
+                          <span class="due-date <%= new Date(task.dueDate) < new Date() ? 'overdue' : '' %>">
+                            <i class="far fa-calendar-alt"></i> 
+                            <%= moment(task.dueDate).format('D MMM YYYY') %>
+                            <% if (task.dueTime) { %>
+                              <%= task.dueTime %>
+                            <% } %>
+                          </span>
+                        <% } %>
+                      </div>
+                    </div>
+                    <div class="task-priority <%= task.taskPriority %>">
+                      <% if (task.taskPriority === 'urgent') { %>
+                        <span class="badge bg-danger">Urgent</span>
+                      <% } else if (task.taskPriority === 'normal') { %>
+                        <span class="badge bg-primary">Normal</span>
+                      <% } else { %>
+                        <span class="badge bg-secondary">Low</span>
+                      <% } %>
+                    </div>
+                  </a>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div class="no-tasks-message">
+                <i class="fas fa-inbox fa-3x"></i>
+                <p>No recent tasks found.</p>
+                <a href="/task/create" class="btn btn-primary btn-sm">Create a task</a>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Calendar Column -->
+      <div class="col-lg-5 col-md-12">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h4><i class="far fa-calendar me-2"></i>Task Calendar</h4>
+          </div>
+          <div class="card-body">
+            <div id="taskCalendar"></div>
+            <div id="selectedDateTasks" class="mt-3">
+              <h5 id="selectedDateTitle">Select a date to view tasks</h5>
+              <div id="tasksOnDate" class="selected-date-tasks"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Projects Section -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="dashboard-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4><i class="fas fa-project-diagram me-2"></i>Your Projects</h4>
+            <a href="/spaces/create" class="btn btn-sm btn-primary">
+              <i class="fas fa-plus"></i> New Project
+            </a>
+          </div>
+          <div class="card-body">
+            <% if (spaces && spaces.length > 0) { %>
+              <div class="row project-cards-container">
+                <% spaces.forEach(space => { %>
+                  <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <a href="/space/<%= space._id %>" class="project-card-link">
+                      <div class="project-card">
+                        <div class="project-cover" style="background-image: url('<%= space.projectCover %>');">
+                          <div class="project-info">
+                            <h5 class="project-title"><%= space.projectName %></h5>
+                            <% if (space.projectDueDate) { %>
+                              <p class="project-due-date">
+                                Due: <%= moment(space.projectDueDate).format('D MMM YYYY') %>
+                              </p>
+                            <% } %>
+                          </div>
+                        </div>
+                        <div class="project-footer">
+                          <div class="project-members">
+                            <% if (space.collaborators && space.collaborators.length > 0) { %>
+                              <div class="members-count">
+                                <i class="fas fa-users"></i> <%= space.collaborators.length %>
+                              </div>
+                            <% } %>
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  </div>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div class="no-projects-message">
+                <i class="fas fa-folder-open fa-3x"></i>
+                <p>No projects found. Create your first project to get started!</p>
+                <a href="/spaces/create" class="btn btn-primary">Create Project</a>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Calendar & Task Load Modal -->
+  <div class="modal fade" id="taskDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="taskModalTitle">Task Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="taskModalBody">
+          Loading...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <a href="#" id="viewTaskLink" class="btn btn-primary">View Full Task</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Dashboard scripts -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize the calendar
+      const calendarEl = document.getElementById('taskCalendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek'
+        },
+        selectable: true,
+        selectMirror: true,
+        dayMaxEvents: true,
+        events: '/getCalendarTasks',
+        eventClick: function(info) {
+          showTaskDetails(info.event.id);
+        },
+        dateClick: function(info) {
+          loadTasksForDate(info.dateStr);
+        },
+        eventClassNames: function(arg) {
+          return [
+            'task-event',
+            'task-' + arg.event.extendedProps.status,
+            'priority-' + arg.event.extendedProps.priority
+          ];
+        }
+      });
+      calendar.render();
+  
+      // Function to load tasks for a selected date
+      function loadTasksForDate(dateStr) {
+        const selectedDateTitle = document.getElementById('selectedDateTitle');
+        const tasksOnDate = document.getElementById('tasksOnDate');
+        
+        selectedDateTitle.textContent = 'Tasks due on ' + new Date(dateStr).toLocaleDateString();
+        tasksOnDate.innerHTML = '<div class="loading-spinner"></div>';
+        
+        fetch(`/api/tasks?date=${dateStr}`)
+          .then(response => response.json())
+          .then(tasks => {
+            if (tasks.length === 0) {
+              tasksOnDate.innerHTML = '<p class="no-tasks">No tasks due on this date.</p>';
+              return;
+            }
+            
+            let tasksHtml = '';
+            tasks.forEach(task => {
+              const priorityClass = task.taskPriority === 'urgent' ? 'task-urgent' : 
+                                   task.taskPriority === 'normal' ? 'task-normal' : 'task-low';
+              
+              tasksHtml += `
+                <div class="calendar-task-item ${priorityClass}">
+                  <div class="task-title-row">
+                    <h6>${task.taskName}</h6>
+                    <span class="task-status ${task.taskStatus}">${task.taskStatus}</span>
+                  </div>
+                  <div class="task-project">
+                    ${task.project.projectName}
+                  </div>
+                  <a href="/task/${task._id}" class="btn btn-sm btn-outline-primary mt-2">
+                    View Task
+                  </a>
+                </div>
+              `;
+            });
+            
+            tasksOnDate.innerHTML = tasksHtml;
+          })
+          .catch(error => {
+            console.error('Error loading tasks:', error);
+            tasksOnDate.innerHTML = '<p class="error-message">Error loading tasks: ' + error.message + '</p>';
+          });
+      }
+  
+      // Function to show task details in modal
+      function showTaskDetails(taskId) {
+        const modal = new bootstrap.Modal(document.getElementById('taskDetailModal'));
+        const viewTaskLink = document.getElementById('viewTaskLink');
+        const taskModalBody = document.getElementById('taskModalBody');
+        
+        viewTaskLink.href = `/task/${taskId}`;
+        taskModalBody.innerHTML = '<div class="d-flex justify-content-center"><div class="spinner-border" role="status"></div></div>';
+        
+        fetch(`/task/${taskId}/json`)
+          .then(response => response.json())
+          .then(task => {
+            let html = `
+              <h5>${task.taskName}</h5>
+              <div class="task-meta">
+                <p><strong>Project:</strong> ${task.project.projectName}</p>
+                <p><strong>Status:</strong> <span class="badge ${getStatusBadgeClass(task.taskStatus)}">${task.taskStatus}</span></p>
+                <p><strong>Priority:</strong> <span class="badge ${getPriorityBadgeClass(task.taskPriority)}">${task.taskPriority}</span></p>
+                <p><strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'} ${task.dueTime || ''}</p>
+              </div>
+              <h6>Description:</h6>
+              <p>${task.taskDetail || 'No description provided.'}</p>
+            `;
+            
+            taskModalBody.innerHTML = html;
+            modal.show();
+          })
+          .catch(error => {
+            console.error('Error loading task details:', error);
+            taskModalBody.innerHTML = '<p class="text-danger">Error loading task details.</p>';
+            modal.show();
+          });
+      }
+      
+      function getStatusBadgeClass(status) {
+        switch(status) {
+          case 'toDo': return 'bg-secondary';
+          case 'inProgress': return 'bg-info';
+          case 'fix': return 'bg-warning';
+          case 'finished': return 'bg-success';
+          default: return 'bg-secondary';
+        }
+      }
+      
+      function getPriorityBadgeClass(priority) {
+        switch(priority) {
+          case 'urgent': return 'bg-danger';
+          case 'normal': return 'bg-primary';
+          case 'low': return 'bg-secondary';
+          default: return 'bg-secondary';
+        }
+      }
+    });
+  </script>

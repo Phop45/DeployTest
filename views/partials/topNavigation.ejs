@@ -5,7 +5,7 @@
 <body>
     <div class="top_navigation">
         <div class="navbar_logo">
-            <a href="/space" id="logo">Task Hub</a>
+            <a href="/dashboard" id="logo">Task Hub</a>
         </div>
 
         <div class="navbar_options">
@@ -136,10 +136,15 @@
                     <div class="linkWrap">
                         <a class="nav_link dropdown-toggle" id="profile-dropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="<%= user.profileImage %><%= user.profileImage %> || /img/profileImage/Profile.jpeg" 
-                                 alt="<%= user.username %>'s Profile Image" 
-                                 onerror="this.onerror=null; this.src='/public/img/profileImage/userDefalt.jpg';"
-                                 id="userImg">
+                            <img src="<%= user.profileImage %>" 
+                            alt="<%= user.username %>'s Profile Image" 
+                            width="40px" 
+                            height="40px" 
+                            style="border-radius: 50%; display: none;"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="fallback-profile" style="display: none;">
+                                <span><%= user.firstName[0] %></span>
+                            </div>
                         </a>
                     </div>
 

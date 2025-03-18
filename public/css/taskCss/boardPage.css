@@ -8,11 +8,11 @@
     --deepbackground: #F7F8F9;
     --lightline: #E9EBEF;
     --lightText: #fffc;
-    --btn: #5C54E5;
+    --mainBtn: #5C54E5;
 
     --line: #d7d9dd;
     --more-line: #9a9a9a;
-    --text1: #656f7d;
+    --subText: #202020;
     --color1: #7952b3;
     --color2: #a788d4;
     --color4: #906fc3;
@@ -24,6 +24,7 @@
 
     --cancle: #E53935;
     --grey: rgb(235, 237, 242);
+    --ds-shadow-overlay: 0px 8px 12px #091E4226, 0px 0px 1px #091E424F;
 }
 
 * {
@@ -37,6 +38,9 @@
     display: flex;
     flex-direction: column;
     height: fit-content;
+    width: 95%;
+    position: relative;
+    left: 5%;
 }
 
 .SubName {
@@ -45,33 +49,33 @@
 }
 
 .boardWrap {
-    width: 1470px;
-    overflow-x: scroll;
+    width: 100%;
     background-color: #f8f9fd;
-    height: 76vh;
+    height: fit-content;
+    padding: 0 40px;
 }
 
 .board {
-    width: max-content;
+    width: 100%;
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: flex-start;
-    gap: 50px;
-    margin: 40px 130px 0;
+    gap: 20px;
 }
 
 .board .column {
-    width: 288px;
-    height: 69vh;
-    background: #F6F9F7;
-    padding: 15px;
+    width: 100%;
+    height: 500px;
+    background: white;
     border-radius: 10px;
+    overflow: auto;
     box-shadow: 0 4px 8px 0 rgba(159, 159, 159, 0.2), 0 6px 20px 0 rgba(63, 63, 63, 0.2);
 }
 
 .itemStatus {
     overflow: scroll;
-    height: 51vh;
+    height: 75%;
+    padding: 0 15px;
 }
 
 .status {
@@ -79,7 +83,6 @@
     top: 0;
     opacity: 1;
     margin-bottom: 15px;
-    border-radius: 10px;
 }
 
 .board .column h2 {
@@ -130,26 +133,24 @@ ul {
     background-color: rgba(248, 248, 248, 0.6);
     color: #000000;
     padding: 2px 10px;
-    border-radius: 5px;
+    border-radius: 50%;
     margin-left: auto;
 }
 
 .board .task {
     background: #fff;
-    padding: 20px;
-    margin-bottom: 10px;
-    border: 1px solid #e8e8e8;
-    border-radius: 5px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
     cursor: pointer;
     list-style-type: none;
-
-    box-shadow: 0 1px 2px rgba(0, 0, 0, .055);
+    transition: all 0.3s;
+    cursor: pointer;
 }
 
 .board .task:hover {
-    background-color: #f1f2f4;
-    box-shadow: 0 var(--1px) var(--3px) rgba(0, 0, 0, .106), 0 var(--1px) var(--2px) var(--negative-1px) rgba(0, 0, 0, .106);;
-    transition: 0.3s ease-in-out;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .board .task .dragging {
@@ -205,29 +206,30 @@ ul {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin: 25px 40px 0;
+    margin: 30px 40px 20px;
 }
 
 .topBoard #new-task-btn {
     text-decoration: none;
-    font-weight: 400;
+    font-weight: 300;
     font-size: 16px;
     color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background-color: #7570d6;
+    background-color: var(--mainBtn);
     color: white;
-    border-radius: 5px;
+    border-radius: 10px;
+    padding: 0 15px;
     height: 40px;
-    width: 150px;
+    width: fit-content;
+    opacity: 0.6;
+    transition: all 0.3s;
 }
 
 .topBoard #new-task-btn:hover {
-    background-color: var(--btn);
-    color: white;
-    transition: 0.3s ease-in-out;
+    opacity: 1;
 }
 
 /* Popup */
@@ -541,7 +543,7 @@ input:not(:placeholder-shown) {
 
 .progress-container {
     width: 100%;
-    height: 10px;
+    height: 6px;
     background-color: #e0e0e0;
     border-radius: 5px;
     overflow: hidden;
@@ -581,51 +583,49 @@ input:not(:placeholder-shown) {
     border: 2px dashed #ccc;
 }
 
-.task-due-date {
+#dueDateItem {
     display: flex;
     align-items: center;
-    font-size: 14px;
-    background-color: #4aa25f;
-    color: white;
-    padding: 0 5px;
+    font-size: 13px;
+    background-color: #ebebeb;
+    padding: 2px 10px;
     border-radius: 5px;
-    height: 25px;
+    color: black;
 }
 
-.task-due-date i {
+#dueDateItem i {
     margin-right: 5px;
     font-size: 12px;
-    color: white;
 }
 
 .task-due-date span {
-    font-weight: 400;
-    font-size: 14px;
-    color: white;
+    font-weight: 300;
+    font-size: 12px;
 }
 
 .addleft .fa-magnifying-glass {
     position: absolute;
-    font-size: 20px;
-    transform: translateY(50%);
-    left: 147px;
-    opacity: 0.8;
+    font-size: 18px;
+    top: 25%;
+    left: 5%;
+    opacity: 0.6;
 }
-
-.addleft #filterMemberInput {
+.addleft{
+    position: relative;
+}
+.addleft #filterTaskInput {
     width: 400px;
     height: 40px;
-    border: 2px solid rgba(151, 151, 151, .6);
+    border: 1.5px solid var(--line);
     border-radius: 5px;
     font-size: 16px;
-    font-weight: 400;
-    padding: 5px 45px;
+    font-weight: 300;
+    padding: 5px 50px;
 }
 
-.addleft #filterMemberInput:focus {
+.addleft #filterTaskInput:focus {
     outline: none;
-    border: 2px solid var(--btn);
-    transition: 0.2s;
+    border: 1.5px solid var(--mainBtn);
 }
 
 .PrioIcon {
@@ -672,13 +672,27 @@ input:not(:placeholder-shown) {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
+    justify-content: space-between;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e2e2e2;
 }
 
 .firstSec .taskname {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 400;
+}
+
+.PrioIcon {
+    width: 25px;
+    height: 25px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    i{
+        font-size: 16px;
+    }
 }
 
 .thSection {
@@ -741,17 +755,18 @@ input:not(:placeholder-shown) {
 }
 
 .task .delSec {
-    display: none;
     cursor: pointer;
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
+    display: flex;
     justify-content: center;
     align-items: center;
     color: white;
     background-color: var(--cancle);
     border-radius: 5px;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    transition: all 0.3s;
+    font-size: 12px;
+    opacity: 0.3;
 }
 
 .task:hover .delSec {
@@ -760,9 +775,11 @@ input:not(:placeholder-shown) {
 }
 
 .progressText {
-    font-size: 16px;
-    color: var(--text);
+    font-size: 14px;
+    color: gray;
     margin-top: 10px;
+    font-weight: 300;
+    margin-bottom: 0;
 }
 
 .addStatusBtn {
@@ -1565,22 +1582,45 @@ input:not(:placeholder-shown) {
 }
 
 .addUnder{
-    background-color: #E9EBEE;
-    color: #46546D;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 0px;
+    padding: 10px 0;
+    margin: 0 15px;
+    width: 90%;
+}
+.triggerAdd{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
     border-radius: 10px;
-    margin-top: 5px;
+    font-size: 16px;
+    font-weight: 300;
+    background-color: var(--grey);
+    opacity: 0.7;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+}
+.addUnder:hover{
+    opacity: 1;
 }
 
 #underInput{
-    border: none;
-    padding: 3px 15px;
-    border-radius: 5px;
+    border: 2px solid var(--line);
+    padding: 5px 15px;
+    border-radius: 8px;
+    width: 250px;
+    font-size: 16px;
+    font-weight: 300;
 }
-
+#underInput:focus{
+    background-color: white;
+    box-shadow: none;
+    outline: none;
+    border: 2px solid var(--mainBtn);
+}
 #assignedUsers {
     width: 320px;
     padding: 5px 0 0 10px;
@@ -1664,4 +1704,11 @@ input:not(:placeholder-shown) {
 
 .disabled-opacity {
     opacity: 0.5;
+}
+
+.rightOpt{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
 }

@@ -1,5 +1,4 @@
 // check auth middleware
-const Subject = require('../models/Subject'); 
 const User = require('../models/User');
 
 exports.isLoggedIn = async function (req, res, next) {

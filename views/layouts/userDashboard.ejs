@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แดชบอร์ดสรุปงาน</title>
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.26.0/date-fns.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-timeline"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/2.25.0/date-fns.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/partialsCss/sideNav.css" />
+    <link rel="stylesheet" href="/css/partialsCss/topNavigation.css" />
+    <link rel="stylesheet" href="/css/dashboardCss/dashboard.css" />
+</head>
+<body>
+    <%- include('../partials/topNavigation.ejs') %>
+    <%- include('../partials/sideNavigation.ejs') %>
+
+    <div class="contentWarp">
+        <div class="topSection">
+            <div class="uesrProfile">
+                <img src="<%= user.profileImage %>" 
+                        class="profileImage" 
+                        alt="<%= user.username %>'s Profile Image" 
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="fallback-profile" style="display: none;">
+                    <span>
+                        <%= user.firstName[0] %>
+                    </span>
+                </div>
+            </div>
+            <div class="welcomeText">
+                <h1 class="wel">
+                    <i class="<%= greetingIcon %>"></i>
+                    <%= greeting %>, 
+                    <%= user.firstName %>
+                </h1>
+                <p class="dateText">
+                    <i class="fa-regular fa-calendar"></i>
+                    <%= dateText %>
+                </p>
+            </div>
+        </div>
+
+        <div class="middleSection">
+            <div class="leftSide">
+                <div class="leftTop">
+                    <div class="taskCard">
+                        <div class="headerText">
+                            <div class="titleCardText">
+                                <i class="fa-regular fa-circle-check titleIcon"></i>
+                                ความคืบหน้าของงาน
+                            </div>
+                            <div class="subText">
+                                ภาพรวมของงานของคุณ
+                            </div>
+                        </div>
+                        <div class="progressBarContainer">
+                            <div class="progressBar" id="allTaskProgress">
+                                <div class="progressBar toDo"
+                                    style="width: <%= allTaskCount > 0 ? (statusCounts.toDo / allTaskCount) * 100 : 0 %>%;"
+                                    title="To Do (<%= statusCounts.toDo %>)"></div>
+                                <div class="progressBar inProgress"
+                                    style="width: <%= allTaskCount > 0 ? (statusCounts.inProgress / allTaskCount) * 100 : 0 %>%;"
+                                    title="In Progress (<%= statusCounts.inProgress %>)"></div>
+                                <div class="progressBar needFix"
+                                    style="width: <%= allTaskCount > 0 ? (statusCounts.fix / allTaskCount) * 100 : 0 %>%;"
+                                    title="Need Fix (<%= statusCounts.fix %>)"></div>
+                                <div class="progressBar completed"
+                                    style="width: <%= allTaskCount > 0 ? (statusCounts.finished / allTaskCount) * 100 : 0 %>%;"
+                                    title="Completed (<%= statusCounts.finished %>)"></div>
+                            </div>
+                            <div class="progressLegend">
+                                <% if (statusCounts.toDo > 0) { %>
+                                    <span class="legendItem toDo">● ยังไม่ทำ (<%= statusCounts.toDo %>)</span>
+                                <% } %>
+                                <% if (statusCounts.inProgress > 0) { %>
+                                    <span class="legendItem inProgress">● กำลังทำ (<%= statusCounts.inProgress %>)</span>
+                                <% } %>
+                                <% if (statusCounts.fix > 0) { %>
+                                    <span class="legendItem needFix">● แก้ไข (<%= statusCounts.fix %>)</span>
+                                <% } %>
+                                <% if (statusCounts.finished > 0) { %>
+                                    <span class="legendItem completed">● เสร็จสิ้น (<%= statusCounts.finished %>)</span>
+                                <% } %>
+                            </div>
+                        </div> 
+                        
+                        <div class="countSec">
+                            <div class="countTextWrap">
+                                <div class="countText">
+                                    <span id="count">
+                                        <%= completedCount %>
+                                    </span> งาน
+                                </div>
+                                
+                                <span id="subText">
+                                    <i class="fa-solid fa-check" style="color: #57D9A3;"></i>
+                                    ที่เสร็จสิ้น
+                                </span>
+                            </div>
+                            <div class="countTextWrap">
+                                <div class="countText">
+                                    <span id="count">
+                                        <%= incompletedCount %>
+                                    </span> งาน
+                                </div>
+                                
+                                <span id="subText">
+                                    <i class="fa-regular fa-clock" style="color: #ffab00;"></i>
+                                    ที่เหลืออยู่
+                                </span>
+                            </div>
+                        </div>
+                    </div>  
+                
+                    <div class="attention">
+                        <div class="headerText">
+                            <div class="titleCardText">
+                                <i class='bx bx-error-circle titleIcon' style="font-size: 24px;"></i>
+                                งานที่ต้องการความใส่ใจ
+                            </div>
+                            <div class="subText">
+                                งานเร่งด่วนหรือต้องแก้ไข
+                            </div>
+                        </div>
+                        <div class="taskList">
+                            <% attentionTasks.forEach(task => { %>
+                                <div class="taskItem">
+                                    <span class="attendIcon">
+                                        <i class='bx bx-error-circle' 
+                                            style="color: <%= task.taskPriority === 'urgent' && task.taskStatus === 'fix' ? '#ef4444' : '#f59e0b' %>;"></i>
+                                    </span>
+                                    <div class="taskDetail">
+                                        <span id="attendName"><%= task.taskName %></span>
+                                        <span id="attendItem">
+                                            <% if (task.taskPriority === 'urgent') { %>
+                                                <div id="attenPri">
+                                                    <i class="fa-solid fa-flag"></i>
+                                                    ด่วน
+                                                </div>
+                                            <% } %>
+                                            <% if (task.taskStatus === 'fix') { %>
+                                                <div id="attenStatus">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                    แก้ไข
+                                                </div>
+                                            <% } %>
+                                        </span>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                        <div class="viewTask">
+                            <button id="viewBtn">ดูงานทั้งหมด <i class="fa-solid fa-arrow-up"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="leftBottom">
+                    <div class="title">
+                       <span>
+                            โปรเจกต์ทั้งหมด
+                       </span> 
+                       <div class="createBtn">
+                            <a href="/createProject" id="createBtn"> <i class="fa-solid fa-plus"></i> สร้างโปรเจกต์ใหม่</a>
+                       </div>
+                    </div>
+
+                    <div class="scollText">
+                        คุณสามารถเลื่อนเพื่อดูงานเพิ่มเติมได้ →
+                    </div>
+
+                    <div class="projectContainer">
+                        <% spaces.forEach(space => { %>
+                            <div class="projectItemContainer">
+                                <div class="projectItem" data-link="/space/item/<%= space._id %>/dashboard?period=7day">
+                                    <div class="cover">
+                                        <img src="<%= space.projectCover %>" alt="projectCover" id="projectCover">
+                                    </div>
+                                    <span id="projectName"><%= space.projectName || 'Unnamed Project' %></span>
+
+                                    <div class="projectDetail">
+                                        <div class="projectDetailText">
+                                            <%= space.projectDetail || 'ไม่มีรายละเอียดเพิ่มเติม'%>
+                                        </div>
+                        
+                                        <div class="detailInfo">
+                                            <div class="createDate">
+                                                <i class="fa-regular fa-calendar titleIcon"></i>
+                                                <span><%= dayjs(space.createdAt).format('D MMMM YYYY') %></span>
+                                            </div>
+                                            <div class="member">
+                                                <i class="fa-solid fa-user-group"></i>
+                                                <span><%= space.collaborators.length %> คน </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="projectProgressBarContainer">
+                                        <div class="progressBarWrap">
+                                            <div class="projectProgressBar" id="projectTaskProgress">
+                                                <div class="projectProgressBar toDo"
+                                                    style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.toDo / space.projectAllTaskCount) * 100 : 0 %>%;"
+                                                    title="To Do (<%= space.statusCounts.toDo %>)"></div>
+                                                <div class="projectProgressBar inProgress"
+                                                    style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.inProgress / space.projectAllTaskCount) * 100 : 0 %>%;"
+                                                    title="In Progress (<%= space.statusCounts.inProgress %>)"></div>
+                                                <div class="projectProgressBar needFix"
+                                                    style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.fix / space.projectAllTaskCount) * 100 : 0 %>%;"
+                                                    title="Need Fix (<%= space.statusCounts.fix %>)"></div>
+                                                <div class="projectProgressBar completed"
+                                                    style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.finished / space.projectAllTaskCount) * 100 : 0 %>%;"
+                                                    title="Completed (<%= space.statusCounts.finished %>)"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="projectProgressLegend">
+                                            <span class="projectLegendItem toDo">● ยังไม่ทำ (<%= space.statusCounts.toDo || 0 %>)</span>
+                                            <span class="projectLegendItem inProgress">● กำลังทำ (<%= space.statusCounts.inProgress || 0 %>)</span>
+                                            <span class="projectLegendItem needFix">● แก้ไข (<%= space.statusCounts.fix || 0 %>)</span>
+                                            <span class="projectLegendItem completed">● เสร็จสิ้น (<%= space.statusCounts.finished || 0 %>)</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="allCount">
+                                        <div class="numberCount">
+                                            งานที่มี <%= space.totalTasks %> งาน
+                                        </div>
+                                        <div class="completePercent">
+                                            <%= space.completePercent %>% ที่เสร็จสิ้น
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rightSide">
+                <div class="headerText">
+                    <div class="titleCardText">
+                        <i class='fa-regular fa-calendar titleIcon'></i>
+                        กำหนดส่งงานที่กำลังจะมีขึ้น
+                    </div>
+                </div>
+                <div class="calendaSection">
+                    <div id="calendarItem"></div>
+                </div>
+                <div class="taskListItem">
+                    <div class="taskListHeader">📅 งานที่ต้องส่งวันนี้</div>
+                    <div class="taskListContent">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
+    <script src="/script/mainDashboard/dashboardScript.js"></script>
+</body>
+</html>

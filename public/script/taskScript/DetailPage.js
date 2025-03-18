@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 //status setion ✅
 document.addEventListener('DOMContentLoaded', () => {
+    const statusWrap = document.querySelector('.statusWrap');
     const statusDiv = document.querySelector('.status-div');
     const dropdownContent = document.querySelector('.dropdown-content');
     const statusText = document.querySelector('.status-text');
@@ -193,11 +194,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Toggle dropdown visibility
-    statusDiv.addEventListener('click', (event) => {
+    statusWrap.addEventListener('click', (event) => {
         event.stopPropagation(); // Prevent event bubbling
         toggleDropdown();
     });
 
+    // Apply colors to status options
+    document.querySelectorAll('.status-option').forEach(option => {
+        const status = option.dataset.status;
+        if (statusColors[status]) {
+            option.style.backgroundColor = statusColors[status];
+        }
+    });
     // Hide the dropdown if clicked outside of it
     document.addEventListener('click', (event) => {
         if (!statusDiv.contains(event.target)) {
@@ -260,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // pripriority section ✅
 document.addEventListener('DOMContentLoaded', () => {
+    const priWrap = document.querySelector('.priWrap');
     const priorityDiv = document.querySelector('.priority-div');
     const dropdownContent = document.querySelector('#priority-dropdown-content');
     
@@ -269,8 +278,17 @@ document.addEventListener('DOMContentLoaded', () => {
         low: { color: '#4C9AFF', icon: 'fa-angle-down', text: 'ต่ำ', textColor: '#4C9AFF' },
     };
 
+    // Apply colors to priority options
+    document.querySelectorAll('.priority-option').forEach(option => {
+        const priority = option.dataset.priority;
+        if (priorityMapping[priority]) {
+            option.style.backgroundColor = priorityMapping[priority].color;
+            option.style.color = 'white'; // Ensure text is visible
+        }
+    });
+    
     // Show dropdown when clicked
-    priorityDiv.addEventListener('click', (event) => {
+    priWrap.addEventListener('click', (event) => {
         event.stopPropagation();
         dropdownContent.style.display = dropdownContent.style.display === 'none' ? 'block' : 'none';
     });
@@ -337,15 +355,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize Flatpickr when clicking on the dueDateText
     document.getElementById('dueDateText').addEventListener('click', function () {
+        const dueDateText = document.getElementById('dueDateText');
         const dueDateInput = document.getElementById('dueDateInput');
 
         flatpickr(dueDateInput, {
             locale: "th", // Use Thai locale
             dateFormat: "Y-m-d", // Date format for the input value
             minDate: "today", // Prevent selection of past dates
+            appendTo: dueDateText.parentElement,
+            position: "below",
             onChange: function (selectedDates, dateStr) {
                 const selectedDate = new Date(dateStr);
-                document.getElementById('dueDateText').innerText = formatDateToThai(selectedDate); // Update display
+                dueDateText.innerText = formatDateToThai(selectedDate); // Update display
                 dueDateInput.value = dateStr; // Set the hidden input's value
                 updateDueDate(dateStr); // Send the new due date to the server
             }
@@ -439,13 +460,19 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener("DOMContentLoaded", () => {
     const tagsDisplay = document.getElementById("tagsDisplay");
     const tagsManagementModal = document.getElementById("tagsManagementModal");
+    const newTagInput = document.getElementById("newTagInput");
+    const allTagsContainer = document.getElementById("allTagsContainer");
+    const showTaskTags = document.querySelector(".showTaskTags");
+    const visibleTagsContainer = document.querySelector(".visible-tags");
+    const extraTagsIndicator = document.getElementById("extraTagsIndicator");
+    const taskId = document.getElementById('task-id').dataset.taskId;
 
     // Function to toggle the modal's visibility
     const toggleModal = () => {
         if (tagsManagementModal.style.display === "block") {
-            tagsManagementModal.style.display = "none"; // Hide modal
+            tagsManagementModal.style.display = "none";
         } else {
-            tagsManagementModal.style.display = "block"; // Show modal
+            tagsManagementModal.style.display = "block";
         }
     };
 
@@ -454,26 +481,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Close the modal when clicking outside it
     window.addEventListener("click", (event) => {
-        if (
-            !tagsDisplay.contains(event.target) && // Not the tagsDisplay
-            !tagsManagementModal.contains(event.target) // Not inside the modal
-        ) {
-            tagsManagementModal.style.display = "none"; // Hide modal
+        if (!tagsDisplay.contains(event.target) && !tagsManagementModal.contains(event.target)) {
+            tagsManagementModal.style.display = "none";
         }
     });
 
     // Prevent modal from closing when interacting inside
     tagsManagementModal.addEventListener("click", (event) => {
-        event.stopPropagation(); // Prevent click propagation
+        event.stopPropagation();
     });
-
-    const newTagInput = document.getElementById("newTagInput");
-    const allTagsContainer = document.getElementById("allTagsContainer");
-    const showTaskTags = document.querySelector(".showTaskTags");
-    const visibleTagsContainer = document.querySelector(".visible-tags");
-    const extraTagsIndicator = document.getElementById("extraTagsIndicator");
-
-    const taskId = document.getElementById('task-id').dataset.taskId; 
 
     // Function to get a random pastel color
     function getRandomPastelColor() {
@@ -521,7 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 allTagsContainer.appendChild(tagItem);
                 newTagInput.value = ""; // Clear the input
-                console.log("New tag created:", newTag);
+                updateVisibleTags();
             } else {
                 console.error("Failed to create tag:", result.message);
             }
@@ -585,8 +601,8 @@ document.addEventListener("DOMContentLoaded", () => {
     
                     allTagsContainer.appendChild(tagItem);
                 }
-    
-                // Clear the input field
+                showTaskTags.appendChild(tagElement);
+                updateVisibleTags();
                 newTagInput.value = "";
                 console.log("New tag added to UI:", tagName);
             } else {
@@ -601,44 +617,37 @@ document.addEventListener("DOMContentLoaded", () => {
     newTagInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
             const tagName = newTagInput.value.trim();
-
-            // Create and add the tag to the task
             createAndAddTagToTask(tagName, taskId);
-
-            // Clear the input field after adding the tag
             newTagInput.value = "";
-
-            // Reset the real-time search logic to show all tags again
-            resetTagSearch();
+            resetTagSearch(); // Reset the search logic
         }
     });
 
     // Real-time search for tags
     newTagInput.addEventListener("input", () => {
-        const searchValue = newTagInput.value.toLowerCase(); // Get the input value and convert to lowercase
-    
-        // Get all tag elements in the container
+        const searchValue = newTagInput.value.toLowerCase();
         const tagItems = allTagsContainer.querySelectorAll(".tag-item");
-    
+
         tagItems.forEach(tag => {
-            const tagName = tag.dataset.tagName; // Get the tag's name from the data attribute
-    
-            // Show or hide tags based on whether their name includes the search value
+            const tagName = tag.dataset.tagName;
             if (tagName.includes(searchValue)) {
                 tag.style.display = "inline-block"; // Show the tag
             } else {
                 tag.style.display = "none"; // Hide the tag
             }
         });
+
+        // Update visible tags display based on filtered tags
+        updateVisibleTags();
     });
 
     const resetTagSearch = () => {
-        // Get all tag elements in the container
         const tagItems = allTagsContainer.querySelectorAll(".tag-item");
-    
         tagItems.forEach(tag => {
-            tag.style.display = "inline-block"; // Ensure all tags are visible again
+            tag.style.display = "inline-block"; // Show all tags
         });
+
+        updateVisibleTags(); // Update the visible tags
     };
 
     // Function to update the visible tags display
@@ -659,13 +668,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const tagElement = document.createElement("span");
             tagElement.classList.add("tag-item");
             tagElement.style.backgroundColor = tag.color;
+            tagElement.style.gap = "5px";
             tagElement.innerText = tag.tagName;
 
             visibleTagsContainer.appendChild(tagElement);
         });
 
         const extraTagsCount = taskTags.length - 3;
-        extraTagsIndicator.innerText = extraTagsCount > 0 ? `+${extraTagsCount}` : '';
+        if (extraTagsCount > 0) {
+            extraTagsIndicator.innerText = `+${extraTagsCount}`;
+            extraTagsIndicator.style.display = "inline";
+        } else {
+            extraTagsIndicator.style.display = "none";
+        }
     };
 
     // Handle tag selection (on click)
@@ -780,11 +795,25 @@ document.addEventListener("DOMContentLoaded", () => {
     createTagButton.addEventListener("click", createNewTag);
 });
 
-// User section
+// User section ✅
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchAssigned');
     const assignedItems = document.querySelectorAll('.assigned-item');
     const allAssignedContainer = document.getElementById("allAssignedContainer");
+    const assignedDisplay = document.getElementById('assignedDisplay');
+    const assignedManagementModal = document.getElementById('assignedManagementModal');
+
+    // Open modal when clicking the detail-data section
+    assignedDisplay.addEventListener('click', () => {
+        assignedManagementModal.classList.toggle('hidden');
+    });
+
+    // Close modal when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!assignedManagementModal.contains(e.target) && !assignedDisplay.contains(e.target)) {
+            assignedManagementModal.classList.add('hidden');
+        }
+    });
 
     // Search functionality for assigned users
     searchInput.addEventListener('input', () => {
@@ -821,8 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok) {
-                alert("User assigned successfully!");
-                // Optional: Update UI dynamically
+                location.reload(); 
             } else {
                 alert(result.error || "An error occurred.");
             }
@@ -850,7 +878,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const result = await response.json();
                     if (response.ok) {
-                        alert(result.message);
                         location.reload(); 
                     } else {
                         alert(result.error);
@@ -863,7 +890,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
 
 // Clear Activity Log ✅
 document.getElementById('clearLogsButton').addEventListener('click', async () => {
@@ -894,4 +920,36 @@ document.getElementById('clearLogsButton').addEventListener('click', async () =>
             alert('เกิดข้อผิดพลาดในการลบกิจกรรม');
         }
     }
+});
+
+// show detail
+document.addEventListener("DOMContentLoaded", function() {
+    const detailHeader = document.querySelector(".detailHeader");
+    const gridContainer = document.querySelector(".grid-container");
+    const moreIcon = document.querySelector(".moreIcon i");
+    const taskSummary = document.querySelector(".task-summary");
+    
+    // Initially set the grid-container as visible
+    let isVisible = true;
+
+    detailHeader.addEventListener("click", function() {
+        if (isVisible) {
+            // Hide the grid container by applying the hidden class
+            gridContainer.classList.add("hidden");
+            taskSummary.classList.remove("hidden");
+            moreIcon.classList.remove("up");
+            moreIcon.classList.add("down");
+            detailHeader.style.borderRadius = "5px"; 
+        } else {
+            // Show the grid container by removing the hidden class
+            gridContainer.classList.remove("hidden");
+            taskSummary.classList.add("hidden");
+            moreIcon.classList.remove("down");
+            moreIcon.classList.add("up");
+            detailHeader.style.borderRadius = ""; 
+        }
+
+        // Toggle the visibility state
+        isVisible = !isVisible;
+    });
 });

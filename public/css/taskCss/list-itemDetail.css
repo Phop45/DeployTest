@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
 :root {
     --topnav: #323450;
     --lighttopnav: #474962;
@@ -11,7 +12,7 @@
 
     --line: #d7d9dd;
     --more-line: #9a9a9a;
-    --text1: #656f7d;
+    --subText: #202020;
     --color1: #7952b3;
     --color2: #a788d4;
     --color4: #906fc3;
@@ -22,7 +23,7 @@
     --notYet: #c3cad5;
 
     --cancle: #E53935;
-    --grey: rgb(235, 237, 242) ;
+    --grey: rgb(235, 237, 242);
     --ds-shadow-overlay: 0px 8px 12px #091E4226, 0px 0px 1px #091E424F;
 }
 
@@ -31,9 +32,9 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-  }
+}
 
-.topOption{
+.topOption {
     width: 100%;
     height: 8vh;
     display: flex;
@@ -43,36 +44,42 @@
     justify-content: space-between;
     border-bottom: 1.5px solid var(--line);
 }
-.breadcomes a{
+
+.breadcomes a {
     text-decoration: none;
     font-size: 14px;
     padding: 10px;
     border-radius: 5px;
     color: gray;
 }
-.breadcomes a:hover{
+
+.breadcomes a:hover {
     background-color: var(--btn);
     color: white;
     transition: 0.3s;
 }
-.breadcomes .active-detail{
+
+.breadcomes .active-detail {
     background-color: var(--btn);
     color: white;
 }
-.breadcomes span{
+
+.breadcomes span {
     margin: 0 5px;
 }
 
-.btn-option{
+.btn-option {
     display: flex;
     flex-direction: row;
     align-items: center;
 }
-.btn-option p{
+
+.btn-option p {
     margin: 0;
     margin-right: 20px;
     font-size: 14px;
 }
+
 #close_btn_link {
     display: inline-flex;
     align-items: center;
@@ -86,48 +93,54 @@
     font-size: 1.2em;
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
+
 #close_btn_link:hover {
     background-color: #d04848;
     transform: scale(1.1);
     cursor: pointer;
 }
+
 /* Top Navigation */
 
-.taskSection{
+.taskSection {
     width: 100%;
-    height: 84vh;
+    height: 85vh;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    position: relative; 
+    position: relative;
 }
 
 /* Subtask */
-.subtask{
+.subtask {
     width: 15%;
     display: flex;
     flex-direction: column;
     border-right: 1.5px solid var(--line);
 }
-.subtask .textTopic{
+
+.subtask .textTopic {
     padding: 20px;
     border-bottom: 1.5px solid var(--line);
 }
-.subtask .textTopic h1{
+
+.subtask .textTopic h1 {
     font-size: 18px;
     margin: 0;
 }
-.subtaskItem{
+
+.subtaskItem {
     background-color: #F7F8F9;
     height: 100%;
 }
-.subtaskItem .item{
+
+.subtaskItem .item {
     list-style: none;
     padding-left: 0;
     margin-bottom: 0;
 }
 
-.subtaskItem .itemDetail{
+.subtaskItem .itemDetail {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -136,54 +149,66 @@
     cursor: pointer;
     transition: 0.3s;
 }
+
 .subtaskItem .itemDetail:hover,
-.addSubtask:hover{
+.addSubtask:hover {
     background-color: var(--grey);
 }
-.subtaskItem .itemDetail .subName{
+
+.subtaskItem .itemDetail .subName {
     margin-left: 10px;
     font-size: 14px;
 }
-.subtaskItem .itemDetail .subtask-options{
+
+.subtaskItem .itemDetail .subtask-options {
     margin-left: auto;
 }
-.subtaskItem .itemDetail .subtask-options i{
+
+.subtaskItem .itemDetail .subtask-options i {
     font-size: 16px;
     color: gray;
 }
-.subtaskItem .itemDetail .dropdown-toggle{
+
+.subtaskItem .itemDetail .dropdown-toggle {
     display: flex;
     align-items: center;
     text-decoration: none;
     padding: 5px;
     border-radius: 5px;
 }
-.subtaskItem .itemDetail .dropdown-toggle:hover{
+
+.subtaskItem .itemDetail .dropdown-toggle:hover {
     color: black;
 }
-.subtaskItem .itemDetail .dropdown-toggle::after{
+
+.subtaskItem .itemDetail .dropdown-toggle::after {
     display: none !important;
 }
-.subtaskItem #addSubtask{
+
+.subtaskItem #addSubtask {
     border: none;
     margin-left: 7px;
     background-color: transparent;
 }
-.subtaskItem #addSubtask:placeholder{
+
+.subtaskItem #addSubtask:placeholder {
     font-size: 16px;
 }
-.subtaskItem #addSubtask:focus{
+
+.subtaskItem #addSubtask:focus {
     outline: none;
     font-size: 14px;
     width: 40px;
 }
-.addSubtask{
+
+.addSubtask {
     padding: 10px 0;
     cursor: pointer;
     position: relative;
     overflow: hidden;
 }
-.addSubtask #addSub-btn{
+
+.addSubtask #addSub-btn {
     margin-left: 30px;
     width: 250px;
     border: none;
@@ -196,17 +221,20 @@
     z-index: 2;
 }
 
-.subtask-options .dropdown-menu{
+.subtask-options .dropdown-menu {
     border-radius: 5px;
     border: 1px solid var(--line);
 }
-.subtask-options .dropdown-menu .dropdown-item{
+
+.subtask-options .dropdown-menu .dropdown-item {
     padding: 10px 20px;
     font-size: 14px;
 }
-.subtask-options .dropdown-menu .dropdown-item i{
+
+.subtask-options .dropdown-menu .dropdown-item i {
     margin-right: 10px;
 }
+
 #subtaskForm {
     display: none;
     flex-direction: row;
@@ -215,39 +243,47 @@
     width: 100%;
     transition: all 0.3s ease-in-out;
 }
+
 @keyframes slideDown {
     0% {
         transform: translateY(-100%);
         opacity: 0;
     }
+
     100% {
         transform: translateY(0);
         opacity: 1;
     }
 }
+
 #addSubtask {
     transition: all 0.3s ease-in-out;
 }
+
 .addSubtask-container {
     position: relative;
     padding: 10px 0;
 }
+
 .show-animation {
     animation: slideDown 0.4s forwards;
 }
+
 /* Subtask */
 
 
 /* detail */
-.detail{
+.detail {
     width: 65%;
     height: 100%;
     padding: 30px 50px;
     position: relative;
-    overflow: scroll;
+    overflow-y: scroll;
+    overflow-x: hidden;
     scroll-behavior: smooth;
 }
-.firstSec{
+
+.firstSec {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -256,53 +292,72 @@
 }
 
 #checkTask {
-    padding: 10px 20px; /* Adjust padding as needed */
+    padding: 10px 20px;
+    /* Adjust padding as needed */
     border: none;
     background-color: #4CAF50;
     color: white;
     border-radius: 5px;
     display: flex;
-    align-items: center; /* Center items vertically */
-    justify-content: center; /* Center items horizontally */
+    align-items: center;
+    /* Center items vertically */
+    justify-content: center;
+    /* Center items horizontally */
     position: relative;
     cursor: pointer;
-    overflow: hidden; /* Prevent overflow during animation */
-    width: 90px; /* Initial width */
+    overflow: hidden;
+    /* Prevent overflow during animation */
+    width: 90px;
+    /* Initial width */
     transition: width 0.6s cubic-bezier(0.25, 0.8, 0.5, 1), background-color 0.3s ease;
     opacity: 0.7;
 }
 
 #checkTask i {
-    position: absolute; /* Remove it from the flow */
-    left: 10px; /* Position the icon at the left end */
-    opacity: 0; /* Initially hidden */
-    visibility: hidden; /* Prevent it from occupying space */
-    transform: translateX(-10px); /* Start slightly off-screen to the left */
+    position: absolute;
+    /* Remove it from the flow */
+    left: 10px;
+    /* Position the icon at the left end */
+    opacity: 0;
+    /* Initially hidden */
+    visibility: hidden;
+    /* Prevent it from occupying space */
+    transform: translateX(-10px);
+    /* Start slightly off-screen to the left */
     transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.5, 1), opacity 0.5s ease;
 }
 
 /* Button expands and icon slides in on hover */
 #checkTask:hover {
-    width: 130px; /* Expanded width */
-    background-color: #45a049; /* Optional background change */
+    width: 130px;
+    /* Expanded width */
+    background-color: #45a049;
+    /* Optional background change */
     opacity: 1;
 }
 
 #checkTask:hover i {
-    transform: translateX(80%); /* Slide to its original position */
-    opacity: 1; /* Make visible */
-    visibility: visible; /* Ensure visibility */
+    transform: translateX(80%);
+    /* Slide to its original position */
+    opacity: 1;
+    /* Make visible */
+    visibility: visible;
+    /* Ensure visibility */
 }
-#checkTask span{
+
+#checkTask span {
     padding-left: 0;
     font-size: 14px;
 }
-#checkTask:hover span{
+
+#checkTask:hover span {
     padding-left: 35px;
     transition: 0.5s cubic-bezier(0.25, 0.8, 0.5, 1), opacity 0.5s ease;
 }
+
 #checkTask span {
-    transition: opacity 0.3s ease; /* Smooth transition for the text */
+    transition: opacity 0.3s ease;
+    /* Smooth transition for the text */
 }
 
 .taskName {
@@ -326,13 +381,15 @@
 #taskName:focus {
     outline: none;
 }
-#updateName{
+
+#updateName {
     display: flex;
     flex-direction: row;
     align-items: center;
     width: 100%;
 }
-.btnOption{
+
+.btnOption {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -340,7 +397,8 @@
     margin-left: 10px;
     gap: 15px;
 }
-#saveButton{
+
+#saveButton {
     width: 35px;
     height: 35px;
     border: none;
@@ -351,12 +409,13 @@
     cursor: pointer;
     opacity: 0.7;
     box-shadow: var(--ds-shadow-overlay, 0 4px 8px -2px #091e4240, 0 0 1px #091e424f);
-    transition: width 0.3s, 
-                height 0.3s,
-                font-size 0.3s,
-                opacity 0.3s;
+    transition: width 0.3s,
+        height 0.3s,
+        font-size 0.3s,
+        opacity 0.3s;
 }
-#cancelButton{
+
+#cancelButton {
     width: 35px;
     height: 35px;
     border: none;
@@ -367,78 +426,91 @@
     cursor: pointer;
     opacity: 0.7;
     box-shadow: var(--ds-shadow-overlay, 0 4px 8px -2px #091e4240, 0 0 1px #091e424f);
-    transition: width 0.3s, 
-                height 0.3s,
-                font-size 0.3s,
-                opacity 0.3s;
+    transition: width 0.3s,
+        height 0.3s,
+        font-size 0.3s,
+        opacity 0.3s;
 }
+
 #saveButton:hover,
-#cancelButton:hover{
+#cancelButton:hover {
     width: 40px;
     height: 40px;
     font-size: 16px;
     opacity: 1;
 }
 
-.previous-name {
-    color: red;
-    font-weight: 400;
-}
-
-.new-name {
-    color: green;
-    font-weight: 400;
-}
-
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px 70px;
-    margin-top: 20px;
+    gap: 20px;
+    padding: 30px;
+    border: 1px solid var(--line);
+    border-radius: 0 0 5px 5px;
+    border-top: none;
+    transition: max-height 0.5s ease-in-out; 
+}
+.grid-container.hidden {
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+    display: none;
 }
 
 .grid-item {
     display: flex;
-    flex-direction: row; 
+    flex-direction: row;
     align-items: center;
     width: 100%;
 }
 
 .detail-name {
-    font-size: 14px;
+    font-size: 16px;
     width: 40%;
-    font-weight: 400;
-    color: var(--text1);
+    font-weight: 300;
+    color: var(--subText);
     display: flex;
     align-items: center;
+    transition: all 0.3s;
+}
+
+.detail-name i {
+    font-size: 16px;
+    width: 20px;
+    height: 20px;
+    color: #838383;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-right: 10px;
 }
-.detail-name i{
-    font-size: 18px;
-    margin-right: 10px;
-    color: var(--text1);
-}
-.detail-data{
+
+.detail-data {
     font-weight: 300;
     height: 50px;
-    width: 55%;
+    width: 60%;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
     display: flex;
     align-items: center;
-    padding-left: 20px;
+    padding-left: 10px;
+    transition: all 0.3s;
+    position: relative;
 }
-.detail-data:hover{
+
+.detail-data:hover {
     background-color: var(--grey);
-    transition: 0.3s;
 }
-.detail-data img{
+
+.detail-data img {
     width: 40px;
     height: 40px;
     object-fit: cover;
     border-radius: 50%;
+    margin-left: 5px;
 }
+
 .status-btn {
     background-color: #1090e0;
     color: white;
@@ -448,15 +520,20 @@
     cursor: pointer;
     font-weight: 300;
 }
-#updateDueDateForm{
+
+#updateDueDateForm {
     width: 55%;
+    position: relative;
 }
-#dueDateText{
+
+#dueDateText {
     width: 100%;
+    font-weight: 300;
 }
+
 .description-box {
     position: relative;
-    margin-top: 30px;
+    margin-top: 50px;
 }
 
 .description-box textarea {
@@ -468,10 +545,13 @@
     resize: none;
     font-size: 16px;
     font-weight: 300;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
-.description-box textarea:focus{
+
+.description-box textarea:focus {
     outline: none;
 }
+
 .expand-icon {
     position: absolute;
     top: 10px;
@@ -487,7 +567,7 @@
 
 /* Full Page View */
 .full-page-view {
-    display: none; 
+    display: none;
     position: absolute;
     top: 0;
     left: 0;
@@ -497,16 +577,22 @@
     color: black;
     padding: 20px;
     z-index: 1000;
-    overflow-y: auto; /* Allow scrolling if content is tall */
-    opacity: 0; /* Initial opacity */
-    transform: translateY(20px); /* Start slightly below */
-    transition: opacity 0.3s ease, transform 0.3s ease; /* Smooth transition */
+    overflow-y: auto;
+    /* Allow scrolling if content is tall */
+    opacity: 0;
+    /* Initial opacity */
+    transform: translateY(20px);
+    /* Start slightly below */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    /* Smooth transition */
 }
 
 .full-page-view.show {
-    display: block; /* Show block on 'show' class */
-    opacity: 1; /* Fully visible */
-    transform: translateY(0); 
+    display: block;
+    /* Show block on 'show' class */
+    opacity: 1;
+    /* Fully visible */
+    transform: translateY(0);
     padding: 50px;
     height: 100%;
 }
@@ -527,16 +613,19 @@
     gap: 15px;
     opacity: 0.7;
 }
-.full-page-view button:hover{
+
+.full-page-view button:hover {
     opacity: 1;
     transition: 0.2s;
 }
-.full-content .taskName{
+
+.full-content .taskName {
     font-size: 22px;
     color: black;
     margin-top: 30px;
 }
-.full-content #taskDescription{
+
+.full-content #taskDescription {
     width: 100%;
     height: 50vh;
     border: none;
@@ -544,16 +633,19 @@
     font-size: 16px;
     resize: none;
 }
-.full-content #taskDescription:focus{
+
+.full-content #taskDescription:focus {
     outline: none;
 }
 
-.subtaskSec{
+.subtaskSec {
     margin-top: 20px;
 }
-.subtaskSec .subText{
+
+.subtaskSec .subText {
     font-size: 20px;
 }
+
 .add-subtask-btn-detail {
     color: gray;
     background-color: transparent;
@@ -567,41 +659,49 @@
     margin-top: 10px;
 
 }
-.add-subtask-btn-detail:hover{
+
+.add-subtask-btn-detail:hover {
     background-color: var(--btn);
     color: white;
     border: 1px solid transparent;
     transition: 0.3s;
 }
-#addSubtaskBtnMainNew{
+
+#addSubtaskBtnMainNew {
     font-size: 14px;
 }
+
 #subtaskForm {
     margin-top: 10px;
     width: 100%;
 }
-#subtaskFormMainNew{
+
+#subtaskFormMainNew {
     width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
-    margin-top: 10px;   
+    margin-top: 10px;
 }
-#subtaskNameInputMainNew{
+
+#subtaskNameInputMainNew {
     width: 70%;
     border: 1px solid var(--line);
     border-radius: 5px;
     padding: 10px 15px;
 }
-#subtaskNameInputMainNew:focus{
+
+#subtaskNameInputMainNew:focus {
     outline: none;
 }
-#subtaskNameInputMainNew::placeholder{
+
+#subtaskNameInputMainNew::placeholder {
     font-size: 14px;
 }
-.assigneeInputNew{
+
+.assigneeInputNew {
     width: 46px;
     height: 46px;
     padding-left: 5px;
@@ -611,66 +711,87 @@
     justify-content: center;
     align-items: center;
     flex-shrink: 0;
-    position: relative; /* Needed for absolute positioning of images */
-    transition: width 0.3s ease; /* Transition for expanding */
+    position: relative;
+    /* Needed for absolute positioning of images */
+    transition: width 0.3s ease;
+    /* Transition for expanding */
 }
+
 .assigneeInputNew.expanded {
-    border-radius: 10px; 
+    border-radius: 10px;
     display: flex;
     justify-content: center;
 }
-.assigneeInputNew.expanded i{
+
+.assigneeInputNew.expanded i {
     display: none;
 }
-.assigneeInputNew i{
+
+.assigneeInputNew i {
     font-size: 20px;
 }
-.assigneeInputNew:hover{
+
+.assigneeInputNew:hover {
     background-color: var(--btn);
     border: 1px solid transparent;
     transition: 0.3s;
 }
-.assigneeInputNew:hover .assignee-nav-link{
+
+.assigneeInputNew:hover .assignee-nav-link {
     color: white;
 }
-.assignee-nav-link{
+
+.assignee-nav-link {
     display: flex;
     align-items: center;
     text-decoration: none;
     color: gray;
 }
-.assignee-nav-link::after{
+
+.assignee-nav-link::after {
     display: none !important;
 }
-.assigneeInputNew .dropdown-item{
+
+.assigneeInputNew .dropdown-item {
     padding: 15px;
 }
-.assigneeInputNew .dropdown-item img{
+
+.assigneeInputNew .dropdown-item img {
     width: 35px;
     height: 35px;
     object-fit: cover;
     border-radius: 50%;
     margin-right: 5px;
 }
-.assigneeInputNew .dropdown-menu.show{
+
+.assigneeInputNew .dropdown-menu.show {
     margin-left: -15px !important;
     margin-top: 15px !important;
 }
+
 .selected-assignees {
-    margin-left: 5px; /* Adjust to align with the left padding */
-    justify-content: center;/* Center vertically */
-    display: flex; /* Use flexbox to arrange images */
+    margin-left: 5px;
+    /* Adjust to align with the left padding */
+    justify-content: center;
+    /* Center vertically */
+    display: flex;
+    /* Use flexbox to arrange images */
 }
 
 .selected-assignees img {
-    width: 30px; /* Size of selected images */
-    height: 30px; /* Maintain square aspect ratio */
-    border-radius: 50%; /* Circular shape */
-    border: 2px solid white; /* Optional: add a border */
-    margin-left: -10px; /* Overlapping effect */
+    width: 30px;
+    /* Size of selected images */
+    height: 30px;
+    /* Maintain square aspect ratio */
+    border-radius: 50%;
+    /* Circular shape */
+    border: 2px solid white;
+    /* Optional: add a border */
+    margin-left: -10px;
+    /* Overlapping effect */
 }
 
-.dueDateInputNew{
+.dueDateInputNew {
     width: 46px;
     height: 46px;
     border: 1px solid var(--line);
@@ -683,25 +804,33 @@
     overflow: hidden;
     flex-shrink: 0;
 }
-.dueDateInputNew:hover{
+
+.dueDateInputNew:hover {
     background-color: var(--btn);
     border: 1px solid transparent;
     transition: 0.3s;
 }
-.dueDateInputNew:hover #calendarIcon{
-    color: white;   
+
+.dueDateInputNew:hover #calendarIcon {
+    color: white;
 }
+
 .dueDateInputNew.expanded {
-    width: 130px; /* Expand to fit the date */
-    border-radius: 10px; /* Change the shape when expanded */
+    width: 130px;
+    /* Expand to fit the date */
+    border-radius: 10px;
+    /* Change the shape when expanded */
 }
-.dueDateInputNew.expanded #calendarIcon{
+
+.dueDateInputNew.expanded #calendarIcon {
     left: 0;
     margin-left: 15px;
 }
-.dueDateInputNew.expanded:hover #dueDateInputNew{
+
+.dueDateInputNew.expanded:hover #dueDateInputNew {
     color: white;
 }
+
 .dueDateInputNew i {
     position: absolute;
     top: 50%;
@@ -711,17 +840,21 @@
     z-index: 1;
     cursor: pointer;
 }
+
 .dueDateInputNew #dueDateInputNew {
     border: none;
     background: transparent;
-    padding-left: 45px; /* Space for the icon */
+    padding-left: 45px;
+    /* Space for the icon */
     width: 100%;
     transition: all 0.3s ease;
-    opacity: 0; /* Initially hidden */
+    opacity: 0;
+    /* Initially hidden */
 }
 
 .dueDateInputNew.expanded #dueDateInputNew {
-    opacity: 1; /* Show when expanded */
+    opacity: 1;
+    /* Show when expanded */
     margin-left: 5px;
     font-size: 14px;
 }
@@ -741,11 +874,13 @@
     font-size: 14px;
     font-weight: 300;
 }
-#addSubtaskNew:hover{
+
+#addSubtaskNew:hover {
     background-color: var(--btn);
     transition: 0.3s;
 }
-#cancelSubtaskNew{
+
+#cancelSubtaskNew {
     width: 10%;
     padding: 10px;
     border: none;
@@ -757,7 +892,8 @@
     font-size: 14px;
     font-weight: 300;
 }
-#cancelSubtaskNew:hover{
+
+#cancelSubtaskNew:hover {
     background-color: var(--cancle);
     color: white;
     transition: 0.3s;
@@ -767,120 +903,164 @@
 .subtask-table {
     margin-top: 20px;
 }
-#subtaskTableNew{
+
+#subtaskTableNew {
     width: 100%;
     border-collapse: collapse;
     border: 1px solid var(--line);
 }
-#subtaskTableNew thead{
+
+#subtaskTableNew thead {
     background-color: var(--btn);
 }
-#subtaskTableNew thead th{
+
+#subtaskTableNew thead th {
     color: white;
     font-weight: 400;
     font-size: 14px;
 }
-#subtaskTableNew tbody td{
+
+#subtaskTableNew tbody td {
     font-weight: 300;
     font-size: 14px;
 }
-#subtaskTableNew th:first-child{
+
+#subtaskTableNew th:first-child {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 44.5px;
 }
-#subtaskTableNew .task-row .inputCheck{
+
+#subtaskTableNew .task-row .inputCheck {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 55.5px;
 }
-th, td {
+
+th,
+td {
     padding: 10px;
     text-align: left;
 }
-td img:first-child{
+
+td img:first-child {
     height: 35px;
     width: 35px;
     border-radius: 50%;
     margin-left: 0;
 }
-td img{
+
+td img {
     margin-left: -15px;
     height: 35px;
     width: 35px;
     border-radius: 50%;
     border: 2px solid white;
 }
+
 .statusWrape {
-    background-color: #6EACDA; /* Default background color */
+    background-color: #6EACDA;
+    /* Default background color */
     padding: 5px 10px;
     width: fit-content;
     border-radius: 5px;
     color: white;
-    transition: background-color 0.3s; /* Smooth transition for background color */
+    transition: background-color 0.3s;
+    /* Smooth transition for background color */
 }
 
 .statusWrape.completed {
-    background-color: #4CAF50; /* Background color for completed tasks */
+    background-color: #4CAF50;
+    /* Background color for completed tasks */
 }
-.task-row:hover{
+
+.task-row:hover {
     background-color: var(--grey);
     transition: 0.3s;
     cursor: pointer;
 }
+
 .flatpickr-input {
     z-index: 9999;
     left: 950px !important;
 }
-#dueDateInput{
-    left: 250px;
-    margin-top: 10px;
-}
-#dueTimeSelect{
+
+#dueDateInput {  
     width: 100%;
-    font-size: 14px;
+    position: absolute;
+    top: 10px; /* Position the calendar directly under the dueDateText */
+    left: 0;
+    z-index: 10;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: none; /* Hide by default */
+}
+#dueDateInput.show {
+    display: block;
+}
+
+#dueTimeSelect {
+    width: 100%;
+    font-size: 16px;
     font-weight: 300;
     border: none;
     background-color: transparent;
-    -webkit-appearance: none;  /* Safari/Chrome */
-    -moz-appearance: none;     /* Firefox */
+    -webkit-appearance: none;
+    /* Safari/Chrome */
+    -moz-appearance: none;
+    /* Firefox */
     appearance: none;
     outline: none;
     cursor: pointer;
-    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-y: auto;
+    /* Enable vertical scrolling */
     max-height: 150px;
 }
-#dueTimeSelect:focus{
+.flatpickr-calendar{
+    top: 50px !important;
+}
+
+#dueTimeSelect:focus {
     outline: none;
 }
-#dueTimeSelect::after{
+
+#dueTimeSelect::after {
     display: none;
 }
+
 .custom-select-container {
     position: relative;
     width: 100%;
-    max-width: 300px; /* Adjust based on your layout */
+    max-width: 300px;
+    /* Adjust based on your layout */
     border: none;
     background-color: transparent;
     font-size: 16px;
     font-weight: 300;
 }
+
 #dueTimeSelect option {
     overflow-y: auto;
     max-height: 150px;
-    scroll-behavior: smooth; /* Smooth scrolling for better UX */
-    padding-right: 10px; /* Add some padding for alignment */
+    scroll-behavior: smooth;
+    /* Smooth scrolling for better UX */
+    padding-right: 10px;
+    /* Add some padding for alignment */
 }
-.taskPriority{
+
+.taskPriority {
     padding-bottom: 0;
     font-size: 14px;
 }
-.nav-item.dropdown .nav-link{
+
+.nav-item.dropdown .nav-link {
     font-size: 14px;
     color: black;
 }
+
 /* Hide the default arrow in MacOS */
 .custom-select-container::after {
     content: "";
@@ -889,50 +1069,74 @@ td img{
     right: 10px;
     width: 10px;
     height: 10px;
-    background-image: url('data:image/svg+xml;base64,<encoded-arrow-image>'); /* Custom arrow image */
+    background-image: url('data:image/svg+xml;base64,<encoded-arrow-image>');
+    /* Custom arrow image */
     background-size: contain;
     transform: translateY(-50%);
     pointer-events: none;
 }
-.deleteSubtask{
+
+.deleteSubtask {
     font-weight: 20px;
     opacity: 0.7;
     cursor: pointer;
 }
-.deleteSubtask:hover{
+
+.deleteSubtask:hover {
     color: var(--cancle);
     transition: 0.3s;
     opacity: 1;
 }
+
 /* detail */
 
 /* activity */
-.activity{
+.activity {
     width: 35%;
     height: 100%;
     background-color: #F7F8F9;
     border-left: 1.5px solid var(--line);
 }
-.activity .textTopic{
+
+.activity .textTopic {
     background-color: white;
     padding: 20px;
     border-bottom: 1.5px solid var(--line);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 }
-.activity .textTopic h1{
+
+.activity .textTopic h1 {
     font-size: 18px;
     margin: 0;
 }
-.messageAct{
-   padding: 20px; 
-   font-weight: 300;
-   font-size: 14px;
-   max-height: 550px;
-   overflow: scroll;
+
+#clearLogsButton{
+    border: 1px solid var(--grey);
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    opacity: 0.5;
+    transition: all 0.3;
 }
+#clearLogsButton{
+    opacity: 1;
+}
+
+.messageAct {
+    padding: 20px;
+    font-weight: 300;
+    font-size: 14px;
+    max-height: 550px;
+    overflow: scroll;
+}
+
 /* activity */
 
 /* subtask full view*/
-.full-subtask-page-view{
+.full-subtask-page-view {
     display: none;
     position: absolute;
     top: 0;
@@ -943,16 +1147,22 @@ td img{
     color: black;
     padding: 20px;
     z-index: 1000;
-    overflow-y: auto; /* Allow scrolling if content is tall */
-    opacity: 0; /* Initial opacity */
-    transform: translateY(20px); /* Start slightly below */
-    transition: opacity 0.3s ease, transform 0.3s ease; /* Smooth transition */
+    overflow-y: auto;
+    /* Allow scrolling if content is tall */
+    opacity: 0;
+    /* Initial opacity */
+    transform: translateY(20px);
+    /* Start slightly below */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    /* Smooth transition */
 }
 
 .full-subtask-page-view.show {
-    display: block; /* Show block on 'show' class */
-    opacity: 1; /* Fully visible */
-    transform: translateY(0); 
+    display: block;
+    /* Show block on 'show' class */
+    opacity: 1;
+    /* Fully visible */
+    transform: translateY(0);
     padding: 50px;
     height: 100%;
 }
@@ -978,10 +1188,12 @@ td img{
     opacity: 0.7;
     font-size: 14px;
 }
-.full-subtask-page-view button:hover{
+
+.full-subtask-page-view button:hover {
     opacity: 1;
     transition: 0.2s;
 }
+
 .full-subtask-page-view .deleteSub {
     padding: 10px 15px;
     background-color: var(--cancle);
@@ -996,16 +1208,19 @@ td img{
     transition: 0.3s;
     font-size: 14px;
 }
-.full-subtask-page-view .deleteSub:hover{
+
+.full-subtask-page-view .deleteSub:hover {
     opacity: 1;
     transition: 0.2s;
 }
-.full-subtask-page-view .taskName{
+
+.full-subtask-page-view .taskName {
     font-size: 22px;
     color: black;
     margin-top: 30px;
 }
-.full-subtask-page-view #subtaskDescription{
+
+.full-subtask-page-view #subtaskDescription {
     width: 100%;
     height: 20vh;
     border: none;
@@ -1016,7 +1231,8 @@ td img{
     padding: 20px 30px;
     margin-top: 20px;
 }
-.full-subtask-page-view #subtaskDescription:focus{
+
+.full-subtask-page-view #subtaskDescription:focus {
     outline: none;
 }
 
@@ -1049,19 +1265,22 @@ td img{
     display: flex;
     align-items: center;
 }
-.sub-detail-name i{
+
+.sub-detail-name i {
     font-size: 20px;
     margin-right: 15px;
     color: var(--text1);
 }
-.sub-detail-data{
+
+.sub-detail-data {
     font-weight: 300;
     width: 50%;
     padding: 15px 0 15px 10px;
     border-radius: 5px;
     cursor: pointer;
 }
-.sub-detail-data:hover{
+
+.sub-detail-data:hover {
     background-color: var(--grey);
     transition: 0.3s;
 }
@@ -1076,11 +1295,12 @@ td img{
     padding: 15px;
     resize: none;
 }
-.SubDescription-box textarea:focus{
+
+.SubDescription-box textarea:focus {
     outline: none;
 }
 
-.SubWrapper{
+.SubWrapper {
     height: 180px;
 }
 
@@ -1097,22 +1317,26 @@ td img{
 .status-div {
     color: white;
     font-weight: 400;
-    padding: 5px;
-    width: 80px;
+    padding: 8px 12px;
+    width: fit-content;
     border-radius: 5px;
     text-align: center;
-    font-size: 14px;
-    cursor: pointer; 
-    position: relative; 
+    font-size: 16px;
+    cursor: pointer;
+    position: relative;
 }
 
 .dropdown-content {
-    position: absolute; /* Ensure it appears below .status-div */
-    background-color: #32344E;
-    display: none; /* Initially hidden */
+    position: absolute;
+    background-color: white;
+    border: 1px solid var(--line);
+    display: none;
     padding: 5px 0;
-    border-radius: 5px;
-    z-index: 100; /* Ensure it appears above other elements */
+    border-radius: 8px;
+    z-index: 100;
+    top: 50px;
+    width: fit-content;
+    box-shadow: var(--ds-shadow-overlay, 0 4px 8px -2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31));;
 }
 
 .dropdown-content a {
@@ -1120,21 +1344,16 @@ td img{
     padding: 10px;
     text-decoration: none;
     display: block;
+    font-size: 16px;
+    margin: 8px 10px;
+    border-radius: 5px;
 }
 
 .dropdown-content a:hover {
-    background-color: #6EACDA; /* Slight hover effect */
+    background-color: #6EACDA;
 }
 
-.toArrow{
-    font-size: 16px;
-    padding: 0 10px;
-    color: var(--btn);
-}
-
-
-
-.checkTask-pending{
+.checkTask-pending {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1143,76 +1362,101 @@ td img{
 
 #approve,
 #fix {
-    padding: 10px 20px; /* Adjust padding as needed */
+    padding: 10px 20px;
+    /* Adjust padding as needed */
     border: none;
     background-color: #4CAF50;
     color: white;
     border-radius: 5px;
     display: flex;
-    align-items: center; /* Center items vertically */
-    justify-content: center; /* Center items horizontally */
+    align-items: center;
+    /* Center items vertically */
+    justify-content: center;
+    /* Center items horizontally */
     position: relative;
     cursor: pointer;
-    overflow: hidden; /* Prevent overflow during animation */
-    width: 120px; /* Initial width */
+    overflow: hidden;
+    /* Prevent overflow during animation */
+    width: 120px;
+    /* Initial width */
     transition: width 0.6s cubic-bezier(0.25, 0.8, 0.5, 1), background-color 0.3s ease;
     opacity: 0.7;
 }
 
 #approve i,
 #fix i {
-    position: absolute; /* Remove it from the flow */
-    left: 10px; /* Position the icon at the left end */
-    opacity: 0; /* Initially hidden */
-    visibility: hidden; /* Prevent it from occupying space */
-    transform: translateX(-10px); /* Start slightly off-screen to the left */
+    position: absolute;
+    /* Remove it from the flow */
+    left: 10px;
+    /* Position the icon at the left end */
+    opacity: 0;
+    /* Initially hidden */
+    visibility: hidden;
+    /* Prevent it from occupying space */
+    transform: translateX(-10px);
+    /* Start slightly off-screen to the left */
     transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.5, 1), opacity 0.5s ease;
 }
 
 /* Button expands and icon slides in on hover */
 #approve:hover {
-    width: 130px; /* Expanded width */
-    background-color: #45a049; /* Optional background change */
+    width: 130px;
+    /* Expanded width */
+    background-color: #45a049;
+    /* Optional background change */
     opacity: 1;
 }
+
 #fix:hover {
-    width: 130px; /* Expanded width */
-    background-color: #FF4C4C; /* Optional background change */
+    width: 130px;
+    /* Expanded width */
+    background-color: #FF4C4C;
+    /* Optional background change */
     opacity: 1;
 }
 
 #approve:hover i {
-    transform: translateX(80%); /* Slide to its original position */
-    opacity: 1; /* Make visible */
-    visibility: visible; /* Ensure visibility */
+    transform: translateX(80%);
+    /* Slide to its original position */
+    opacity: 1;
+    /* Make visible */
+    visibility: visible;
+    /* Ensure visibility */
 }
+
 #approve span,
-#fix span{
+#fix span {
     padding-left: 0;
     transition: opacity 0.3s ease;
 }
-#approve:hover span{
+
+#approve:hover span {
     padding-left: 35px;
     transition: 0.5s cubic-bezier(0.25, 0.8, 0.5, 1), opacity 0.5s ease;
 }
 
-#fix:hover span{
+#fix:hover span {
     padding-left: 25px;
     transition: 0.5s cubic-bezier(0.25, 0.8, 0.5, 1), opacity 0.5s ease;
 }
+
 #fix:hover i {
     margin-left: 30px;
-    opacity: 1; /* Make visible */
-    visibility: visible; /* Ensure visibility */
+    opacity: 1;
+    /* Make visible */
+    visibility: visible;
+    /* Ensure visibility */
 }
 
-.attachments-section{
+.attachments-section {
     margin-top: 40px;
 }
-.attachments-section h3{
+
+.attachments-section h3 {
     font-size: 20px;
 
 }
+
 .attachment {
     display: flex;
     align-items: center;
@@ -1272,13 +1516,16 @@ button.btn:hover {
 }
 
 /* File item */
-.fileItemSec{
+.fileItemSec {
     width: 100%;
-    overflow-x: auto; /* Enable horizontal scrolling */
-    overflow-y: hidden; /* Hide vertical overflow */
-    scrollbar-width: thin; 
+    overflow-x: auto;
+    /* Enable horizontal scrolling */
+    overflow-y: hidden;
+    /* Hide vertical overflow */
+    scrollbar-width: thin;
     padding: 10px;
 }
+
 /* File Item List */
 #fileItemlist {
     list-style: none;
@@ -1305,19 +1552,24 @@ button.btn:hover {
     transition: transform 0.3s, box-shadow 0.3s;
     overflow: hidden;
     text-align: center;
-    overflow: hidden; 
+    overflow: hidden;
 }
+
 #fileItemlist::-webkit-scrollbar {
-    height: 8px; /* Set height of the scrollbar */
+    height: 8px;
+    /* Set height of the scrollbar */
 }
 
 #fileItemlist::-webkit-scrollbar-thumb {
-    background: #888; /* Color of the scrollbar thumb */
-    border-radius: 10px; /* Rounded corners */
+    background: #888;
+    /* Color of the scrollbar thumb */
+    border-radius: 10px;
+    /* Rounded corners */
 }
 
 #fileItemlist::-webkit-scrollbar-thumb:hover {
-    background: #555; /* Color on hover */
+    background: #555;
+    /* Color on hover */
 }
 
 /* Hover Effect */
@@ -1348,8 +1600,10 @@ button.btn:hover {
 
 /* Ensure the extension is visible */
 .file-text {
-    direction: rtl; /* Align from the right to show extension */
-    text-align: center; /* Keep overall alignment consistent */
+    direction: rtl;
+    /* Align from the right to show extension */
+    text-align: center;
+    /* Keep overall alignment consistent */
     display: inline-block;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1358,16 +1612,16 @@ button.btn:hover {
 
 }
 
-#file_input_help{
+#file_input_help {
     font-size: 14px;
     color: var(--text1);
 }
 
-#noFile{
+#noFile {
     display: none;
 }
 
-.deleteFile .fa-solid{
+.deleteFile .fa-solid {
     font-size: 16px !important;
     color: var(--cancle);
 }
@@ -1377,15 +1631,15 @@ button.btn:hover {
     position: relative;
     display: inline-block;
     text-align: center;
-  }
-  
-  .username-tooltip {
+}
+
+.username-tooltip {
     display: none;
     position: absolute;
     bottom: -35px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.8);
     color: white;
     padding: 5px 10px;
     border-radius: 5px;
@@ -1393,34 +1647,37 @@ button.btn:hover {
     font-size: 14px;
     z-index: 10;
 }
-  
+
 .user-profile:hover .username-tooltip {
     display: block;
 }
-  
-.fileWrap{
+
+.fileWrap {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 20px;
 }
-.fileWrap .time-text{
+
+.fileWrap .time-text {
     font-size: 14px;
     font-weight: 300;
     color: var(--more-line);
 }
-.fileWrap .deleteFile{
+
+.fileWrap .deleteFile {
     margin-bottom: 0;
     font-size: 20px;
     opacity: 0.7;
     cursor: pointer;
 }
-.fileWrap .deleteFile:hover{
+
+.fileWrap .deleteFile:hover {
     opacity: 1;
     transition: 0.3s;
 }
 
-#taskDescriptionFullView{
+#taskDescriptionFullView {
     width: 100%;
     height: 50vh;
     border: none;
@@ -1428,7 +1685,7 @@ button.btn:hover {
     padding: 15px;
 }
 
-.dropdown-option-assign{
+.dropdown-option-assign {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -1436,55 +1693,71 @@ button.btn:hover {
     padding: 15px;
     cursor: pointer;
 }
-.dropdown-option-assign:hover{
+
+.dropdown-option-assign:hover {
     background-color: var(--grey);
     transition: 0.3s;
 }
-.dropdown-assign{
+
+.dropdown-assign {
     border: 2px solid var(--grey);
     width: 200px;
     z-index: 1000;
-    position: absolute; /* Make the dropdown absolute */
-    display: none; /* Hide it by default */
+    position: absolute;
+    /* Make the dropdown absolute */
+    display: none;
+    /* Hide it by default */
     margin-left: -23px;
-    top: 100%; /* Position it below the selected element */
-    left: 0; /* Align it to the left */
-    background-color: white; /* Ensure the dropdown has a white background */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add a shadow for better visibility */
-    border-radius: 5px; /* Optional: round the corners */
+    top: 100%;
+    /* Position it below the selected element */
+    left: 0;
+    /* Align it to the left */
+    background-color: white;
+    /* Ensure the dropdown has a white background */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Add a shadow for better visibility */
+    border-radius: 5px;
+    /* Optional: round the corners */
 }
-#dropdownSelected_assign{
+
+#dropdownSelected_assign {
     display: flex;
     flex-direction: row;
     align-items: center;
 }
-#dropdownSelected_assign i{
+
+#dropdownSelected_assign i {
     margin-left: -10px;
     margin-top: 4px;
     color: gray;
 }
-#dropdownSelected_assign img{
+
+#dropdownSelected_assign img {
     width: 40px;
     height: 40px;
     object-fit: cover;
     border-radius: 50%;
     margin-right: 10px;
-}
-.dropdown-option-assign img{
-    width: 40px;
-    height: 40px;
-    object-fit: cover;
-    border-radius: 50%;
-    margin-right: 10px;
-}
-#customDropdown{
-    margin-left: 5px;
-}
-.custom-dropdown {
-    position: relative; /* Set relative positioning for dropdown placement */
 }
 
-.commentSection{
+.dropdown-option-assign img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+#customDropdown {
+    margin-left: 5px;
+}
+
+.custom-dropdown {
+    position: relative;
+    /* Set relative positioning for dropdown placement */
+}
+
+.commentSection {
     margin: 0 20px;
     width: 100%;
     display: flex;
@@ -1492,15 +1765,18 @@ button.btn:hover {
     align-items: center;
     gap: 10px;
 }
-#commentInput{
+
+#commentInput {
     width: 70%;
     font-size: 14px;
 }
-#commentInput:focus{
+
+#commentInput:focus {
     outline: none !important;
     border: none;
 }
-#submitComment{
+
+#submitComment {
     margin: 0 !important;
     width: 35px;
     height: 35px;
@@ -1512,13 +1788,15 @@ button.btn:hover {
 /* Styling for tags */
 
 /* Modal styles */
-#tagsDisplay{
+#tagsDisplay,
+#assignedDisplay {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 10px;
     position: relative;
 }
+
 #tagsDisplay .tag-item {
     display: inline-flex;
     align-items: center;
@@ -1526,10 +1804,15 @@ button.btn:hover {
     border-radius: 12px;
     padding: 5px 10px;
     font-size: 14px;
-    color: black; /* Ensures text is readable against pastel backgrounds */
-    font-weight: 400; /* Optional: Make text stand out */
-    white-space: nowrap; /* Prevent text wrapping */;
+    color: black;
+    /* Ensures text is readable against pastel backgrounds */
+    font-weight: 400;
+    /* Optional: Make text stand out */
+    white-space: nowrap;
+    /* Prevent text wrapping */
+    ;
 }
+
 #visible-tags {
     display: inline-block;
     border-radius: 12px;
@@ -1540,32 +1823,38 @@ button.btn:hover {
     white-space: nowrap;
     /* Add any specific styles you need for visible tags */
 }
+
 #visible-tags .remove-tag {
     display: none;
-    transform: translateX(20px); 
-    opacity: 0; 
+    transform: translateX(20px);
+    opacity: 0;
     transition: all 0.3s ease;
 }
-#visible-tags{
+
+#visible-tags {
     display: inline-flex !important;
     align-items: center !important;
     padding: 5px 10px !important;
     border-radius: 12px !important;
     transition: width 0.3s ease;
-} 
-#visible-tags:hover{
+}
+
+#visible-tags:hover {
     width: fit-content;
 }
+
 #visible-tags:hover .remove-tag {
-    display: inline; 
+    display: inline;
     transform: translateX(0);
     opacity: 1;
 }
-.remove-tag{
+
+.remove-tag {
     height: 12px;
     cursor: pointer;
 }
-.extra-tags{
+
+.extra-tags {
     width: 25px;
     height: 25px;
     border-radius: 50%;
@@ -1576,6 +1865,7 @@ button.btn:hover {
     justify-content: center;
     opacity: 0.5;
 }
+
 #extraTagsIndicator {
     font-weight: 400;
     color: white;
@@ -1596,13 +1886,16 @@ button.btn:hover {
     font-weight: bold;
     color: #fff;
     white-space: nowrap;
-    cursor: pointer; /* Make the tag clickable */
+    cursor: pointer;
+    /* Make the tag clickable */
     transition: background-color 0.3s ease;
 }
 
 .showAllTags .tag-item:hover {
-    background-color: rgba(0, 0, 0, 0.1); /* Light hover effect */
+    background-color: rgba(0, 0, 0, 0.1);
+    /* Light hover effect */
 }
+
 .showTaskTags .tag-item {
     display: inline-block;
     border-radius: 12px;
@@ -1634,18 +1927,18 @@ button.btn:hover {
 }
 
 #tagsManagementModal {
-    position: absolute; 
+    position: absolute;
     top: calc(100% + 15px);
-    left: -20px; 
-    z-index: 999; 
+    left: -20px;
+    z-index: 999;
     width: 250px;
-    max-height: 300px; 
-    overflow-y: auto; 
-    background-color: #fff; 
-    border-radius: 10px; 
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: #fff;
+    border-radius: 10px;
     padding: 10px;
     display: none;
-    transition: opacity 0.3s ease; 
+    transition: opacity 0.3s ease;
     border: 1px solid var(--line);
     box-shadow: var(--ds-shadow-overlay, 0 4px 8px -2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31));
 }
@@ -1654,27 +1947,32 @@ button.btn:hover {
     opacity: 1;
 }
 
-.modal-content{
+.modal-content {
     border: none;
 }
-.modal-header{
+
+.modal-header {
     padding: 0;
     padding-bottom: 15px;
 }
-.modal-body{
+
+.modal-body {
     padding: 0;
 }
-.add-new-tag #newTagInput{
+
+.add-new-tag #newTagInput {
     border-radius: 5px;
     padding: 5px 10px;
     border: 1px solid #cecece;
     margin-top: 10px;
     width: 100%;
 }
-.add-new-tag #newTagInput::placeholder{
+
+.add-new-tag #newTagInput::placeholder {
     color: #8d8d8d;
 }
-.showTaskTags{
+
+.showTaskTags {
     display: flex;
     flex-wrap: wrap;
     row-gap: 7px;
@@ -1684,13 +1982,16 @@ button.btn:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-top: 10px;
+    max-height: 240px;
+    overflow: scroll;
 }
 
 .assigned-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 5px;
+    gap: 20px;
+    padding: 8px;
     cursor: pointer;
 }
 
@@ -1699,9 +2000,20 @@ button.btn:hover {
     border-radius: 5px;
 }
 
-#assignedName {
-    font-size: 14px;
-    font-weight: bold;
+.userInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.userInfo #assignedName {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.userInfo #assignedEmail {
+    font-size: 13px;
+    font-weight: 200;
+    color: gray;
 }
 
 .fallback-circle {
@@ -1717,6 +2029,7 @@ button.btn:hover {
     color: #fff;
     margin-right: 8px;
 }
+
 .user-profile {
     position: relative;
 }
@@ -1737,8 +2050,291 @@ button.btn:hover {
     width: 20px;
     height: 20px;
     cursor: pointer;
-    font-size: 14px;
-    line-height: 18px;
+    font-size: 12px;
     text-align: center;
     z-index: 20;
+}
+
+#assignedManagementModal.hidden {
+    display: none;
+}
+
+#assignedManagementModal {
+    display: block;
+    position: absolute;
+    top: calc(100% + 15px);
+    left: 0px;
+    z-index: 999;
+    width: 250px;
+    max-height: fit-content;
+    overflow-y: auto;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    transition: opacity 0.3s ease;
+    border: 1px solid var(--line);
+    box-shadow: var(--ds-shadow-overlay, 0 4px 8px -2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31));
+}
+
+#searchAssigned {
+    border-radius: 5px;
+    padding: 8px 10px;
+    border: 1px solid #cecece;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.fallback-profile {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #5C54E5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.fallback-profile-modal {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #5C54E5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 400;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.detailHeader{
+    width: 100%;
+    height: fit-content;
+    border: 1px solid var(--line);
+    border-radius: 5px 5px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 30px;
+    margin-top: 40px;
+    transition: all 0.3s;
+    cursor: pointer;
+
+    .headerFirst{
+        display: flex;
+        align-items: end;
+        gap: 10px;
+
+        p{
+            margin-bottom: 0;
+            font-size: 14px;
+            font-weight: 300;
+            color: gray;
+        }
+    }
+    .task-summary.hidden{
+        display: none;
+    }
+    .detailText{
+        font-size: 18px;
+        margin-bottom: 0;
+        font-weight: 400;
+    }
+
+    .moreIcon{
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 14px;
+    }
+    
+    .moreIcon i {
+        transition: transform 0.3s ease-in-out; /* Smooth transition for icon */
+    }
+    
+    .up {
+        transform: rotate(0deg);
+    }
+    
+    .down {
+        transform: rotate(180deg);
+    }
+}
+.detailHeader:hover{
+    background-color: var(--grey);
+}
+.priority{
+    .priority-text{
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: 500;
+    
+        #priIcon {
+            font-size: 20px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+    .priority-option{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+        #priIcon{
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+}
+.detailSec{
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.log-entry{
+    background-color: white;
+    margin: 20px 0;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+
+    p{
+        margin-bottom: 0;
+    }
+    .log-entry-detail{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 20px 30px 0;
+    }
+    .user-profile-log{
+
+        img{
+            border-radius: 50%; 
+            margin-right: 8px;
+            width: 50px; 
+            height: 50px; 
+        }
+        .fallback-circle-activitylog{
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            background-color: var(--btn); 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 300; 
+            font-size: 22px; 
+            color: #fff; 
+        }
+    }
+    .nameLog,
+    .statusLog,
+    .prorityLog,
+    .dueDateLog,
+    .dueTimeLog{
+        display: flex;
+        flex-direction: column;
+        margin-left: 10px;
+        gap: 10px;
+    }
+
+    .nameLog{
+        .logDetail{
+            font-size: 16px;
+            font-weight: 300;
+
+            .previous-name {
+                color: red;
+                font-weight: 400;
+            }
+            .new-name {
+                color: green;
+                font-weight: 400;
+            }
+        }
+    }
+    .statusLog{
+        .previous-status,
+        .new-status{
+            font-size: 16px !important;
+            padding: 5px 15px !important;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    }
+    .prorityLog{
+        .logDetail{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            .previous-priority,
+            .new-priority{
+                font-size: 16px !important;
+                font-weight: 400 !important;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+
+            .logPriIcon{
+                font-size: 18px !important;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        }
+    }
+    .dueDateLog,
+    .dueTimeLog{
+        font-size: 16px;
+        .previous-dueDate,
+        .previous-dueTime {
+            color: red;
+            font-weight: 400;
+        }
+        .new-dueDate,
+        .new-dueTime {
+            color: green;
+            font-weight: 400;
+        }
+    }
+
+
+
+    #logText{
+        font-size: 16px;
+    }
+    #whoChange{
+        color: var(--btn);
+        font-weight: 400;
+        margin-right: 5px;
+    }
+    .toArrow {
+        font-size: 14px;
+        padding: 0 10px;
+    }
+    p:last-child{
+        color: gray;
+        font-weight: 300;
+        margin-bottom: 0; 
+        padding: 20px 30px;
+        text-align: end;
+    }
 }

@@ -19,6 +19,22 @@ const cors = require('cors');
 const http = require("http");
 const socketIo = require("socket.io");
 
+const { initializeApp } = require('firebase/app');
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB8Tda89b3f3QjKSetSHHREOryB_wjYptY",
+  authDomain: "taskweb-5a534.firebaseapp.com",
+  projectId: "taskweb-5a534",
+  storageBucket: "taskweb-5a534.firebasestorage.app",
+  messagingSenderId: "549066264041",
+  appId: "1:549066264041:web:cb9167704340bd91fc8f78",
+  measurementId: "G-E6TQ2Q94LE"
+};
+
+// Initialize Firebase
+const firebaseApp = initializeApp(firebaseConfig);
+
 const app = express();
 const port = process.env.PORT || 5001;
 
@@ -84,6 +100,8 @@ passport.use(
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
+app.use(cors());
+
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -100,6 +118,7 @@ app.use(flash());
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
+  res.location(req.get("Referrer") || "/");
   next();
 });
 
@@ -136,11 +155,13 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.set("socketio", io);
 app.use(require('express-ejs-layouts'));
+app.use('/static', express.static(path.join(__dirname, 'node_modules')));
 
 // Routes
 app.use('/', require('./server/routes/auth'));
 app.use('/', require('./server/routes/index'));
-app.use('/', require('./server/routes/spaceRoutes'));
+app.use('/', require('./server/routes/dashboardRouter'));
+app.use('/', require('./server/routes/projectRoutes'));
 app.use('/', require('./server/routes/taskRou/taskRoutes'));
 app.use('/', require('./server/routes/taskRou/taskPageRoutes'));
 app.use('/', require('./server/routes/taskRou/taskDetailRoutes'));

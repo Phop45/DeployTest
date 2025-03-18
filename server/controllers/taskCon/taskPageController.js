@@ -59,7 +59,7 @@ exports.task_dashboard = async (req, res) => {
             _id: spaceId,
             $or: [{ user: userId }, { collaborators: { $elemMatch: { user: userId } } }],
         })
-            .populate('collaborators.user', 'username profileImage googleEmail')
+            .populate('collaborators.user', 'firstName lastName profileImage googleEmail')
             .lean();
 
         if (!space) {
@@ -151,50 +151,32 @@ exports.task_dashboard = async (req, res) => {
         };
 
         // Workload Distribution
-        const incompleteStatuses = ['toDo', 'inProgress', 'fix']; // Define incomplete statuses
-        const totalIncompleteTasks = filteredTasks.filter(task => incompleteStatuses.includes(task.taskStatus)).length;
-        const totalCompletedTasks = filteredTasks.filter(task => task.taskStatus === 'finished').length;
+        const incompleteStatuses = ['toDo', 'inProgress', 'fix']; 
 
-        const workloadData = filteredTasks.reduce((acc, task) => {
-            task.assignedUsers.forEach(user => {
-                const userId = user._id.toString();
-                if (!acc[userId]) {
-                    acc[userId] = { user, completedTasks: 0, incompleteTasks: 0, taskCount: 0 }; // Initialize taskCount
-                }
+        const workloadChartData = space.collaborators
+            .filter(collaborator => collaborator.user) // Exclude collaborators with null user
+            .map(collaborator => {
+                const userId = collaborator.user._id.toString();
+                const userTasks = filteredTasks.filter(task => 
+                    task.assignedUsers.some(user => user && user._id.toString() === userId) // Check if user exists
+                );
 
-                // Increment task counts based on status
-                acc[userId].taskCount++; // Total tasks assigned to the user
-                if (task.taskStatus === 'finished') {
-                    acc[userId].completedTasks++;
-                } else if (incompleteStatuses.includes(task.taskStatus)) {
-                    acc[userId].incompleteTasks++;
-                }
+                const completedTasks = userTasks.filter(task => task.taskStatus === 'finished').length;
+                const incompleteTasks = userTasks.filter(task => incompleteStatuses.includes(task.taskStatus)).length;
+                const taskCount = userTasks.length;
+
+                const percentage = taskCount > 0 
+                    ? Math.round((completedTasks / taskCount) * 100) 
+                    : 0;
+
+                return {
+                    user: collaborator.user,
+                    percentage,
+                    taskCount,
+                    completedTasks,
+                    incompleteTasks,
+                };
             });
-            return acc;
-        }, {});
-
-        const workloadChartData = space.collaborators.map(collaborator => {
-            const userId = collaborator.user._id.toString();
-            const userTasks = filteredTasks.filter(task => 
-                task.assignedUsers.some(user => user._id.toString() === userId)
-            );
-        
-            const completedTasks = userTasks.filter(task => task.taskStatus === 'finished').length;
-            const incompleteTasks = userTasks.filter(task => incompleteStatuses.includes(task.taskStatus)).length;
-            const taskCount = userTasks.length;
-        
-            const percentage = taskCount > 0 
-                ? Math.round((completedTasks / taskCount) * 100) 
-                : 0;
-        
-            return {
-                user: collaborator.user,
-                percentage,
-                taskCount,
-                completedTasks,
-                incompleteTasks,
-            };
-        });
 
         // Render the Dashboard
         res.render('task/task-dashboard', {
@@ -277,11 +259,11 @@ exports.getTasks = async (req, res) => {
 };
 
 
-/// task board controller
-exports.task_board = async (req, res) => {
+/// task board page controller
+exports.boardPageRender = async (req, res) => {
     try {
         const spaceId = req.params.id;
-        const userId = req.user.id;
+        const userId = req.user._id; 
 
         // Fetch the space
         const space = await Spaces.findOne({
@@ -299,10 +281,10 @@ exports.task_board = async (req, res) => {
         const currentUserRole = spaceCollaborators.find(c => c.user._id.toString() === userId)?.role || 'Member';
 
         // Fetch tasks and populate required fields
-        const tasks = await Task.find({ space: spaceId })
+        const tasks = await Task.find({ project: spaceId, deleted: false })
             .populate('assignedUsers', 'profileImage displayName')
             .lean();
-
+        
         for (const task of tasks) {
             const subtasks = await SubTask.find({ task: task._id }).populate('assignee', 'username profileImage').lean();
 
@@ -332,32 +314,29 @@ exports.task_board = async (req, res) => {
         }
 
         // Organize tasks by status
-        const statuses = await Status.find({ space: spaceId }).lean();
-
-        // Log the fetched statuses for debugging
-        console.log("Statuses:", statuses);
-
-        const tasksByStatus = statuses.reduce((acc, status) => {
-            acc[status.name] = tasks.filter(task => task.taskStatus === status.name);
-            return acc;
-        }, {});
-
-        // Log tasks by status for debugging
-        console.log("Tasks By Status:", tasksByStatus);
+        const tasksByStatus = {
+            toDo: tasks.filter(task => task.taskStatus === 'toDo'),
+            inProgress: tasks.filter(task => task.taskStatus === 'inProgress'),
+            fix: tasks.filter(task => task.taskStatus === 'fix'),
+            finished: tasks.filter(task => task.taskStatus === 'finished')
+        };
 
         // Prepare task counts for each status category
-        const taskCounts = statuses.reduce((acc, status) => {
-            acc[status.category] = tasksByStatus[status.name]?.length || 0;
-            return acc;
-        }, {});
+        const taskCounts = {
+            toDo: tasksByStatus.toDo.length,
+            inProgress: tasksByStatus.inProgress.length,
+            fix: tasksByStatus.fix.length,
+            finished: tasksByStatus.finished.length
+        };
 
-        // Sort statuses by category
+        // Fetch and sort statuses by category
+        const statuses = await Status.find({ space: spaceId }).lean();
         const sortedStatuses = statuses.sort((a, b) => {
             const order = ['toDo', 'inProgress', 'fix', 'finished'];
             return order.indexOf(a.category) - order.indexOf(b.category);
         });
 
-        // Calculate user workload
+        // Calculate user workload (tasks assigned to each user)
         const userWorkload = {};
         tasks.forEach(task => {
             task.assignedUsers.forEach(user => {
@@ -370,14 +349,14 @@ exports.task_board = async (req, res) => {
                     };
                 }
                 userWorkload[userId].totalTasks += 1; // Increment total tasks
-                if (task.taskStatus === 'เสร็จสิ้น') {
+                if (task.taskStatus === 'finished') {
                     userWorkload[userId].completedTasks += 1; // Increment completed tasks
                 }
             });
         });
 
-        // Calculate completion percentages for each user
-        for (const userId in userWorkload) {
+         // Calculate completion percentages for each user
+         for (const userId in userWorkload) {
             const workload = userWorkload[userId];
             workload.percentage = workload.totalTasks > 0 ? Math.round((workload.completedTasks / workload.totalTasks) * 100) : 0;
         }
@@ -391,11 +370,11 @@ exports.task_board = async (req, res) => {
             user: req.user,
             spaceCollaborators,
             currentUserRole,
-            moment,
+            moment, 
             userWorkload: JSON.stringify(userWorkload),
             currentPage: 'board',
-            layout: "../views/layouts/task",
-            priority: tasks.map(task => task.taskPriority), // Pass task priorities
+            layout: "../views/layouts/task", 
+            priority: tasks.map(task => task.taskPriority), 
         });
     } catch (error) {
         console.log(error);
@@ -450,8 +429,8 @@ exports.task_list = async (req, res) => {
             taskTypes: taskTypes,
             dueDate: thaiDueDate,
             createdAt: thaiCreatedAt,
-            taskPriority: taskPriority,  // New addition
-            taskTag: taskTag,  // New addition
+            taskPriority: taskPriority,  
+            taskTag: taskTag,  
             users: tasks.flatMap(task => task.assignedUsers),
             user: req.user.id,
             userName: req.user.firstName,

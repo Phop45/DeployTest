@@ -58,39 +58,40 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 async function confirmDeleteTask(taskId, spaceId) {
-    try {
-      // Fetch the number of subtasks for the task
-      const response = await fetch(`/task/getSubtaskCount/${spaceId}`, {
+  try {
+    // Fetch the number of subtasks for the task
+    const response = await fetch(`/task/getSubtaskCount/${spaceId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taskIds: [taskId] }) // Pass taskIds as an array
+    });
+
+    const data = await response.json();
+    const subtaskCount = data.subtaskCount || 0;
+
+    // Show confirmation alert with subtask count
+    const confirmMessage = `คุณต้องการลบงานนี้หรือไม่? งานนี้มี ${subtaskCount} งานย่อยที่จะถูกลบด้วย`;
+
+    if (confirm(confirmMessage)) {
+      // Proceed with deletion if confirmed
+      const deleteResponse = await fetch(`/task/deleteTasks/${spaceId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskIds: taskId })
+        body: JSON.stringify({ taskIds: [taskId] }) // Pass taskIds as an array
       });
-  
-      const data = await response.json();
-      const subtaskCount = data.subtaskCount;
-  
-      // Show confirmation alert with subtask count
-      const confirmMessage = `คุณต้องการลบงานนี้หรือไม่? งานนี้มี ${subtaskCount} งานย่อยที่จะถูกลบด้วย`;
-  
-      if (confirm(confirmMessage)) {
-        // Proceed with deletion if confirmed
-        const deleteResponse = await fetch(`/task/deleteTasks/${spaceId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskIds: taskId })
-        });
-  
-        if (deleteResponse.ok) {
-          alert('งานและงานย่อยถูกลบเรียบร้อยแล้ว');
-          location.reload(); // Reload the page to reflect changes
-        } else {
-          alert('ไม่สามารถลบงานได้');
-        }
+
+      if (deleteResponse.ok) {
+        alert('งานและงานย่อยถูกลบเรียบร้อยแล้ว');
+        location.reload(); // Reload the page to reflect changes
+      } else {
+        const errorData = await deleteResponse.json();
+        alert(`ไม่สามารถลบงานได้: ${errorData.message || 'Unknown error'}`);
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('เกิดข้อผิดพลาด');
     }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('เกิดข้อผิดพลาด');
   }
-  
+}
+
   

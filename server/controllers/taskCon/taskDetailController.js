@@ -35,27 +35,25 @@ const extractTaskParameters = async (tasks) => {
     return { taskNames, taskDetail, taskStatus, taskTypes, dueDate, dueTime, createdAt, taskPriority, taskTag };
 };
 const formatDateToThai = (dueDate) => {
-    const dateParts = dueDate.split('/');
+    if (!(dueDate instanceof Date)) {
+        dueDate = new Date(dueDate);
+    }
+    if (isNaN(dueDate)) return 'ไม่ทราบ';
 
-    if (dateParts.length !== 3) return 'ไม่ทราบ'; // Invalid date format
-
-    const day = parseInt(dateParts[0], 10);
-    const month = parseInt(dateParts[1], 10) - 1; // Month is zero-based in JavaScript
-    const year = parseInt(dateParts[2], 10) - 543; // Convert Buddhist year to Gregorian year
-
-    const date = new Date(year, month, day);
-    if (isNaN(date)) return 'ไม่ทราบ';
-
+    // Set the Thai locale
     const thaiMonths = [
         'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
         'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
     ];
 
-    const formattedDay = date.getDate();
-    const formattedMonth = thaiMonths[date.getMonth()];
-    const formattedYear = date.getFullYear() + 543; // Convert back to Buddhist year
+    // Get the date components
+    const day = dueDate.getDate();
+    const month = dueDate.getMonth(); // 0-based index, no need to subtract 1
+    const year = dueDate.getFullYear() + 543; // Add 543 for the Buddhist year
 
-    return `${formattedDay} ${formattedMonth} ${formattedYear}`;
+    // Format the date into the Thai format
+    const formattedDate = `${day} ${thaiMonths[month]} ${year}`;
+    return formattedDate;
 };
 function getRandomPastelColor() {
     const hue = Math.floor(Math.random() * 360);
@@ -70,8 +68,24 @@ exports.detailPageRender = async (req, res) => {
         const spaceId = ObjectId(req.query.spaceId);
         const loggedInUserId = req.user._id.toString();
 
+        if (!mongoose.Types.ObjectId.isValid(taskId) || !mongoose.Types.ObjectId.isValid(spaceId)) {
+            return res.status(400).send("Invalid task or space ID.");
+        }
+        
         const task = await Task.findById(taskId)
             .populate('assignedUsers', 'profileImage firstName lastName googleEmail')
+            .populate({
+                path: 'activityLogs.createdBy',
+                select: 'profileImage firstName lastName',
+            })
+            .populate({
+                path: 'activityLogs.userId',
+                select: 'profileImage firstName lastName',
+            })
+            .populate({
+                path: 'taskTags._id', 
+                select: 'tagName color',
+            })
             .lean();
 
         const space = await Spaces.findById(spaceId)
@@ -117,6 +131,9 @@ exports.detailPageRender = async (req, res) => {
         const assignedUsers = (task.assignedUsers || []).map(user => ({
             ...user,
             username: `${user.firstName} ${user.lastName}`,
+            profileImage: user.profileImage.startsWith('/api')
+                ? user.profileImage
+                : user.profileImage || '/public/img/profileImage/userDefault.jpg',
         }));
 
         const statusMapping = {
@@ -140,7 +157,10 @@ exports.detailPageRender = async (req, res) => {
             return log;
         });
 
-        const taskTags = task.taskTags || []; 
+        const taskTags = (task.taskTags || []).map(tag => ({
+            tagName: tag._id?.tagName || tag.tagName,
+            color: tag._id?.color || tag.color,
+        }));
         const allTags = await Tag.find({ user: req.user._id }).lean(); 
         const taskTagsIds = task.taskTags.map(tag => tag._id.toString());
         const availableTags = allTags.filter(tag => !taskTagsIds.includes(tag._id.toString()));
@@ -283,7 +303,7 @@ exports.updateTaskName = async (req, res) => {
     try {
         const { taskId, taskName } = req.body; 
         const userId = req.user._id; 
-        const userName = req.user.firstName;
+        const userName = `${req.user.firstName} ${req.user.lastName}`; 
 
         if (!taskName || !/^[a-zA-Z0-9ก-๙\s]+$/.test(taskName)) {
             return res.status(400).send('Invalid task name. Please avoid special characters or empty values.');
@@ -320,7 +340,7 @@ exports.updateTaskName = async (req, res) => {
 exports.updateTaskStatus = async (req, res) => {
     try {
         const { taskId, newStatus } = req.body;
-        const userName = req.user.firstName;
+        const userName = `${req.user.firstName} ${req.user.lastName}`; 
 
         if (!mongoose.Types.ObjectId.isValid(taskId)) {
             console.error('Invalid Task ID:', taskId);
@@ -360,7 +380,7 @@ exports.updateTaskStatus = async (req, res) => {
 // update Task Priority ✅
 exports.updateTaskPriority = async (req, res) => {
     const { taskId, taskPriority } = req.body;
-    const userName = req.user.firstName; 
+    const userName = `${req.user.firstName} ${req.user.lastName}`; 
 
     try {
         const task = await Task.findById(taskId);
@@ -396,7 +416,7 @@ exports.updateTaskPriority = async (req, res) => {
 // update Due Date ✅
 exports.updateDueDate = async (req, res) => {
     const { taskId, dueDate } = req.body;
-    const userName = req.user.firstName; 
+    const userName = `${req.user.firstName} ${req.user.lastName}`; 
 
     try {
         // Find the task by ID
@@ -436,7 +456,7 @@ exports.updateDueDate = async (req, res) => {
 exports.updateDueTime = async (req, res) => {
     const { taskId, dueTime } = req.body;
     const userId = req.user._id; 
-    const userName = req.user.firstName; 
+    const userName = `${req.user.firstName} ${req.user.lastName}`; 
 
     try {
         // Find the task by ID
@@ -477,7 +497,7 @@ exports.addTagsToTask = async (req, res) => {
         const { taskId } = req.params;
         const { tags } = req.body;
         const userId = req.user._id;
-        const userName = req.user.firstName;
+        const userName = `${req.user.firstName} ${req.user.lastName}`;
 
         console.log("Received tags to add:", tags, taskId);
 
@@ -562,7 +582,7 @@ exports.createTag = async (req, res) => {
     try {
         const { name, color } = req.body;
         const userId = req.user._id; 
-        const userName = req.user.firstName; 
+        const userName = `${req.user.firstName} ${req.user.lastName}`;  
 
         // Validate input
         if (!name) {
@@ -611,7 +631,7 @@ exports.removeTagFromTask = async (req, res) => {
         const { taskId } = req.params; 
         const { tagId } = req.body;  
         const userId = req.user._id;
-        const userName = req.user.firstName;
+        const userName = `${req.user.firstName} ${req.user.lastName}`; 
 
         console.log("Received tag ID to remove:", tagId, "from task ID:", taskId);
 

@@ -247,8 +247,7 @@ body {
 
 /* Side Bar */
 .sidebar.close {
-    width: 70px;
-    z-index: 0;
+    width: 100%;
     transition: width 0.4s ease;
 }
 
@@ -744,8 +743,9 @@ header .image-text .header-text {
 }
 .secside{
     position: absolute;
-    height: 100%;
-    z-index: 10;
+    height: 93%;
+    width: 5%;
+    z-index: 999;
 }
 .nav-tabs .nav-link{
     border: none;

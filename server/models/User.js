@@ -32,10 +32,7 @@ const UserSchema = new Schema({
         required: [true, "กรุณากรอกอีเมล"],
         unique: true,
     },
-    profileImage: {
-        type: String,
-        default: '/img/profileImage/Profile.jpeg',
-    },
+    profileImage: { type: String },
     role: {
         type: String,
         default: 'user',

@@ -12,7 +12,7 @@ const Task = require('../models/Task');
 const fs = require('fs');
 moment.locale('th');
 
-exports.SpaceDashboard = async (req, res) => {
+exports.allProjectPage = async (req, res) => {
   try {
     const userId = mongoose.Types.ObjectId(req.user.id);
 
@@ -28,45 +28,45 @@ exports.SpaceDashboard = async (req, res) => {
       .populate('collaborators.user', 'username profileImage')
       .lean();
 
-      // Ensure each space has a valid project cover
-      for (const space of spaces) {
-        if (!space.projectCover || typeof space.projectCover !== "string") {
+    // Ensure each space has a valid project cover
+    for (const space of spaces) {
+      if (!space.projectCover || typeof space.projectCover !== "string") {
+        space.projectCover = '/public/spacePictures/defaultBackground.jpg';
+      } else {
+        const picturePath = path.join(__dirname, '../..', space.projectCover);
+        if (!fs.existsSync(picturePath)) {
           space.projectCover = '/public/spacePictures/defaultBackground.jpg';
-        } else {
-          const picturePath = path.join(__dirname, '../..', space.projectCover);
-          if (!fs.existsSync(picturePath)) {
-            space.projectCover = '/public/spacePictures/defaultBackground.jpg';
-          }
         }
-
-        const taskCount = await Task.countDocuments({ space: space._id, deleteAt: null });
-        space.taskCount = taskCount;
       }
 
-      // Fetch notifications with space populated
-      const notifications = await Notification.find({ user: userId, status: 'unread' })
-        .populate('user', 'username profileImage')
-        .populate('space', 'projectName')  
-        .populate('leader', 'profileImage') // Populate the leader field
-        .sort({ createdAt: -1 }) // Order by most recent
-        .lean();
-      const unreadCount = notifications.length;
-    
-      res.render("space/space-dashboard", {
-        spaces,
-        user: req.user,
-        notifications,
-        unreadCount,
-        layout: "../views/layouts/space"
-      });
-    } catch (error) {
-      console.error("Error fetching spaces:", error);
-      res.status(500).send("Internal Server Error");
+      const taskCount = await Task.countDocuments({ space: space._id, deleteAt: null });
+      space.taskCount = taskCount;
     }
-  };
+
+    // Fetch notifications with space populated
+    const notifications = await Notification.find({ user: userId, status: 'unread' })
+      .populate('user', 'username profileImage')
+      .populate('space', 'projectName')
+      .populate('leader', 'profileImage') // Populate the leader field
+      .sort({ createdAt: -1 }) // Order by most recent
+      .lean();
+    const unreadCount = notifications.length;
+
+    res.render("space/space-dashboard", {
+      spaces,
+      user: req.user,
+      notifications,
+      unreadCount,
+      layout: "../views/layouts/space"
+    });
+  } catch (error) {
+    console.error("Error fetching spaces:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
 
 // create space controller
-exports.createSpace = async (req, res) => {
+exports.createProject = async (req, res) => {
   if (req.method === 'GET') {
     try {
       const userId = mongoose.Types.ObjectId(req.user.id);
@@ -118,7 +118,7 @@ exports.createSpace = async (req, res) => {
       });
       if (existingProject) {
         req.flash("error", "A project with this name already exists.");
-        return res.redirect("/createSpace");
+        return res.redirect("/createProject");
       }
 
       let parsedDueDate = null;
@@ -182,11 +182,45 @@ exports.createSpace = async (req, res) => {
       ];
       await Status.insertMany(defaultStatuses);
 
-      res.redirect("/space");
+      res.redirect("/project");
     } catch (error) {
       req.flash('error', 'เกิดข้อผิดพลาดในการดึงข้อมูลโปรเจกต์');
       res.redirect('/createProject');
     }
+  }
+};
+
+exports.getUsers = async (req, res) => {
+  const { search } = req.query;
+
+  // Ensure the current user's ID is excluded
+  const currentUserId = req.user ? req.user.userid : null;
+
+  let filter = currentUserId ? { userid: { $ne: currentUserId } } : {};
+  if (search) {
+    const regex = new RegExp(search, 'i'); // Case-insensitive search
+    filter = {
+      $and: [
+        { userid: { $ne: currentUserId } }, 
+        {
+          $or: [
+            { firstName: regex },
+            { lastName: regex },
+            { googleEmail: regex },
+          ],
+        },
+      ],
+    };
+  }
+
+  try {
+    const users = await User.find(filter).select(
+      'userid firstName lastName googleEmail profileImage lastActive isOnline'
+    );
+    res.status(200).json(users);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 };
 
@@ -227,14 +261,15 @@ exports.searchMembers = async (req, res) => {
 
     const users = await User.find({
       $or: [
-        { username: { $regex: query, $options: 'i' } },
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
         { googleEmail: { $regex: query, $options: 'i' } },
         { userid: { $regex: query, $options: 'i' } },
       ],
       _id: { $ne: currentUserId }
     })
       .limit(10)
-      .select('username googleEmail userid profileImage');
+      .select('firstName lastName googleEmail userid profileImage');
 
     res.json(users);
   } catch (error) {

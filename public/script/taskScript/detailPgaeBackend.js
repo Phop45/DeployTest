@@ -48,9 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainTaskDueDate = document.getElementById('dueDateInput').value;
     const maxDate = mainTaskDueDate ? new Date(mainTaskDueDate) : null;
 
-    // Retrieve current user ID from the backend
-    const currentUserId = "<%= currentUserId %>";
-
+    // Function to format date to Thai format
     function formatDateToThai(date) {
         const thaiMonths = [
             'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
@@ -59,17 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${date.getDate()} ${thaiMonths[date.getMonth()]}`;
     }
 
+    // Initialize Flatpickr
     const flatpickrInstance = flatpickr(dateInput, {
-        dateFormat: "Y-m-d",
-        locale: "th",
-        minDate: "today",
-        maxDate: maxDate,
+        dateFormat: "Y-m-d",  // Use ISO date format for backend submission
+        locale: "th",  // Thai locale for display
+        minDate: "today",  // Disable past dates
+        maxDate: maxDate,  // Max date set to the main task's due date
         onChange: function (selectedDates) {
             if (selectedDates.length > 0) {
                 const formattedDate = formatDateToThai(selectedDates[0]);
                 dueDateWrapper.classList.add('expanded');
-                dateInput.value = formattedDate;
-                dateInput.setAttribute('data-iso-date', selectedDates[0].toISOString());
+                dateInput.value = formattedDate; // Display date in Thai format
+                dateInput.setAttribute('data-iso-date', selectedDates[0].toISOString()); // Save ISO date for form submission
             }
         }
     });
@@ -78,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addSubtaskNew = function () {
         const subtaskName = document.getElementById('subtaskNameInputMainNew').value.trim();
-        const dueDateInput = dateInput.getAttribute('data-iso-date');
+        const dueDateInput = dateInput.getAttribute('data-iso-date'); // Use ISO date from Flatpickr
         const taskId = document.getElementById('taskId').value;
         const assigneeSelect = document.getElementById('assigneeSelect');
         const assignee = assigneeSelect ? assigneeSelect.value : '';
@@ -90,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const data = {
             subTask: subtaskName,
-            dueDate: dueDateInput,
+            dueDate: dueDateInput,  // Send the ISO formatted due date
             taskId: taskId,
             assignee: assignee
         };

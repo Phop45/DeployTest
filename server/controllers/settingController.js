@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const Subject = require("../models/Subject");
 const User = require("../models/User");
 const multer = require('multer');
 const path = require('path');

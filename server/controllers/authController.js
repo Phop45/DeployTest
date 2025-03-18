@@ -6,7 +6,10 @@ const bcrypt = require("bcrypt");
 const { sendEmail } = require("../../emailService");
 // const logUserActivity = require('../utils/activityLogger');
 // const logFeatureUsage = require('../utils/featureLogger');
-const mongoose = require("mongoose"); // เพิ่มบรรทัดนี้
+const mongoose = require("mongoose");
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
 exports.googleCallback = async (accessToken, refreshToken, profile, done) => {
   try {
@@ -21,8 +24,9 @@ exports.googleCallback = async (accessToken, refreshToken, profile, done) => {
       user.isOnline = true;
 
       if (!user.googleId) user.googleId = googleId;
-      if (!user.profileImage) user.profileImage = profileImage;
-
+      if (!user.profileImage) {
+        user.profileImage = await saveProfileImage(profileImage, user.userid);
+      }
       await user.save();
       return done(null, user); 
     } else {
@@ -66,7 +70,7 @@ exports.googleRegister = async (req, res) => {
       }
 
       req.flash('success', 'ลงทะเบียนสำเร็จแล้ว');
-      return res.redirect('/space');
+      return res.redirect('/dashboard');
     });
     
   } catch (err) {
@@ -138,7 +142,7 @@ exports.registerUser = async (req, res) => {
     await User.register(newUser, password);
 
     req.flash("success", "ลงทะเบียนสำเร็จแล้ว");
-    res.redirect("/space");
+    res.redirect("/dashboard");
   } catch (err) {
     if (err.code === 11000 && err.keyPattern?.googleEmail) {
       req.flash("errors", ["อีเมลนี้มีอยู่ในระบบแล้ว"]);

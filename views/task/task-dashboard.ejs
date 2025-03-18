@@ -22,6 +22,7 @@
         </div>
       </div>
     </div>
+    
     <div class="countSection">
       <div class="countCard" id="dueNextSevenDaysCard" data-space-id="<%= spaceId %>">
         <div class="icon" style="background-color: #F9D7D3;">
@@ -173,39 +174,39 @@
 
 
 
-<div class="tasksModal modal" id="tasksModal" >
+<div class="tasksModal modal" id="tasksModal">
   <div class="modal-content">
-      <div class="topModal">
-          <div class="nameSearch">
-              <h2 id="modalTitle"></h2>
-              <div class="searchContainer">
-                <i class='bx bx-search searchIcon'></i>
-                <input type="search" placeholder="ค้นหางาน..." id="searchInput">
-              </div>
-          </div>
-          <span class="close">&times;</span>
+    <div class="topModal">
+      <div class="nameSearch">
+        <h2 id="modalTitle"></h2>
+        <div class="searchContainer">
+          <i class='bx bx-search searchIcon'></i>
+          <input type="search" placeholder="ค้นหางาน..." id="searchInput">
+        </div>
       </div>
+      <span class="close">&times;</span>
+    </div>
     <table id="tasksTable">
       <thead>
         <tr>
           <th>ชื่องาน</th>
           <th>
-              <div class="tableHead">
-                <i class='bx bxs-detail'></i>
-                รายละเอียด
-              </div>
+            <div class="tableHead">
+              <i class='bx bxs-detail'></i>
+              รายละเอียด
+            </div>
           </th>
           <th>
-              <div class="tableHead">
-                <i class="fa-solid fa-circle-arrow-right"></i> 
-                สถานะ
-              </div>
+            <div class="tableHead">
+              <i class="fa-solid fa-circle-arrow-right"></i>
+              สถานะ
+            </div>
           </th>
           <th>
-              <div class="tableHead">
-                <i class="fa-solid fa-flag"></i> 
-                ความสำคัญ
-              </div>
+            <div class="tableHead">
+              <i class="fa-solid fa-flag"></i>
+              ความสำคัญ
+            </div>
           </th>
           <th>
             <div class="tableHead">
@@ -217,37 +218,38 @@
           </th>
           <th>
             <div class="tableHead">
-                <i class="fa-solid fa-calendar-check"></i> 
-                วันครบกำหนด
-                <i class="fa-solid fa-arrow-down" id="dueDateSortIcon" style="cursor: pointer;" title="เรียงลำดับใหม่สุด -> เก่าสุด"></i>
+              <i class="fa-solid fa-calendar-check"></i>
+              วันครบกำหนด
+              <i class="fa-solid fa-arrow-down" id="dueDateSortIcon" style="cursor: pointer;"
+                title="เรียงลำดับใหม่สุด -> เก่าสุด"></i>
             </div>
           </th>
           <th>
-              <div class="tableHead">
-                <i class="fa-solid fa-user-tag"></i> ผู้รับผิดชอบ
-              </div>
+            <div class="tableHead">
+              <i class="fa-solid fa-user-tag"></i> ผู้รับผิดชอบ
+            </div>
           </th>
         </tr>
       </thead>
       <div style="max-height: 400px; overflow-y: auto;">
-          <tbody>
-          </tbody>
+        <tbody>
+        </tbody>
       </div>
     </table>
 
     <div class="formFooter">
       <div class="showAfterForm">
-          <p>+ เพิ่มงานที่คุณต้องจัดการ</p>
-        </div>
-        <form action="" class="addForm">
-          <input type="text" placeholder="ใส่ชื่องาน" id="addFormInput">
-          <button type="submit" id="enterBtn">
-            + สร้าง
-            <div class="formIcon">
-              <i class="fa-solid fa-turn-down"></i>
-            </div>
-          </button>
-        </form>
+        <p>+ เพิ่มงานที่คุณต้องจัดการ</p>
+      </div>
+      <form action="" class="addForm">
+        <input type="text" placeholder="ใส่ชื่องาน" id="addFormInput">
+        <button type="submit" id="enterBtn">
+          + สร้าง
+          <div class="formIcon">
+            <i class="fa-solid fa-turn-down"></i>
+          </div>
+        </button>
+      </form>
     </div>
   </div>
 </div>
@@ -785,7 +787,7 @@
             },
           },
           tooltip: {
-            enabled: false, // Disable default tooltips
+            enabled: false, 
           },
         },
       },

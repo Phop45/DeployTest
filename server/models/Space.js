@@ -1,4 +1,4 @@
-//Space Model
+//Space Model = project Model
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 

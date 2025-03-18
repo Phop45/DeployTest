@@ -8,11 +8,13 @@ const Notification = require('../../models/Noti');
 const moment = require('moment');
 const fs = require('fs');
 const path = require('path');
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 const Tag = require('../../models/Tag');
 const upload = require('../../middleware/upload'); 
+
 moment.locale('th');
+
 
 const extractTaskParameters = async (tasks) => {
   const taskNames = tasks.map(task => task.taskName);
@@ -261,44 +263,42 @@ exports.addTask2 = async (req, res) => {
 
 exports.addTask_underBoard = async (req, res) => {
   try {
-    const { taskName, spaceId, statusId } = req.body;
+    const { taskName, project, columnStatus } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(spaceId)) {
-      return res.status(400).send("Invalid space ID.");
+    // Validate Space ID (project)
+    if (!mongoose.Types.ObjectId.isValid(project)) {
+      return res.status(400).send("Invalid project ID.");
     }
 
-    const space = await Spaces.findById(spaceId);
+    const space = await Spaces.findById(project);
     if (!space) {
       return res.status(404).send("Space not found.");
     }
 
-    if (!mongoose.Types.ObjectId.isValid(statusId)) {
-      return res.status(400).send("Invalid status ID.");
+    // Validate column status
+    const validStatuses = ['toDo', 'inProgress', 'fix', 'finished'];
+    if (!validStatuses.includes(columnStatus)) {
+      return res.status(400).send("Invalid column status.");
     }
 
-    const status = await Status.findOne({ _id: statusId, space: spaceId });
-    if (!status) {
-      return res.status(404).send("Status not found or does not belong to the specified space.");
-    }
-
+    // Create the new task
     const newTask = new Task({
       taskName,
-      taskStatus: status.name,
-      space: mongoose.Types.ObjectId(spaceId),
+      project, // Assign the project ID
+      taskStatus: columnStatus, // Assign the column status
       user: req.user.id, // Logged-in user
     });
 
     await newTask.save();
-
+    console.log("New Task Created:", newTask);
     // Redirect back to the task board
-    res.redirect(`/space/item/${spaceId}/task_board`);
-    console.log(newTask);
+    res.redirect(`/space/item/${project}/task_board`);
+    console.log("New Task Created:", newTask);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).send("Internal Server Error");
   }
 };
-
 
 exports.getUserTags = async (req, res) => {
   try {
@@ -312,8 +312,12 @@ exports.getUserTags = async (req, res) => {
 
 exports.getSubtaskCount = async (req, res) => {
   try {
-    let taskIds = req.body.taskIds;
-    taskIds = taskIds.split(',').filter(id => id); // Ensure valid IDs
+    let { taskIds } = req.body; // Expecting taskIds as an array
+
+    // Validate taskIds
+    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+      return res.status(400).send({ message: 'Invalid or missing taskIds' });
+    }
 
     // Count the subtasks related to the tasks
     const subtaskCount = await SubTask.countDocuments({ task: { $in: taskIds } });
@@ -321,30 +325,40 @@ exports.getSubtaskCount = async (req, res) => {
     res.status(200).json({ subtaskCount });
   } catch (error) {
     console.error('Error fetching subtask count:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).send({ message: 'Internal Server Error' });
   }
 };
 
 exports.deleteTasks = async (req, res) => {
   try {
     let taskIds = req.body.taskIds;
-    taskIds = taskIds.split(',').filter(id => id); // Ensure valid IDs
 
-    const spaceId = req.params.id;
-    const space = await Spaces.findOne({ _id: spaceId, user: req.user.id });
-
-    if (!space) {
-      return res.status(404).send('Space not found or unauthorized');
+    // Validate taskIds
+    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+      return res.status(400).json({ message: 'Invalid taskIds provided' });
     }
 
-    // Count the number of subtasks associated with the tasks
+    const spaceId = req.params.id;
+    const space = await Spaces.findOne({
+      _id: spaceId,
+      $or: [
+        { user: req.user.id }, // เจ้าของ Space
+        { collaborators: { $elemMatch: { user: req.user.id } } } // Collaborators
+      ]
+    });
+
+    if (!space) {
+      return res.status(404).json({ message: 'Space not found or unauthorized' });
+    }
+
+    // Count the subtasks associated with the tasks
     const subtaskCount = await SubTask.countDocuments({ task: { $in: taskIds } });
 
     // Delete all subtasks related to the tasks
     await SubTask.deleteMany({ task: { $in: taskIds } });
 
     // Delete the main tasks
-    await Task.deleteMany({ _id: { $in: taskIds }, space: spaceId });
+    await Task.deleteMany({ _id: { $in: taskIds }, project: spaceId });
 
     res.status(200).json({
       message: 'Tasks and subtasks deleted successfully',
@@ -352,9 +366,11 @@ exports.deleteTasks = async (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting tasks:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
+
 
 exports.pendingTask = async (req, res) => {
   try {

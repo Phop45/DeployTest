@@ -65,14 +65,12 @@ body {
   display: flex;
   flex-direction: column;
   margin: 0 40px;
-  width: 100%;
 }
 .contentfistpage {
   flex: 1;
   display: grid;
   align-items: center;
   grid-template-areas: "weltext imgfpage loginregiser";
-  grid-template-columns: 40% 30% 30%;
   width: 100%;
   height: auto;
   padding: 30px;
@@ -246,6 +244,22 @@ body {
   .contentfistpage {
     display: inline;
     font-size: 15px;
+  }
+}
+
+@media only screen and (max-width: 450px) {
+  .contentfistpage {
+    display: inline;
+    font-size: 15px;
+  }
+  .weltext {
+    text-align: center;
+  }
+  .weltext a {
+    display: none;
+  }
+  .headerText{
+    display: none;
   }
 }
 .headerText{

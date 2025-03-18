@@ -1,8 +1,10 @@
+// auth router
 const express = require("express");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const authController = require("../controllers/authController");
 const router = express.Router();
+const { createCanvas } = require('canvas');
 
 // Google OAuth 2.0 strategy
 passport.use(
@@ -48,7 +50,7 @@ router.get("/auth/google/callback", (req, res, next) => {
 
       req.logIn(user, (err) => {
           if (err) return next(err);
-          return res.redirect("/space");
+          return res.redirect("/dashboard");
       });
   })(req, res, next);
 });
@@ -80,5 +82,25 @@ router.post('/resend-otp', authController.resendOTP);
 // Routes for reset password
 router.get('/reset-password', authController.showResetPassword);
 router.post('/reset-password', authController.resetPassword);
+
+router.get('/profile-placeholder', (req, res) => {
+  const { initial = 'U', color = '007ACC' } = req.query;
+  const canvas = createCanvas(100, 100);
+  const ctx = canvas.getContext('2d');
+
+  // Draw background
+  ctx.fillStyle = `#${color}`;
+  ctx.fillRect(0, 0, 100, 100);
+
+  // Draw text
+  ctx.fillStyle = '#FFFFFF'; // Text color
+  ctx.font = 'bold 50px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(initial, 50, 50);
+
+  res.setHeader('Content-Type', 'image/png');
+  res.send(canvas.toBuffer());
+});
 
 module.exports = router;
