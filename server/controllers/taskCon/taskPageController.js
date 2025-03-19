@@ -7,6 +7,7 @@ const Status = require('../../models/Status');
 const Notification = require('../../models/Noti');
 const moment = require('moment');
 const mongoose = require('mongoose');
+const { Console } = require("winston/lib/winston/transports");
 moment.locale('th');
 
 const extractTaskParameters = async (tasks) => {
@@ -18,11 +19,11 @@ const extractTaskParameters = async (tasks) => {
     const taskTag = tasks.map(task => task.taskTag);
 
     const dueDate = tasks.map(task => {
-        const date = moment(task.dueDate).locale('th'); // Set locale to Thai
+        const date = moment(task.dueDate).locale('th'); 
         return {
             day: date.format('DD'),
-            month: date.format('MMM'), // Use abbreviated Thai month names
-            year: date.format('YYYY') // Buddhist calendar year (BE)
+            month: date.format('MMM'), 
+            year: date.format('YYYY') 
         };
     });
 
@@ -68,14 +69,14 @@ exports.task_dashboard = async (req, res) => {
 
         // Retrieve tasks and populate fields
         const tasks = await Task.find({ project: spaceId })
-            .populate('assignedUsers', 'username profileImage')
-            .populate('activityLogs.createdBy', 'username profileImage')
+            .populate('assignedUsers', 'firstName lastName profileImage')
+            .populate('activityLogs.createdBy', 'firstName lastName profileImage')
             .populate({
                 path: 'subtasks',
                 model: 'SubTask',
                 populate: {
                     path: 'assignee',
-                    select: 'username profileImage',
+                    select: 'firstName lastName profileImage',
                 },
             })
             .lean();
@@ -258,7 +259,6 @@ exports.getTasks = async (req, res) => {
     }
 };
 
-
 /// task board page controller
 exports.boardPageRender = async (req, res) => {
     try {
@@ -270,7 +270,7 @@ exports.boardPageRender = async (req, res) => {
             _id: spaceId,
             $or: [{ user: userId }, { collaborators: { $elemMatch: { user: userId } } }],
         })
-            .populate('collaborators.user', 'username profileImage googleEmail ')
+            .populate('collaborators.user', 'firstName lastName profileImage googleEmail')
             .lean();
 
         if (!space) {
@@ -279,12 +279,14 @@ exports.boardPageRender = async (req, res) => {
 
         const spaceCollaborators = (space.collaborators || []).filter(c => c && c.user);
         const currentUserRole = spaceCollaborators.find(c => c.user._id.toString() === userId)?.role || 'Member';
+        
+        console.log(spaceCollaborators); 
 
         // Fetch tasks and populate required fields
         const tasks = await Task.find({ project: spaceId, deleted: false })
-            .populate('assignedUsers', 'profileImage displayName')
+            .populate('assignedUsers', 'profileImage firstName lastName')
             .lean();
-        
+
         for (const task of tasks) {
             const subtasks = await SubTask.find({ task: task._id }).populate('assignee', 'username profileImage').lean();
 
@@ -315,15 +317,15 @@ exports.boardPageRender = async (req, res) => {
 
         // Organize tasks by status
         const tasksByStatus = {
-            toDo: tasks.filter(task => task.taskStatus === 'toDo'),
             inProgress: tasks.filter(task => task.taskStatus === 'inProgress'),
+            pending: tasks.filter(task => task.taskStatus === 'pending'),
             fix: tasks.filter(task => task.taskStatus === 'fix'),
             finished: tasks.filter(task => task.taskStatus === 'finished')
         };
 
         // Prepare task counts for each status category
         const taskCounts = {
-            toDo: tasksByStatus.toDo.length,
+            pending: tasksByStatus.pending.length,
             inProgress: tasksByStatus.inProgress.length,
             fix: tasksByStatus.fix.length,
             finished: tasksByStatus.finished.length
@@ -332,7 +334,7 @@ exports.boardPageRender = async (req, res) => {
         // Fetch and sort statuses by category
         const statuses = await Status.find({ space: spaceId }).lean();
         const sortedStatuses = statuses.sort((a, b) => {
-            const order = ['toDo', 'inProgress', 'fix', 'finished'];
+            const order = ['inProgress', 'pending', 'fix', 'finished'];
             return order.indexOf(a.category) - order.indexOf(b.category);
         });
 
@@ -381,8 +383,6 @@ exports.boardPageRender = async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 };
-
-
 
 // ลิสต์งาน (ยังไม่ได้ใช้)
 exports.task_list = async (req, res) => {

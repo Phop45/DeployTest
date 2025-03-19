@@ -57,120 +57,120 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // status
-document.addEventListener('DOMContentLoaded', async function () {
-    const statusDropdown = document.querySelector('#statusDropdown');
-    const spaceId = document.querySelector('#spaceId').value;
-    const statusToggle = document.querySelector('#statusToggle');
-    const statusSection = document.querySelector('.status-section'); // เลือก status-section
-    const currentStatus = document.querySelector('#currentStatus');
-    const taskStatusInput = document.querySelector('#taskStatus');
-    const statusIdInput = document.querySelector('#statusId');
+// document.addEventListener('DOMContentLoaded', async function () {
+//     const statusDropdown = document.querySelector('#statusDropdown');
+//     const spaceId = document.querySelector('#spaceId').value;
+//     const statusToggle = document.querySelector('#statusToggle');
+//     const statusSection = document.querySelector('.status-section'); // เลือก status-section
+//     const currentStatus = document.querySelector('#currentStatus');
+//     const taskStatusInput = document.querySelector('#taskStatus');
+//     const statusIdInput = document.querySelector('#statusId');
 
-    // กำหนดสีของแต่ละสถานะ
-    const statusColors = {
-        toDo: '#44546f',
-        inProgress: '#0880ea',
-        fix: '#F93827',
-        finished: '#299764'
-    };
+//     // กำหนดสีของแต่ละสถานะ
+//     const statusColors = {
+//         toDo: '#44546f',
+//         inProgress: '#0880ea',
+//         fix: '#F93827',
+//         finished: '#299764'
+//     };
 
-    // ฟังก์ชันอัปเดตสีพื้นหลังของ .status-section
-    function updateStatusSectionColor(status) {
-        if (statusColors[status]) {
-            statusSection.style.backgroundColor = statusColors[status];
-            statusSection.style.color = '#fff'; // ปรับสีข้อความให้ชัดขึ้น
-            statusSection.style.padding = '8px 12px';
-            statusSection.style.borderRadius = '5px';
-        }
-    }
+//     // ฟังก์ชันอัปเดตสีพื้นหลังของ .status-section
+//     function updateStatusSectionColor(status) {
+//         if (statusColors[status]) {
+//             statusSection.style.backgroundColor = statusColors[status];
+//             statusSection.style.color = '#fff'; // ปรับสีข้อความให้ชัดขึ้น
+//             statusSection.style.padding = '8px 12px';
+//             statusSection.style.borderRadius = '5px';
+//         }
+//     }
 
-    // Fetch statuses from the server
-    async function fetchStatuses() {
-        try {
-            const response = await fetch(`/${spaceId}/statuses`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch statuses');
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching statuses:', error);
-            return [];
-        }
-    }
+//     // Fetch statuses from the server
+//     async function fetchStatuses() {
+//         try {
+//             const response = await fetch(`/${spaceId}/statuses`);
+//             if (!response.ok) {
+//                 throw new Error('Failed to fetch statuses');
+//             }
+//             return await response.json();
+//         } catch (error) {
+//             console.error('Error fetching statuses:', error);
+//             return [];
+//         }
+//     }
 
-    // Populate the dropdown with statuses
-    async function populateDropdown() {
-        const statuses = await fetchStatuses();
-        if (statuses.length === 0) {
-            statusDropdown.innerHTML = '<p>ไม่มีสถานะที่พร้อมใช้งาน</p>';
-            return;
-        }
+//     // Populate the dropdown with statuses
+//     async function populateDropdown() {
+//         const statuses = await fetchStatuses();
+//         if (statuses.length === 0) {
+//             statusDropdown.innerHTML = '<p>ไม่มีสถานะที่พร้อมใช้งาน</p>';
+//             return;
+//         }
 
-        statusDropdown.innerHTML = ''; // Clear existing options
-        statuses.forEach(status => {
-            const option = document.createElement('div');
-            option.classList.add('status-option');
-            option.setAttribute('data-status-id', status._id);
-            option.setAttribute('data-status', status.category);
-            option.textContent = status.name;
+//         statusDropdown.innerHTML = ''; // Clear existing options
+//         statuses.forEach(status => {
+//             const option = document.createElement('div');
+//             option.classList.add('status-option');
+//             option.setAttribute('data-status-id', status._id);
+//             option.setAttribute('data-status', status.category);
+//             option.textContent = status.name;
 
-            // ตั้งค่าพื้นหลังของแต่ละสถานะ
-            if (statusColors[status.category]) {
-                option.style.backgroundColor = statusColors[status.category];
-                option.style.color = '#fff';
-                option.style.padding = '8px';
-                option.style.borderRadius = '5px';
-                option.style.cursor = 'pointer';
-            }
+//             // ตั้งค่าพื้นหลังของแต่ละสถานะ
+//             if (statusColors[status.category]) {
+//                 option.style.backgroundColor = statusColors[status.category];
+//                 option.style.color = '#fff';
+//                 option.style.padding = '8px';
+//                 option.style.borderRadius = '5px';
+//                 option.style.cursor = 'pointer';
+//             }
 
-            // Mark "toDo" as the default selection
-            if (status.category === 'toDo') {
-                currentStatus.textContent = status.name;
-                taskStatusInput.value = 'toDo';
-                statusIdInput.value = status._id;
-                updateStatusSectionColor('toDo'); // ตั้งค่าสีเริ่มต้น
-            }
+//             // Mark "toDo" as the default selection
+//             if (status.category === 'toDo') {
+//                 currentStatus.textContent = status.name;
+//                 taskStatusInput.value = 'toDo';
+//                 statusIdInput.value = status._id;
+//                 updateStatusSectionColor('toDo'); // ตั้งค่าสีเริ่มต้น
+//             }
 
-            statusDropdown.appendChild(option);
-        });
-    }
+//             statusDropdown.appendChild(option);
+//         });
+//     }
 
-    // Toggle dropdown visibility
-    statusToggle.addEventListener('click', function () {
-        const isDropdownVisible = statusDropdown.style.display === 'block';
-        statusDropdown.style.display = isDropdownVisible ? 'none' : 'block';
-    });
+//     // Toggle dropdown visibility
+//     statusToggle.addEventListener('click', function () {
+//         const isDropdownVisible = statusDropdown.style.display === 'block';
+//         statusDropdown.style.display = isDropdownVisible ? 'none' : 'block';
+//     });
 
-    // Handle status selection
-    statusDropdown.addEventListener('click', function (event) {
-        const selectedOption = event.target.closest('.status-option');
-        if (selectedOption) {
-            const selectedStatus = selectedOption.getAttribute('data-status');
-            const selectedStatusId = selectedOption.getAttribute('data-status-id');
+//     // Handle status selection
+//     statusDropdown.addEventListener('click', function (event) {
+//         const selectedOption = event.target.closest('.status-option');
+//         if (selectedOption) {
+//             const selectedStatus = selectedOption.getAttribute('data-status');
+//             const selectedStatusId = selectedOption.getAttribute('data-status-id');
 
-            // Update the current status display and hidden inputs
-            currentStatus.textContent = selectedOption.textContent;
-            taskStatusInput.value = selectedStatus;
-            statusIdInput.value = selectedStatusId;
+//             // Update the current status display and hidden inputs
+//             currentStatus.textContent = selectedOption.textContent;
+//             taskStatusInput.value = selectedStatus;
+//             statusIdInput.value = selectedStatusId;
 
-            // อัปเดตสีของ .status-section
-            updateStatusSectionColor(selectedStatus);
+//             // อัปเดตสีของ .status-section
+//             updateStatusSectionColor(selectedStatus);
 
-            // Hide the dropdown
-            statusDropdown.style.display = 'none';
-        }
-    });
+//             // Hide the dropdown
+//             statusDropdown.style.display = 'none';
+//         }
+//     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function (event) {
-        if (!statusToggle.contains(event.target) && !statusDropdown.contains(event.target)) {
-            statusDropdown.style.display = 'none';
-        }
-    });
+//     // Close dropdown when clicking outside
+//     document.addEventListener('click', function (event) {
+//         if (!statusToggle.contains(event.target) && !statusDropdown.contains(event.target)) {
+//             statusDropdown.style.display = 'none';
+//         }
+//     });
 
-    // Populate the dropdown and set the default value
-    await populateDropdown();
-});
+//     // Populate the dropdown and set the default value
+//     await populateDropdown();
+// });
 
 // priority
 document.addEventListener('DOMContentLoaded', function () {

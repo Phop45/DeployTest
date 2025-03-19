@@ -175,18 +175,22 @@
 
                 <div class="leftBottom">
                     <div class="title">
-                       <span>
-                            โปรเจกต์ทั้งหมด
-                       </span> 
+                       <div class="selectProjectDisplay">
+                            <div class="selectItem" id="allProject">
+                                โปรเจกต์ทั้งหมด
+                            </div>
+                            <div class="selectItem" id="leaderProject">
+                                โปรเจกต์ที่คุณเป็นเจ้าของ
+                            </div>
+                            <div class="selectItem" id="memberProject">
+                                โปรเจกต์ที่คุณเป็นสมาชิก
+                            </div>
+                       </div>
                        <div class="createBtn">
                             <a href="/createProject" id="createBtn"> <i class="fa-solid fa-plus"></i> สร้างโปรเจกต์ใหม่</a>
                        </div>
                     </div>
-
-                    <div class="scollText">
-                        คุณสามารถเลื่อนเพื่อดูงานเพิ่มเติมได้ →
-                    </div>
-
+                    
                     <div class="projectContainer">
                         <% spaces.forEach(space => { %>
                             <div class="projectItemContainer">

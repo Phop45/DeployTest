@@ -1,4 +1,4 @@
-//Space Model = project Model
+// project Model
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -6,7 +6,7 @@ const collaboratorSchema = new Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     role: { 
         type: String, 
-        enum: ['owner', 'admin', 'member', 'Guest'], 
+        enum: ['owner', 'admin', 'member', 'guest'], 
         default: 'member'
     },
     joinDate: { type: Date, default: Date.now }

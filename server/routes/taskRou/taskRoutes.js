@@ -5,7 +5,6 @@ const taskController = require('../../controllers/taskCon/taskController.js');
 const { isLoggedIn } = require('../../middleware/checkAuth');
 const { uploadFiles, uploadCovers } = require('../../middleware/upload'); 
 
-
 router.post('/createTask', isLoggedIn, uploadFiles.array('attachments', 10), taskController.createTask);
 
 router.post('/addTask', isLoggedIn, taskController.addTask);

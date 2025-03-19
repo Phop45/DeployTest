@@ -32,6 +32,17 @@ exports.dashboardRender = async (req, res) => {
         const spaces = await Spaces.find({ 'collaborators.user': user._id })
             .select('projectName projectCover projectDetail createdAt collaborators');
 
+        // Filter spaces based on user role
+        const allProjects = spaces;
+        const leaderProjects = spaces.filter(space => 
+            space.collaborators.some(collab => 
+                collab.user.equals(user._id) && (collab.role === 'owner' || collab.role === 'admin')
+            ));
+        const memberProjects = spaces.filter(space => 
+            space.collaborators.some(collab => 
+                collab.user.equals(user._id) && collab.role === 'member')
+        );
+
         // Aggregate task stats for each project
         const taskStats = await Task.aggregate([
             {
@@ -168,6 +179,9 @@ exports.dashboardRender = async (req, res) => {
         res.render('layouts/userDashboard', {
             user,
             spaces: spacesWithStats,
+            allProjects,
+            leaderProjects,
+            memberProjects,
             dateText,
             tasksDueToday,
             statusCounts,

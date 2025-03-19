@@ -45,7 +45,7 @@
 
 .topSection{
     width: 100%;
-    padding: 30px;
+    padding: 30px 40px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -365,6 +365,7 @@
     .leftBottom{
         width: 100%;
         margin-top: 40px;
+
         .title{
             display: flex;
             flex-direction: row;
@@ -822,4 +823,13 @@
 }
 .fc .fc-scrollgrid{
     border: none;
+}
+
+.uesrProfile{
+    .profileImage{
+        height: 60px;
+        width: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
 }

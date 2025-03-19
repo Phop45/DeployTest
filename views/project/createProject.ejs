@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/css/spaceCss/spaceCreate.css">
+<link rel="stylesheet" href="/css/spaceCss/projectCreate.css">
 
 <%- include('../partials/topNavigation.ejs') %>
 
@@ -47,9 +47,9 @@
               <div id="selectedMembers" class="selected-members">
               </div>
             </div>
-            
+
           </div>
-          <input type="hidden" id="members" name="members" />
+          <input type="hidden" id="members" name="members"/>
 
           <div class="input" id="dueDateInput">
             <div class="dateLabel">
@@ -68,18 +68,22 @@
       </div>
     </form>
 
-    <div class="assignMemberModal show">
+    <div class="assignMemberModal">
       <div class="modalTitle">
         <div class="title">
           ผู้ใช้ทั้งหมด
         </div>
         <div class="searchOption">
           <input type="search" name="searchUser" id="searchUser" placeholder="ค้นหาผู้ใช้ผ่านชื่อ หรือ อีเมล์">
+          <i class="fa-solid fa-x" id="closeModal"></i>
         </div>
       </div>
 
-      <div class="modalSelected">
+      <div class="modalSelectedWrap">
+        <div class="modalSelected">
+        </div>
       </div>
+
 
       <div class="modalContent">
         <table>
@@ -92,21 +96,21 @@
                 <div class="sortData">
                   ชื่อ
                   <div id="filterNameIcon" class="filterNameIcon">
-                      <i class="fa-solid fa-caret-down"></i>
+                    <i class="fa-solid fa-caret-down"></i>
                   </div>
                   <div class="filterContent" style="display: none;">
-                      <div class="filterSelect" id="sortUp">
-                          <i class="fa-solid fa-arrow-up-long"></i>
-                          <div class="sortText">เรียงจาก ก → ฮ</div>
-                      </div>
-                      <div class="filterSelect" id="sortDown">
-                          <i class="fa-solid fa-arrow-down-long"></i>
-                          <div class="sortText">เรียงจาก ฮ → ก</div>
-                      </div>
-                      <div class="filterSelect" id="clearSort">
-                        <i class="fa-solid fa-minus"></i>
-                        <div class="sortText">ล้างการเรียงลำดับ</div>
-                      </div>
+                    <div class="filterSelect" id="sortUp">
+                      <i class="fa-solid fa-arrow-up-long"></i>
+                      <div class="sortText">เรียงจาก ก → ฮ</div>
+                    </div>
+                    <div class="filterSelect" id="sortDown">
+                      <i class="fa-solid fa-arrow-down-long"></i>
+                      <div class="sortText">เรียงจาก ฮ → ก</div>
+                    </div>
+                    <div class="filterSelect" id="clearSort">
+                      <i class="fa-solid fa-minus"></i>
+                      <div class="sortText">ล้างการเรียงลำดับ</div>
+                    </div>
                   </div>
                 </div>
               </th>
@@ -120,18 +124,18 @@
                     <i class="fa-solid fa-caret-down"></i>
                   </div>
                   <div class="filterOnlineContent" style="display: none;">
-                      <div class="filterSelect" id="isOnline">
-                        <i class="fa-solid fa-signal" style="color: green;"></i>
-                          <div class="sortText">แสดงเฉพาะสถานะออนไลน์</div>
-                      </div>
-                      <div class="filterSelect" id="isOffline">
-                          <i class="fa-solid fa-signal" style="color: red;"></i>
-                          <div class="sortText">แสดงเฉพาะสถานะออฟไลน์</div>
-                      </div>
-                      <div class="filterSelect" id="clearOnlineSort">
-                        <i class="fa-solid fa-minus"></i>
-                        <div class="sortText">ล้างการเรียงลำดับ</div>
-                      </div>
+                    <div class="filterSelect" id="isOnline">
+                      <i class="fa-solid fa-signal" style="color: green;"></i>
+                      <div class="sortText">แสดงเฉพาะสถานะออนไลน์</div>
+                    </div>
+                    <div class="filterSelect" id="isOffline">
+                      <i class="fa-solid fa-signal" style="color: red;"></i>
+                      <div class="sortText">แสดงเฉพาะสถานะออฟไลน์</div>
+                    </div>
+                    <div class="filterSelect" id="clearOnlineSort">
+                      <i class="fa-solid fa-minus"></i>
+                      <div class="sortText">ล้างการเรียงลำดับ</div>
+                    </div>
                   </div>
                 </div>
               </th>
@@ -139,30 +143,33 @@
           </thead>
           <tbody>
             <tr data-userid="${user.userid}" class="${selectedUsers.includes(user.userid) ? 'highlight' : ''}">
-                <td>
-                    <input 
-                        type="checkbox" 
-                        class="selectUser" 
-                        data-userid="${user.userid}" 
-                        ${selectedUsers.includes(user.userid) ? 'checked' : ''}
-                    >
-                </td>
-                <td>
-                    <img src="${user.profileImage || '/default-profile.png'}" alt="Profile" class="profile-image">
-                </td>
-                <td>${user.firstName}</td>
-                <td>${user.googleEmail}</td>
-                <td>${new Date}</td>
-                <td>online</td>
+              <td>
+                <input type="checkbox" class="selectUser" data-userid="${user.userid}"
+                  ${selectedUsers.includes(user.userid) ? 'checked' : '' }>
+              </td>
+              <td>
+                <img src="<%= user.profileImage %>" class="profile-image" alt="<%= user.username %>'s Profile Image"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                <div class="fallback-profile" style="display: none;">
+                  <span>
+                    <%= user.firstName ? user.firstName[0].toUpperCase() : '' %>
+                  </span>
+                </div>
+              </td>
+              <td>${user.firstName}</td>
+              <td>${user.googleEmail}</td>
+              <td>${new Date}</td>
+              <td>online</td>
             </tr>
           </tbody>
         </table>
-        <div class="confirmButtonContainer">
-          <button id="confirmSelectionButton" class="btn">ยืนยัน</button>
-        </div>
+      </div>
+      <div class="confirmButtonContainer">
+        <button id="confirmSelectionButton" class="btn">ยืนยัน</button>
       </div>
     </div>
-    <div class="overlay show" id="overlay"></div>
+    <div class="overlay" id="overlay"></div>
   </div>
 
   <script src="/script/project/createProjectScript.js"></script>

@@ -1,4 +1,4 @@
-//Space Controller
+//project Controller
 const Spaces = require('../models/Space');
 const Space = require('../models/Space');
 const User = require('../models/User');
@@ -24,8 +24,8 @@ exports.allProjectPage = async (req, res) => {
       ],
       deleted: false
     })
-      .populate('user', 'username profileImage')
-      .populate('collaborators.user', 'username profileImage')
+      .populate('user', 'firstName profileImage') 
+      .populate('collaborators.user', 'firstName profileImage') 
       .lean();
 
     // Ensure each space has a valid project cover
@@ -52,12 +52,12 @@ exports.allProjectPage = async (req, res) => {
       .lean();
     const unreadCount = notifications.length;
 
-    res.render("space/space-dashboard", {
+    res.render("project/allProject", {
       spaces,
       user: req.user,
       notifications,
       unreadCount,
-      layout: "../views/layouts/space"
+      layout: "../views/layouts/project"
     });
   } catch (error) {
     console.error("Error fetching spaces:", error);
@@ -65,7 +65,7 @@ exports.allProjectPage = async (req, res) => {
   }
 };
 
-// create space controller
+// create project controller
 exports.createProject = async (req, res) => {
   if (req.method === 'GET') {
     try {
@@ -77,12 +77,12 @@ exports.createProject = async (req, res) => {
         ],
         deleted: false
       })
-        .populate('user', 'username profileImage')
-        .populate('collaborators.user', 'username profileImage')
+        .populate('user', 'firstName lastName profileImage')
+        .populate('collaborators.user', 'firstName lastName profileImage')
         .lean();
       
       const notifications = await Notification.find({ user: userId, status: 'unread' })
-        .populate('user', 'username profileImage')
+        .populate('user', 'firstName lastName profileImage')
         .populate('space', 'projectName')
         .populate('leader', 'profileImage')
         .sort({ createdAt: -1 })
@@ -90,10 +90,10 @@ exports.createProject = async (req, res) => {
       const unreadCount = notifications.length;
       const errorMessage = req.flash('error'); // Capture the error flash message here
 
-      res.render("space/createProject", {
+      res.render("project/createProject", {
         spaces,
         user: req.user,
-        layout: "../views/layouts/space",
+        layout: "../views/layouts/project",
         notifications,
         unreadCount,
         errorMessage: errorMessage.length > 0 ? errorMessage[0] : null, // Pass the message to the view
@@ -103,6 +103,7 @@ exports.createProject = async (req, res) => {
       res.status(500).send("Internal Server Error");
     }
   }
+  
   else if (req.method === 'POST') {
     try {
       const { projectName, projectDetail, members, dueDate } = req.body;
@@ -324,12 +325,12 @@ exports.ShowRecover = async (req, res) => {
       },
     ]).exec();
 
-    res.render("space/space-recover", {
+    res.render("project/space-recover", {
       spaces: spaces,
       userName: req.user.username,
       usernameId: req.user.userid,
       userImage: req.user.profileImage,
-      layout: "../views/layouts/space",
+      layout: "../views/layouts/project",
     });
   } catch (error) {
     console.log(error);
@@ -350,7 +351,7 @@ exports.recoverSpace = async (req, res) => {
       return res.status(404).json({ success: false, error: "Space not found" });
     }
 
-    res.redirect('/space');
+    res.redirect('/project');
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error: "Internal Server Error" });

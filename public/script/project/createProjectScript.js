@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmSelectionButton = document.querySelector('#confirmSelectionButton');
     const membersInput = document.querySelector('#members');
     const selectedMembersDiv = document.querySelector('#selectedMembers');
+    const closeModalIcon = document.querySelector('#closeModal'); 
+    const selectedMembers = [];
 
     let selectedUsers = [];
     let userData = [];
@@ -21,18 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchCurrentUserId();
     });
 
-    // // Hide modal when clicked outside
-    // assignMemberModal.addEventListener('click', (e) => {
-    //     assignMemberModal.classList.remove('show');
-    //     overlay.classList.remove('show');
-    // });
-
-    // Hide modal when pressing the escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+    // Hide modal when clicked outside
+    assignMemberModal.addEventListener('click', (e) => {
+        if (e.target === assignMemberModal) {
             assignMemberModal.classList.remove('show');
             overlay.classList.remove('show');
         }
+    });
+
+    closeModalIcon.addEventListener('click', () => {
+        assignMemberModal.classList.remove('show');
+        overlay.classList.remove('show');
     });
 
     // Fetch current user ID and then fetch users
@@ -40,8 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/getUsers'); // Adjust API endpoint
             const currentUser = await response.json();
-            currentUserId = currentUser.userid;
-            fetchUsers(); // Fetch users after getting current user ID
+            currentUserId = currentUser._id;
+            fetchUsers(); 
         } catch (error) {
             console.error('Error fetching current user:', error);
         }
@@ -52,35 +53,87 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/getUsers'); // Adjust API endpoint
             userData = await response.json();
-            renderUsers(userData.filter(user => user.userid !== currentUserId)); // Exclude current user
+            renderUsers(userData.filter(user => user._id !== currentUserId));
         } catch (error) {
             console.error('Error fetching users:', error);
+        }
+    }
+
+    function formatTimeAgo(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000); // Time difference in seconds
+        
+        const minutes = Math.floor(diffInSeconds / 60);
+        const hours = Math.floor(diffInSeconds / 3600);
+        const days = Math.floor(diffInSeconds / 86400);
+    
+        if (minutes < 1) {
+            return 'ไม่กี่วินาทีที่แล้ว';
+        } else if (minutes < 60) {
+            return `${minutes} นาทีที่แล้ว`;
+        } else if (hours < 24) {
+            return `${hours} ชั่วโมงที่แล้ว`;
+        } else if (days < 30) {
+            return `${days} วันที่แล้ว`;
+        } else {
+            const months = Math.floor(days / 30);
+            return `${months} เดือนที่แล้ว`;
         }
     }
 
     // Render users in the modal table
     function renderUsers(users) {
         const tbody = modalContentTable.querySelector('tbody');
+        tbody.innerHTML = '';
+    
+        // If no users in the list, show a message for no online/offline users
+        if (users.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; color: gray;">
+                        <strong>ไม่มีผู้ใช้ที่ออนไลน์</strong> <!-- For online users -->
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+    
+        // Render the users as usual if there are users
         tbody.innerHTML = users.map(user => `
-          <tr data-userid="${user.userid}" class="${selectedUsers.includes(user.userid) ? 'highlight' : ''}">
-              <td>
-                  <input 
-                      type="checkbox" 
-                      class="selectUser" 
-                      data-userid="${user.userid}" 
-                      ${selectedUsers.includes(user.userid) ? 'checked' : ''}
-                  >
-              </td>
-              <td>
-                  <img src="${user.profileImage || '/default-profile.png'}" alt="Profile" class="profile-image">
-              </td>
-              <td>${user.firstName || ''} ${user.lastName || ''}</td>
-              <td>${user.googleEmail}</td>
-              <td>${new Date(user.lastActive).toLocaleString()}</td>
-              <td>${user.isOnline ? 'Online' : 'Offline'}</td>
-          </tr>
-      `).join('');
-
+            <tr data-userid="${user._id}" class="${selectedUsers.includes(user._id) ? 'highlight' : ''}">
+                <td>
+                    <input 
+                        type="checkbox" 
+                        class="selectUser" 
+                        data-userid="${user._id}" 
+                        ${selectedUsers.includes(user._id) ? 'checked' : ''}
+                    >
+                </td>
+                <td>
+                    <img 
+                        src="${user.profileImage}" 
+                        class="profile-image" 
+                        alt="${user.username}'s Profile Image" 
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="fallback-profile" style="display: none;">
+                        <span>
+                        ${ user.firstName ? user.firstName[0].toUpperCase() : '' }
+                        </span>
+                    </div>
+                </td>
+                <td>${user.firstName || ''} ${user.lastName || ''}</td>
+                <td>${user.googleEmail}</td>
+                <td><span>ใช้งานล่าสุดเมื่อ ${formatTimeAgo(new Date(user.lastActive))}</span></td>
+                <td>
+                    <span style="color: ${user.isOnline ? 'green' : 'red'};">
+                        ${user.isOnline 
+                            ? '<i class="fa-solid fa-signal" style="color: green;"></i> ออนไลน์' 
+                            : '<i class="fa-solid fa-signal" style="color: red;"></i> ออฟไลน์'}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+    
         // Attach event listeners to checkboxes
         tbody.querySelectorAll('.selectUser').forEach(checkbox => {
             checkbox.addEventListener('change', handleUserSelection);
@@ -90,11 +143,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle user selection
     function handleUserSelection(e) {
         const userId = e.target.dataset.userid;
+        const user = userData.find(u => u._id === userId);
 
         if (e.target.checked) {
-            if (!selectedUsers.includes(userId)) selectedUsers.push(userId);
+            if (!selectedUsers.some(u => u.id === userId)) {
+                selectedUsers.push({
+                    id: user._id,  
+                    username: user.firstName || user.username,
+                    profileImage: user.profileImage
+                });
+            }
         } else {
-            selectedUsers = selectedUsers.filter(id => id !== userId);
+            selectedUsers = selectedUsers.filter(u => u.id !== userId);
         }
 
         updateModalSelected();
@@ -103,35 +163,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update modalSelected UI and selected members
     function updateModalSelected() {
-        modalSelectedDiv.innerHTML = selectedUsers.map(userId => {
-            const user = userData.find(user => user.userid === userId);
+        // Update modal selected UI with the new selectedUsers array
+        modalSelectedDiv.innerHTML = selectedUsers.map(user => {
             return `
-              <div class="selected-user">
-                  <img src="${user.profileImage || '/default-profile.png'}" alt="Profile" class="profile-image">
-                  <span>${user.firstName || ''} ${user.lastName || ''}</span>
-                  <i class="fa-solid fa-xmark unselect-user" data-userid="${userId}"></i>
-              </div>
-          `;
+                <div class="selected-user" data-userid="${user.id}">
+                    <img 
+                        src="${user.profileImage}" 
+                        class="profile-image" 
+                        alt="${user.username}'s Profile Image" 
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="fallback-profile" style="display: none; width: 30px; height: 30px;">
+                        <span>${user.username ? user.username[0].toUpperCase() : ''}</span>
+                    </div>
+                    <span>${user.username}</span>
+                    <i class="fa-solid fa-xmark unselect-user" data-userid="${user.id}" style="cursor: pointer;"></i>
+                </div>
+            `;
         }).join('');
 
-        selectedMembersDiv.innerHTML = selectedUsers.map(userId => {
-            const user = userData.find(user => user.userid === userId);
+       // Update selected members UI with full user details
+        selectedMembersDiv.innerHTML = selectedUsers.map(user => {
             return `
-              <div class="member-chip">
-                  <img src="${user.profileImage || '/default-profile.png'}" alt="Profile" class="profile-image">
-                  <span>${user.firstName || ''} ${user.lastName || ''}</span>
-                  <i class="fa-solid fa-xmark unselect-user" data-userid="${userId}"></i>
-              </div>
-          `;
+                <div class="member-chip" data-userid="${user.id}">
+                    <img 
+                        src="${user.profileImage}" 
+                        class="profile-image" 
+                        alt="${user.username}'s Profile Image" 
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="fallback-profile" style="display: none;">
+                        <span>${user.username ? user.username[0].toUpperCase() : ''}</span>
+                    </div>
+                    <span>${user.username}</span>
+                    <i class="fa-solid fa-xmark unselect-user" data-userid="${user.id}" style="cursor: pointer;"></i>
+                </div>
+            `;
         }).join('');
-
-        const members = selectedUsers.map(userId => {
-            const user = userData.find(user => user.userid === userId);
-            return { id: user.userid, username: user.firstName || user.googleEmail };
-        });
-
-        membersInput.value = JSON.stringify(members);
-
+    
+        // Prepare and serialize the list of members
+        const members = selectedUsers.map(user => ({
+            id: user.id,
+            username: user.username
+        }));
+    
+        membersInput.value = JSON.stringify(members); 
+    
+        // Add event listeners to the unselect user icons
         document.querySelectorAll('.unselect-user').forEach(icon => {
             icon.addEventListener('click', handleUnselectUser);
         });
@@ -163,7 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Confirm button functionality
     confirmSelectionButton.addEventListener('click', () => {
-        assignMemberModal.style.display = 'none';
+        // Hide the modal and overlay
+        assignMemberModal.classList.remove('show');
+        overlay.classList.remove('show');
     });
 
     // Real-time search functionality
@@ -272,6 +350,75 @@ document.addEventListener('DOMContentLoaded', () => {
     clearOnlineSort.addEventListener('click', () => { // Highlighted change
         renderUsers(userData); // Render the original order
         filterContent.style.display = 'none'; // Hide dropdown
+    });
+
+    // Prepare form data logic
+    async function prepareFormData() {
+        const projectName = document.getElementById("projectName").value.trim();
+        const isoDate = dueDateInput.dataset.isoDate;
+        if (isoDate) {
+            dueDateInput.value = isoDate;
+        }
+        const membersInput = document.getElementById("members");
+        membersInput.value = JSON.stringify(selectedMembers || []);
+
+        const response = await fetch('/checkExistingProject', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ projectName })
+        });
+
+        const result = await response.json();
+
+        if (result.exists) {
+            window.alert("คุณมีโปรเจกต์ชื่อนี้อยู่แล้ว กรุณาใส่ชื่อโปรเจกต์ใหม่");
+            return true;
+        }
+
+        return false;
+    }
+
+    // Form submission logic
+    document.querySelector('#createProjectForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (await prepareFormData()) {
+            return;
+        }
+
+        const projectName = document.querySelector('#projectName').value.trim();
+        const projectDetail = document.querySelector('#projectDetail').value.trim();
+        const projectDueDate = document.querySelector('#dueDateInput').value;
+        const members = JSON.parse(membersInput.value);
+
+        const formData = {
+            projectName,
+            projectDetail,
+            projectDueDate,
+            collaborators: members,
+        };
+
+        try {
+            const response = await fetch('/createProject', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Project created successfully!');
+                window.location.reload();
+            } else {
+                alert('Error creating project: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error creating project:', error);
+            alert('An error occurred. Please try again.');
+        }
     });
 });
 
@@ -417,19 +564,19 @@ document.addEventListener("DOMContentLoaded", function () {
         if (await prepareFormData()) {
             return;
         }
-
+    
         const projectName = document.querySelector('#projectName').value.trim();
         const projectDetail = document.querySelector('#projectDetail').value.trim();
         const projectDueDate = document.querySelector('#dueDateInput').value;
-        const members = JSON.parse(membersInput.value);
-
+        const members = JSON.parse(membersInput.value); // Get the selected members, now including data-userid
+    
         const formData = {
             projectName,
             projectDetail,
             projectDueDate,
             collaborators: members,
         };
-
+    
         try {
             const response = await fetch('/createProject', {
                 method: 'POST',
@@ -438,7 +585,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: JSON.stringify(formData),
             });
-
+    
             const result = await response.json();
             if (result.success) {
                 alert('Project created successfully!');
@@ -452,3 +599,5 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+

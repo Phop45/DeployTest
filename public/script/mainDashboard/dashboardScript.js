@@ -132,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function () {
     calendar.render();
 });
 
-
 // project item click
 document.addEventListener('DOMContentLoaded', () => {
     const projectItems = document.querySelectorAll('.projectItem');

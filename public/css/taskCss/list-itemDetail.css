@@ -2338,3 +2338,8 @@ button.btn:hover {
         text-align: end;
     }
 }
+
+.comment-log {
+    color: red; /* Set text color for comment logs */
+    font-weight: 500;
+}

@@ -129,8 +129,13 @@
               <% users.forEach(user => { %> <!-- Loop through all users to display default rows -->
                 <tr class="workload-row" data-user-id="<%= user._id %>" data-space-id="<%= spaces._id %>">
                   <td id="userAvatar">
-                    <img src="<%= user.profileImage %>" class="user-avatar">
-                    <span class="user-name"><%= user.username %></span>
+                    <img src="<%= user.profileImage %>" class="user-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="fallback-profile-dashboard" style="display: none;">
+                      <span>
+                        <%= user.firstName[0] %>
+                      </span>
+                    </div>
+                    <span class="user-name"><%= user.firstName %></span>
                   </td>
                   <td id="progressBar">
                     <div class="perWrap">
@@ -147,8 +152,13 @@
               <% workloadChartData.forEach(item => { %>
                 <tr class="workload-row" data-user-id="<%= item.user._id %>" data-space-id="<%= spaces._id %>">
                   <td id="userAvatar">
-                    <img src="<%= item.user.profileImage %>" class="user-avatar">
-                    <span class="user-name"><%= item.user.username %></span>
+                    <img src="<%= item.user.profileImage %>" class="user-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="fallback-profile-dashboard" style="display: none; ">
+                      <span>
+                        <%= user.firstName[0] %>
+                      </span>
+                    </div>
+                    <span class="user-name"><%= item.user.firstName %></span>
                   </td>
                   <td id="progressBar">
                     <div class="perWrap">

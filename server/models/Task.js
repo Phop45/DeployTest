@@ -55,7 +55,7 @@ const taskSchema = new Schema({
     },
     taskStatus: {
         type: String,
-        enum: ['toDo', 'inProgress', 'fix', 'finished'],
+        enum: ['inProgress', 'pending', 'fix', 'finished'],
         required: true,
     },      
     taskPriority: {
@@ -63,7 +63,6 @@ const taskSchema = new Schema({
         enum: ['urgent', 'normal', 'low'],
         default: 'normal'
     },
-
     taskTags: [{
         _id: { type: mongoose.Schema.Types.ObjectId, ref: 'Tag' },
         tagName: { type: String },

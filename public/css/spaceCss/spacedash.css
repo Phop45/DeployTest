@@ -26,7 +26,7 @@
 
 .content {
     background-color: white;
-    margin: 30px 50px 30px 150px;
+    margin: 0 40px 0 130px;
 
     .spaceall {
 
@@ -130,10 +130,12 @@
     width: 100%;
 }
 
-.taskcardall-text .taskmember {
+.taskmember {
     margin-right: 10px;
     display: flex;
     flex-direction: row;
+    align-items: center;
+    gap: 5px;
 }
 
 .taskcardall-text .taskmember img {
@@ -381,4 +383,18 @@
 #sec{
     display: flex;
     flex-direction: row;
+}
+
+.fallback-profile-allProject{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #5C54E5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 300;
 }

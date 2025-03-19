@@ -8,28 +8,8 @@
     </div>
 
     <div class="formWrap">
-        <span id="note">ช่องที่ต้องกรอกข้อมูลจะมีเครื่องหมายดอกจัน <span style="color: #ff0000;">*</span> </span>
         <form action="/createTask" method="POST" class="add-form" enctype="multipart/form-data" id="taskForm" 
-        onsubmit="return prepareFormData()">
-            <div class="formInput" id="statusForm" style="margin-top: 15px;">
-                <span id="staLabel">
-                    <i class="fa-solid fa-hourglass-start icon"></i>
-                    สถานะของงาน
-                </span>
-                <div class="status-section">
-                    <div class="status-toggle" id="statusToggle">
-                        <span id="currentStatus">ยังไม่ทำ</span>
-                        <i class="bx bx-chevron-down"></i>
-                    </div>
-                </div>
-                <div class="dropdown-status" id="statusDropdown" style="display: none;">
-                    <!-- สถานะของงานจะโชว์ -->
-                </div>
-                <input type="hidden" id="taskStatus" name="taskStatus" value="toDo" />
-                <input type="hidden" id="statusId" name="statusId" value="" />
-                <span id="staNote">ส่วนของสถานะเริ่มต้นเมื่อสร้างงาน</span>
-            </div>
-
+              onsubmit="return prepareFormData()">
             <div class="formInput" id="nameInput">
                 <label for="taskName">
                     <i class="fa-solid fa-font icon"></i>
@@ -59,8 +39,8 @@
                     <div id="assignedUsersDropdown" class="custom-dropdown">
                         <div class="selected-users" id="selectedUsers"></div>
                         <div class="dropdown-options" id="dropdownOptions">
-                            <% spaces.collaborators.forEach(collaborator=> { %>
-                                <% if (collaborator.status !=='pending' ) { %>
+                            <% spaces.collaborators.forEach(collaborator => { %>
+                                <% if (collaborator.user && collaborator.status !== 'pending') { %>
                                     <div class="dropdown-item" data-user-id="<%= collaborator.user._id %>"
                                         onclick="selectUser('<%= collaborator.user._id %>', '<%= collaborator.user.username %>', '<%= collaborator.user.profileImage %>')">
                                         <img src="<%= collaborator.user.profileImage || '/public/img/profileImage/userDefalt.jpg' %>"
@@ -74,8 +54,8 @@
                                             </p>
                                         </span>
                                     </div>
-                                    <% } %>
-                                        <% }) %>
+                                <% } %>
+                            <% }) %>
                         </div>
                     </div>
                     <p id="autoAssign" data-user-id="<%= user._id %>" data-username="<%= user.username %>"

@@ -158,7 +158,7 @@ exports.createTask = async (req, res) => {
       taskDetail,
       taskType,
       taskPriority,
-      taskStatus: status.category,
+      taskStatus: 'inProgress',
       project: mongoose.Types.ObjectId(spaceId),
       user: mongoose.Types.ObjectId(userId),
       assignedUsers: validAssignedUsers,

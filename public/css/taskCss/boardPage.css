@@ -64,7 +64,7 @@
 }
 
 .board .column {
-    width: 100%;
+    width: 22%;
     height: 500px;
     background: white;
     border-radius: 10px;
@@ -1711,4 +1711,19 @@ input:not(:placeholder-shown) {
     flex-direction: row;
     align-items: center;
     gap: 5px;
+}
+
+.fallback-profile-board{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #5C54E5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 300;
+    cursor: pointer;
+    border: 2px solid white;
 }
