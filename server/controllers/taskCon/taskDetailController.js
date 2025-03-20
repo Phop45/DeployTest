@@ -131,9 +131,7 @@ exports.detailPageRender = async (req, res) => {
         const assignedUsers = (task.assignedUsers || []).map(user => ({
             ...user,
             username: `${user.firstName} ${user.lastName}`,
-            profileImage: user.profileImage.startsWith('/api')
-                ? user.profileImage
-                : user.profileImage || '/public/img/profileImage/userDefault.jpg',
+            profileImage: user.profileImage || '/public/img/profileImage/userDefault.jpg',
         }));
 
         const statusMapping = {
@@ -168,6 +166,7 @@ exports.detailPageRender = async (req, res) => {
         res.render("task/task-ItemDetail", {
             user: req.user,
             currentUserId: req.user._id.toString(),
+            taskId: task._id.toString(),
             task,
             attachments: task.attachments || [],
             subtasks: formattedSubtasks,
@@ -849,5 +848,29 @@ exports.clearLogs = async (req, res) => {
     } catch (error) {
         console.error('Error clearing activity logs:', error);
         res.status(500).send('An error occurred while clearing activity logs.');
+    }
+};
+
+exports.updatePendingStatus = async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { status } = req.body;
+
+        if (!['inProgress', 'pending', 'fix', 'finished'].includes(status)) {
+            return res.status(400).send({ message: 'Invalid status' });
+        }
+
+        const task = await Task.findById(taskId);
+        if (!task) {
+            return res.status(404).send({ message: 'Task not found' });
+        }
+
+        task.taskStatus = status;
+        await task.save();
+
+        res.status(200).send({ message: 'Task status updated successfully', task });
+    } catch (error) {
+        console.error('Error updating task status:', error);
+        res.status(500).send({ message: 'Internal Server Error' });
     }
 };
