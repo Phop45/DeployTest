@@ -131,9 +131,7 @@ exports.detailPageRender = async (req, res) => {
         const assignedUsers = (task.assignedUsers || []).map(user => ({
             ...user,
             username: `${user.firstName} ${user.lastName}`,
-            profileImage: user.profileImage.startsWith('/api')
-                ? user.profileImage
-                : user.profileImage || '/public/img/profileImage/userDefault.jpg',
+            profileImage: user.profileImage || '/public/img/profileImage/userDefault.jpg',
         }));
 
         const statusMapping = {
