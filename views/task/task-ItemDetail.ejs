@@ -1,7 +1,7 @@
 <div class="content">
     <div class="topOption">
         <div class="breadcomes">
-            <a href="/space">พื้นที่</a>
+            <a href="/project">โปรเจกต์ทั้งหมด</a>
             <span>/</span>
             <a href="/space/item/<%= spaceId %>">แดชบอร์ด</a>
             <span>/</span>
@@ -45,8 +45,15 @@
                         </button>
                     </div>
                 </form>
+                <% if (taskStatus !== 'pending') { %>
+                    <div class="sendTask">
+                        <button type="button" id="sendTask" onclick="checkWork('<%= taskId %>')">
+                            <span>ส่งงาน</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                <% } %>
             </div>
-
             <!-- Task Name -->
 
             <!-- Task Detail -->
@@ -72,15 +79,10 @@
                         </div>
                         <div class="detail-data statusWrap" id="detail-data-status">
                             <div class="status-div" data-task-id="<%= task._id %>" data-status="<%= taskStatus %>">
+                                <span class="status-icon"></span> 
                                 <span class="status-text">
                                     <%= taskStatus %>
                                 </span>
-                            </div>
-                            <div class="dropdown-content" id="status-dropdown-content" style="display: none;">
-                                <a href="#" class="status-option" data-status="toDo">ยังไม่ได้ทำ</a>
-                                <a href="#" class="status-option" data-status="inProgress">กำลังทำ</a>
-                                <a href="#" class="status-option" data-status="fix">แก้ไข</a>
-                                <a href="#" class="status-option" data-status="finished">เสร็จสิ้น</a>
                             </div>
                         </div>
                     </div>
@@ -804,6 +806,56 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sendTaskButton = document.querySelector('.sendTask');
+        const statusDiv = document.querySelector('.status-div');
+    
+        const checkAndHideSendTask = () => {
+            const currentStatus = statusDiv.getAttribute('data-status');
+            if (currentStatus === 'pending') {
+                sendTaskButton.style.display = 'none'; // Hide the button
+            } else {
+                sendTaskButton.style.display = 'block'; // Show the button if not pending
+            }
+        };
+    
+        // Initial check
+        checkAndHideSendTask();
+    
+        // Optional: Add a listener for status changes
+        document.querySelectorAll('.status-option').forEach(option => {
+            option.addEventListener('click', function () {
+                const newStatus = this.getAttribute('data-status');
+                statusDiv.setAttribute('data-status', newStatus);
+                checkAndHideSendTask(); // Recheck visibility after status update
+            });
+        });
+    });
+    
+    async function checkWork(taskId) {
+        try {
+            const response = await fetch(`/tasks/${taskId}/update-status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: 'pending' }), // New status to set
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Unhandled status: ${response.statusText}`);
+            }
+    
+            const result = await response.json();
+            console.log('Task updated:', result);
+            alert('Task status updated successfully!');
+            window.location.reload(); 
+        } catch (error) {
+            console.error('Error updating task status:', error.message);
+            alert('Failed to update task status.');
+        }
+    }
+
     // description section
     document.addEventListener('DOMContentLoaded', function () {
         const updateTaskDescription = async (textarea) => {
