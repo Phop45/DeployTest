@@ -23,7 +23,7 @@ router.post('/tasks/remove-user', isLoggedIn, taskDetailController.removeUserFro
 
 router.post('/update/:taskId', isLoggedIn, taskDetailController.updateTask);
 router.post('/tasks/:id/clearLogs', isLoggedIn, taskDetailController.clearLogs);
-
+router.put('/tasks/:taskId/update-status',isLoggedIn, taskDetailController.updatePendingStatus);
 
 // ❌
 
