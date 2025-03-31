@@ -1,5 +1,12 @@
 @import url(https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap);
 
+@font-face {
+    font-family: 'Kanit';
+    font-style: normal;
+    font-display: swap;
+    src: url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+}
+
 * {
     font-family: 'kanit', sans-serif;
     margin: 0;
@@ -186,4 +193,3 @@ body {
 .google_btn span {
     display: inline-block;
 }
-
