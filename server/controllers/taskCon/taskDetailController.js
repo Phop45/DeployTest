@@ -101,17 +101,18 @@ exports.detailPageRender = async (req, res) => {
             .lean();
 
         const spaceUsers = (space.collaborators || [])
-        .map(collab => ({
-            ...collab.user,
-            username: collab.user._id.toString() === loggedInUserId
-                ? 'ฉัน'
-                : `${collab.user.firstName} ${collab.user.lastName}`,
+            .filter(collab => collab.user)
+            .map(collab => ({
+                ...collab.user,
+                username: collab.user._id.toString() === loggedInUserId
+                    ? 'ฉัน'
+                    : `${collab.user.firstName} ${collab.user.lastName}`,
             }))
-        .sort((a, b) => {
-            if (a._id.toString() === loggedInUserId) return -1;
-            if (b._id.toString() === loggedInUserId) return 1;
-            return 0;
-        });
+            .sort((a, b) => {
+                if (a._id.toString() === loggedInUserId) return -1;
+                if (b._id.toString() === loggedInUserId) return 1;
+                return 0;
+            });
 
         const { taskNames, dueDate, dueTime, taskStatus, taskDetail, taskPriority } =
             await extractTaskParameters([task]);

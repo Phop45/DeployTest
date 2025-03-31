@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const attachmentSchema = new Schema({
-    path: String, 
+    url: String, // Add a URL field
     originalName: String,
     uploadedAt: { type: Date, default: Date.now },
     fileSize: Number,
@@ -56,6 +56,7 @@ const taskSchema = new Schema({
     taskStatus: {
         type: String,
         enum: ['inProgress', 'pending', 'fix', 'finished'],
+        default: 'inProgress',
         required: true,
     },      
     taskPriority: {
@@ -69,10 +70,8 @@ const taskSchema = new Schema({
         color: { type: String }
     }],
     assignedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    subtasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
-    dependencies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
+    subtasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SubTask' }],
 
-    // Additional features
     activityLogs: [activityLogSchema],
     attachments: [attachmentSchema],
     deleted: { type: Boolean, default: false }

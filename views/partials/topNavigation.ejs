@@ -13,7 +13,14 @@
             <div class="search_container">
                 <form class="search_formTop">
                     <i class="fa-solid fa-magnifying-glass" id="search_icon"></i>
-                    <input class="searchInputTop" type="search" placeholder="ค้นหา" aria-label="Search" maxlength="500">
+                    <input 
+                        class="searchInputTop" 
+                        type="search" 
+                        id="searchInputTop" 
+                        name="searchQuery" 
+                        placeholder="ค้นหา" 
+                        aria-label="Search" 
+                        maxlength="500">
                 </form>
 
                 <div class="mainSearchResult" style="display: none;">
@@ -141,7 +148,7 @@
                             alt="<%= user.username %>'s Profile Image" 
                             width="40px" 
                             height="40px" 
-                            style="border-radius: 50%; display: none;"
+                            style="border-radius: 50%;"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="fallback-profile" style="display: none;">
                                 <span><%= user.firstName[0] %></span>

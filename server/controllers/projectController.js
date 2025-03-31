@@ -10,6 +10,7 @@ const multer = require("multer");
 const path = require("path");
 const Task = require('../models/Task'); 
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 moment.locale('th');
 
 exports.allProjectPage = async (req, res) => {
@@ -17,7 +18,7 @@ exports.allProjectPage = async (req, res) => {
     const userId = mongoose.Types.ObjectId(req.user.id);
 
     // Fetch spaces
-    const spaces = await Spaces.find({
+    let spaces = await Spaces.find({
       $or: [
         { user: userId },
         { collaborators: { $elemMatch: { user: userId } } }
@@ -26,22 +27,54 @@ exports.allProjectPage = async (req, res) => {
     })
       .populate('user', 'firstName profileImage') 
       .populate('collaborators.user', 'firstName profileImage') 
+      .sort({ createdAt: -1 })
       .lean();
 
     // Ensure each space has a valid project cover
     for (const space of spaces) {
+      // Ensure each space has a valid project cover
       if (!space.projectCover || typeof space.projectCover !== "string") {
-        space.projectCover = '/public/spacePictures/defaultBackground.jpg';
-      } else {
-        const picturePath = path.join(__dirname, '../..', space.projectCover);
-        if (!fs.existsSync(picturePath)) {
-          space.projectCover = '/public/spacePictures/defaultBackground.jpg';
-        }
+        space.projectCover = 'https://res.cloudinary.com/dibbpr0zu/image/upload/v1743406589/defultBackground_vjda8s.jpg';
+      } else if (!space.projectCover.startsWith('http')) {
+        space.projectCover = 'https://res.cloudinary.com/dibbpr0zu/image/upload/v1743406589/defultBackground_vjda8s.jpg';
       }
 
-      const taskCount = await Task.countDocuments({ space: space._id, deleteAt: null });
+      // Task Count
+      const taskCount = await Task.countDocuments({ project: space._id, deleteAt: null });
       space.taskCount = taskCount;
+
+      // Assigned Users Task Count
+      let assignedUserstaskCount = {};
+      for (const collaborator of space.collaborators || []) {
+        if (collaborator.user && collaborator.user._id) {
+          // Get all tasks assigned to each collaborator in the space
+          const taskCountForUser = await Task.countDocuments({
+            project: space._id,
+            assignedUsers: collaborator.user._id,
+            deleteAt: null
+          });
+          assignedUserstaskCount[collaborator.user._id] = taskCountForUser;
+        }
+      }
+      space.assignedUserstaskCount = assignedUserstaskCount;
     }
+
+    // Convert createdAt to ISO string
+    spaces.forEach(space => {
+      if (!space.createdAt) {
+        console.warn(`Missing createdAt for space: ${space.projectName}`);
+        space.createdAt = new Date(); // Default to the current date if missing
+      } else if (typeof space.createdAt === 'string') {
+        space.createdAt = new Date(space.createdAt); // Convert string to Date
+      }
+
+      // Ensure it's a valid Date object before calling toISOString
+      if (space.createdAt instanceof Date && !isNaN(space.createdAt)) {
+        space.createdAt = space.createdAt.toISOString();
+      } else {
+        space.createdAt = new Date().toISOString(); // Default to the current date if invalid
+      }
+    });
 
     // Fetch notifications with space populated
     const notifications = await Notification.find({ user: userId, status: 'unread' })
@@ -64,6 +97,7 @@ exports.allProjectPage = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
 
 // create project controller
 exports.createProject = async (req, res) => {
@@ -88,7 +122,7 @@ exports.createProject = async (req, res) => {
         .sort({ createdAt: -1 })
         .lean();
       const unreadCount = notifications.length;
-      const errorMessage = req.flash('error'); // Capture the error flash message here
+      const errorMessage = req.flash('error'); 
 
       res.render("project/createProject", {
         spaces,
@@ -107,7 +141,7 @@ exports.createProject = async (req, res) => {
   else if (req.method === 'POST') {
     try {
       const { projectName, projectDetail, members, dueDate } = req.body;
-      
+
       const userId = mongoose.Types.ObjectId(req.user.id);
       const existingProject = await Spaces.findOne({
         projectName: projectName.trim(),
@@ -130,6 +164,16 @@ exports.createProject = async (req, res) => {
         }
       }
 
+      // Upload the project cover to Cloudinary
+      let projectCoverUrl = 'https://res.cloudinary.com/dibbpr0zu/image/upload/v1743406589/defultBackground_vjda8s.jpg'; // Default cover
+      if (req.file) {
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'projectCovers',
+          transformation: [{ width: 800, height: 600, crop: 'limit' }]
+        });
+        projectCoverUrl = result.secure_url;
+      }
+
       const newSpace = new Spaces({
         projectName,
         projectDetail: projectDetail?.trim() || "",
@@ -137,12 +181,10 @@ exports.createProject = async (req, res) => {
         collaborators: [
           {
             user: req.user.id,
-            role: "owner", 
+            role: "owner",
           },
         ],
-        projectCover: req.file
-          ? `/public/projectCover/${req.file.filename}`
-          : "/public/projectCover/defultBackground.jpg",
+        projectCover: projectCoverUrl,
       });
 
       // Add members to the collaborators list and create notifications
@@ -173,7 +215,7 @@ exports.createProject = async (req, res) => {
         }
       }
       await newSpace.save();
-      
+
       // Add default statuses
       const defaultStatuses = [
         { name: "ยังไม่ทำ", category: "toDo", space: newSpace._id },
@@ -185,7 +227,8 @@ exports.createProject = async (req, res) => {
 
       res.redirect("/project");
     } catch (error) {
-      req.flash('error', 'เกิดข้อผิดพลาดในการดึงข้อมูลโปรเจกต์');
+      console.error('Error creating project:', error);
+      req.flash('error', 'เกิดข้อผิดพลาดในการสร้างโปรเจกต์');
       res.redirect('/createProject');
     }
   }
@@ -359,27 +402,9 @@ exports.recoverSpace = async (req, res) => {
 };
 
 const storage = multer.diskStorage({
-  destination: "./public/spacePictures/",
-  filename: function (req, file, cb) {
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
-  },
-});
-
-const spaceStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(
-      null,
-      "/Users/p/Desktop/10:04_TaskP/public/spacePictures"
-    );
-  },
-  filename: function (req, file, cb) {
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
+  destination: './public/projectCover/',
+  filename: (req, file, cb) => {
+    cb(null, `projectCover-${Date.now()}${path.extname(file.originalname)}`);
   },
 });
 
@@ -394,7 +419,7 @@ const upload = multer({
       return cb(null, true);
     }
     cb(new Error('Only images are allowed!'));
-  }
+  },
 }).single('SpacePicture');
 
 function checkFileType(file, cb) {
@@ -410,59 +435,55 @@ function checkFileType(file, cb) {
 }
 
 module.exports.edit_Update_SpacePicture = async (req, res) => {
-  upload(req, res, async (err) => {
-    if (err) {
-      res.send(
-        '<script>alert("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ: ' +
-        err +
-        '"); window.location="/space";</script>'
-      );
-    } else {
-      if (req.file == undefined) {
-        // กรณีไม่ได้เลือกไฟล์
-        res.send(
-          '<script>alert("ไม่ได้เลือกไฟล์! กรุณาเลือกไฟล์รูปภาพ"); window.location="/space";</script>'
-        );
-      } else {
-        try {
-          // ค้นหา space จาก id และอัปเดตรูปภาพ
-          const space = await Space.findById(req.params.id);
-          space.SpacePicture = "/spaceictures/" + req.file.filename;
-          await space.save();
+    try {
+        const spaceId = req.params.id;
+        const space = await Spaces.findById(spaceId);
 
-          // หลังจากบันทึกเสร็จสิ้น
-          res.send(
-            '<script>alert("อัปโหลดรูปภาพสำเร็จ"); window.location="/space";</script>'
-          );
-        } catch (error) {
-          console.log(error);
-          res.send(
-            '<script>alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' +
-            error.message +
-            '"); window.location="/space";</script>'
-          );
+        if (!space) {
+            return res.status(404).send('Space not found.');
         }
-      }
+
+        // Get the Cloudinary URL from the uploaded file
+        const newCoverUrl = req.file.path;
+
+        // Store the new cover URL in the database
+        const oldCoverUrl = space.projectCover;
+        space.projectCover = newCoverUrl;
+        await space.save();
+
+        // Optionally, delete the old cover from Cloudinary if it's not the default cover
+        if (oldCoverUrl && !oldCoverUrl.includes('defultBackground.jpg')) {
+            const publicId = oldCoverUrl.split('/').pop().split('.')[0]; // Extract public ID
+            await cloudinary.uploader.destroy(`projectCovers/${publicId}`);
+        }
+
+        res.redirect('/project');
+    } catch (error) {
+        console.error('Error updating project cover:', error);
+        res.status(500).send('Internal Server Error');
     }
-  });
 };
 
-module.exports.edit_Update_SpaceName = async (req, res) => {
+exports.edit_Update_SpaceName = async (req, res) => {
   try {
-    const space = await Space.findById(req.params.id);
+    const space = await Spaces.findById(req.params.id);
     if (!space) {
-      return res.status(404).send('<script>alert("ไม่พบพื้นที่งาน!"); window.location="/space";</script>');
+      return res.status(404).json({ success: false, message: "Space not found" });
     }
 
-    space.SpaceName = req.body.SpaceName;
+    // Update project name
+    space.projectName = req.body.SpaceName;
     await space.save();
 
-    res.redirect('/space'); // เปลี่ยนเป็น redirect เพื่อโหลดใหม่โดยไม่มีแจ้งเตือน
+    res.redirect('/project');
   } catch (error) {
-    console.log(error);
-    res.send('<script>alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message + '"); window.location="/space";</script>');
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
+
+
 
 exports.addStatus = async (req, res) => {
   try {

@@ -26,6 +26,17 @@ const io = socketIo(server);
 
 app.set('io', io);
 
+const corsOptions = {
+  origin: '*', // Update with your client URL or '*' for all origins
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
+  credentials: true, // Include cookies in CORS requests
+};
+// Apply CORS middleware before other routes
+app.use(cors(corsOptions));
+// Handle OPTIONS requests (Preflight requests)
+app.options('*', cors(corsOptions));
+
 // เชื่อมต่อฐานข้อมูล
 connectDB()
   .then(() => {
@@ -81,6 +92,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/img', express.static(path.join(__dirname, 'public/img')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/docUploads', express.static(path.join(__dirname, 'docUploads')));
 app.use(methodOverride('_method'));
 app.use('/webhook', lineWebhook);
@@ -174,10 +186,8 @@ const usersInChat = new Map(); // เก็บข้อมูลผู้ใช�
 app.set('usersInChat', usersInChat);
 
 io.on('connection', (socket) => {
-  console.log('🔌 User connected:', socket.id);
 
   socket.on('disconnect', () => {
-    console.log('🔌 User disconnected:', socket.id);
   });
 
   // เมื่อผู้ใช้อยู่ในหน้าแชท

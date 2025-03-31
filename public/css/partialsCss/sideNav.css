@@ -778,7 +778,7 @@ header .image-text .header-text {
     position: absolute;
     height: 93%;
     width: 5%;
-    z-index: 999;
+    z-index: 99;
 }
 
 .nav-tabs .nav-link {

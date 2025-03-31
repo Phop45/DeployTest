@@ -85,8 +85,7 @@ exports.createTask = async (req, res) => {
         return res.status(404).send("Status not found or does not belong to the specified space.");
       }
     } else {
-      // Default to 'toDo' if no valid status is provided
-      status = await Status.findOne({ category: 'toDo', space: spaceId });
+      status = await Status.findOne({ category: 'inProgress', space: spaceId });
       if (!status) {
         return res.status(500).send("Default status 'toDo' not found in the space.");
       }
@@ -105,20 +104,26 @@ exports.createTask = async (req, res) => {
     }
 
     // Prepare tags
-    const tags = taskTag ? taskTag.split(',').map(tag => tag.trim().toLowerCase()) : [];
+    const tags = taskTag? JSON.parse(taskTag).map(tag => ({
+        _id: tag._id ? mongoose.Types.ObjectId(tag._id) : undefined,
+        tagName: tag.tagName,
+        color: tag.color,
+      }))
+    : [];
+
     const userTags = [];
     for (const tag of tags) {
-        let existingTag = await Tag.findOne({ name: tag, user: userId });
-        if (!existingTag) {
-            const pastelColor = getRandomPastelColor(); // Generate a random pastel color
-            existingTag = new Tag({ name: tag, user: userId, color: pastelColor });
-            await existingTag.save();
-        }
-        userTags.push({
-            _id: existingTag._id,
-            tagName: existingTag.name,
-            color: existingTag.color, 
-        }); 
+      let existingTag = await Tag.findOne({ name: tag.tagName, user: userId }); 
+      if (!existingTag) {
+        const pastelColor = getRandomPastelColor();
+        existingTag = new Tag({ name: tag.tagName, user: userId, color: pastelColor }); 
+        await existingTag.save();
+      }
+      userTags.push({
+        _id: existingTag._id,
+        tagName: existingTag.name, // Use existingTag.name
+        color: existingTag.color,
+      });
     }
 
     // Parse and validate dates
@@ -158,7 +163,7 @@ exports.createTask = async (req, res) => {
       taskDetail,
       taskType,
       taskPriority,
-      taskStatus: 'inProgress',
+      taskStatus: status.category,
       project: mongoose.Types.ObjectId(spaceId),
       user: mongoose.Types.ObjectId(userId),
       assignedUsers: validAssignedUsers,
@@ -225,7 +230,6 @@ exports.addTask_list = async (req, res) => {
 
     await newTask.save();
 
-    console.log(newTask); // Log the newly created task
     res.redirect(`/space/item/${req.body.spaceId}/task_list`);
   } catch (error) {
     console.log(error);
@@ -276,7 +280,7 @@ exports.addTask_underBoard = async (req, res) => {
     }
 
     // Validate column status
-    const validStatuses = ['toDo', 'inProgress', 'fix', 'finished'];
+    const validStatuses = ['pending', 'inProgress', 'fix', 'finished'];
     if (!validStatuses.includes(columnStatus)) {
       return res.status(400).send("Invalid column status.");
     }
@@ -290,19 +294,62 @@ exports.addTask_underBoard = async (req, res) => {
     });
 
     await newTask.save();
-    console.log("New Task Created:", newTask);
-    // Redirect back to the task board
     res.redirect(`/space/item/${project}/task_board`);
-    console.log("New Task Created:", newTask);
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
   }
 };
 
+exports.createTag = async (req, res) => {
+  try {
+      const { tagName } = req.body;
+
+      if (!tagName || tagName.trim().length < 2) {
+          return res.status(400).json({ message: 'Tag name must be at least 2 characters long.' });
+      }
+
+      if (tagName.length > 30) {
+          return res.status(400).json({ message: 'Tag name cannot exceed 30 characters.' });
+      }
+
+      // Check for invalid characters
+      const tagNameRegex = /^[a-zA-Z0-9\s-_]+$/;
+      if (!tagNameRegex.test(tagName)) {
+          return res.status(400).json({
+              message: 'Invalid characters in tag name. Only letters, numbers, spaces, dashes, and underscores are allowed.',
+          });
+      }
+
+      const userId = req.user && req.user.id;
+      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+          return res.status(400).json({ message: 'Invalid user ID.' });
+      }
+
+      // Check if the tag already exists for the user
+      const existingTag = await Tag.findOne({ name: tagName, user: userId });
+      if (existingTag) {
+          return res.status(400).json({ message: 'Tag already exists.' });
+      }
+
+      const newTag = new Tag({
+          name: tagName,
+          color: getRandomPastelColor(),
+          user: userId,
+      });
+
+      await newTag.save();
+
+      res.status(201).json(newTag);
+  } catch (error) {
+      console.error('Error creating tag:', error);
+      res.status(500).json({ message: 'Internal Server Error', error });
+  }
+};
+
 exports.getUserTags = async (req, res) => {
   try {
-    const tags = await Tag.find({ user: req.user.id }).sort({ name: 1 }); // Fetch tags for the user
+    const tags = await Tag.find({ user: req.user.id }).sort({ name: 1 }); 
     res.status(200).json(tags);
   } catch (error) {
     console.error(error);
@@ -587,5 +634,106 @@ exports.updateProjectName = async (req, res) => {
   } catch (error) {
       console.error('Error updating project name:', error);
       res.status(500).json({ error: 'Internal server error.' });
+  }
+};
+
+// Check if a task has incomplete subtasks
+exports.checkIncompleteSubtasks = async (req, res) => {
+  try {
+      const { taskId } = req.params;
+      const subtasks = await SubTask.find({ task: taskId });
+
+      const hasIncompleteSubtasks = subtasks.length > 0;
+      const incompleteCount = subtasks.length;
+
+      res.status(200).send({
+          hasIncompleteSubtasks,
+          incompleteCount
+      });
+  } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: 'Failed to check incomplete subtasks' });
+  }
+};
+
+// Update task status with optional subtask completion
+exports.updateTaskStatus = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { newStatus, markSubtasksCompleted } = req.body;
+
+    // Find the task
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).send({ message: 'Task not found' });
+    }
+
+    // Update the task status
+    task.taskStatus = newStatus;
+    await task.save();
+
+    // Handle subtasks when task status changes to "pending"
+    if (newStatus === 'pending') {
+      const result = await SubTask.updateMany(
+        { task: taskId, subTask_status: { $ne: 'finished' } }, // Only update subtasks not already finished
+        { $set: { subTask_status: 'finished' } }
+      );
+    }
+
+    // Handle subtasks when marking a task as "finished" with explicit request
+    if (newStatus === 'finished' && markSubtasksCompleted) {
+      const result = await SubTask.updateMany(
+        { task: taskId, subTask_status: { $ne: 'finished' } },
+        { $set: { subTask_status: 'finished' } }
+      );
+    }
+
+    res.status(200).send({ message: 'Task and subtasks updated successfully' });
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).send({ message: 'Failed to update task status' });
+  }
+};
+
+
+
+// Update subtask status
+// Update subtask status
+exports.updateSubtaskStatus = async (req, res) => {
+  try {
+    const { subtaskId } = req.params;  // Get the subtask ID
+    const { status } = req.body;       // Get the new status
+
+    // Find the subtask by ID
+    const subtask = await SubTask.findById(subtaskId);
+    if (!subtask) {
+      return res.status(404).json({ message: 'Subtask not found' });
+    }
+
+    // Update the subtask status
+    subtask.subTask_status = status;
+
+    // Save the updated subtask
+    await subtask.save();
+
+    res.status(200).json({ message: 'Subtask status updated successfully', subtask });
+  } catch (error) {
+    console.error('Error updating subtask status:', error);
+    res.status(500).json({ message: 'Failed to update subtask status' });
+  }
+};
+
+
+// Fetch subtasks for a specific task
+exports.getTaskSubtasks = async (req, res) => {
+  try {
+      const { taskId } = req.params;
+      const subtasks = await SubTask.find({ task: taskId });
+      res.status(200).send({ subtasks });
+
+      console.log('Fetched subtasks for task:', taskId, subtasks); 
+  } catch (error) {
+      console.error(error);
+      res.status(500).send({ message: 'Failed to fetch subtasks' });
   }
 };

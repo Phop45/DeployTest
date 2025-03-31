@@ -264,31 +264,78 @@ exports.boardPageRender = async (req, res) => {
     try {
         const spaceId = req.params.id;
         const userId = req.user._id; 
+        const currentUserId = req.user._id; 
 
         // Fetch the space
         const space = await Spaces.findOne({
             _id: spaceId,
             $or: [{ user: userId }, { collaborators: { $elemMatch: { user: userId } } }],
-        })
+          })
             .populate('collaborators.user', 'firstName lastName profileImage googleEmail')
             .lean();
-
-        if (!space) {
+      
+          if (!space) {
             return res.status(404).send("Space not found");
-        }
+          }
 
         const spaceCollaborators = (space.collaborators || []).filter(c => c && c.user);
-        const currentUserRole = spaceCollaborators.find(c => c.user._id.toString() === userId)?.role || 'Member';
-        
-        console.log(spaceCollaborators); 
+        const isOwner = space.user && space.user.toString() === userId.toString();
+        const collaborator = space.collaborators?.find(c => c.user && c.user._id.toString() === userId.toString());
+        const currentUserRole = isOwner ? 'Owner' : collaborator?.role || 'member';
 
+        console.log('Current user role:', currentUserRole);
         // Fetch tasks and populate required fields
-        const tasks = await Task.find({ project: spaceId, deleted: false })
+        let tasks = await Task.find({ project: spaceId, deleted: false })
             .populate('assignedUsers', 'profileImage firstName lastName')
             .lean();
 
+        // Apply filter based on query parameters
+        const filter = req.query.filter;
+        if (filter === 'assignToMe') {
+            tasks = tasks.filter(task => {
+                const isAssigned = task.assignedUsers.some(user => user._id.toString() === currentUserId.toString());
+                return isAssigned;
+            });
+        }
+
+        if (filter === 'unAssign') {
+            tasks = tasks.filter(task => !task.assignedUsers || task.assignedUsers.length === 0);
+        }
+
+        // Filter tasks that are due this week
+        if (filter === 'dueThisWeek') {
+            const startOfWeek = moment().startOf('week').startOf('day'); // Start of the current week
+            const endOfWeek = moment().endOf('week').endOf('day'); // End of the current week
+
+            tasks = tasks.filter(task => {
+                if (task.dueDate) {
+                    const dueDate = moment(task.dueDate);
+                    return dueDate.isBetween(startOfWeek, endOfWeek, 'day', '[]'); // Check if the task's due date is within the week
+                }
+                return false;
+            });
+        }
+        
+        // Filter by priority
+        const priority = req.query.priority;
+        if (priority) {
+            tasks = tasks.filter(task => task.taskPriority === priority);
+        }
+
+        // Filter by assignee
+        const assigneeId = req.query.assigneeId;
+        if (assigneeId) {
+            tasks = tasks.filter(task => task.assignedUsers.some(user => user._id.toString() === assigneeId));
+        }
+
+        // Calculate subtask progress percentage
         for (const task of tasks) {
-            const subtasks = await SubTask.find({ task: task._id }).populate('assignee', 'username profileImage').lean();
+            const subtasks = await SubTask.find({ task: mongoose.Types.ObjectId(task._id) })
+                .populate('assignee', 'firstName lastName profileImage')
+                .lean();
+
+            task.subTaskId = subtasks.map(subtask => subtask._id);
+            console.log(`Subtasks for task ${task._id}:`, task.subTaskId); 
 
             // Group subtasks by assignee and calculate completion percentage
             const assigneeProgress = subtasks.reduce((acc, subtask) => {
@@ -303,7 +350,9 @@ exports.boardPageRender = async (req, res) => {
                 }
 
                 acc[assigneeId].total++;
-                if (subtask.subTask_status === 'เสร็จสิ้น') acc[assigneeId].completed++;
+
+                // Count subtasks that are 'inProgress' or 'finished'
+                if (subtask.subTask_status === 'finished') acc[assigneeId].completed++;
 
                 return acc;
             }, {});
@@ -313,7 +362,26 @@ exports.boardPageRender = async (req, res) => {
                 ...progress,
                 percentage: progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0,
             }));
+
+            // Calculate total progress for the task based on subtasks
+            const taskProgress = subtasks.reduce(
+                (taskAcc, subtask) => {
+                    if (subtask.subTask_status === 'finished') taskAcc.completed++;
+                    else taskAcc.incompleteCount++; // Increment for incomplete subtasks
+                    taskAcc.total++;
+                    return taskAcc;
+                },
+                { total: 0, completed: 0, incompleteCount: 0 }
+            );
+
+            task.subTaskProgress = taskProgress.total > 0
+                ? Math.round((taskProgress.completed / taskProgress.total) * 100)
+                : 0;
+
+            // Include the incomplete subtask count in the task object
+            task.incompleteSubTaskCount = taskProgress.incompleteCount;
         }
+        
 
         // Organize tasks by status
         const tasksByStatus = {
@@ -362,7 +430,8 @@ exports.boardPageRender = async (req, res) => {
             const workload = userWorkload[userId];
             workload.percentage = workload.totalTasks > 0 ? Math.round((workload.completedTasks / workload.totalTasks) * 100) : 0;
         }
-
+        const projectDueDate = space.projectDueDate ? space.projectDueDate.toISOString().split('T')[0] : null;
+        
         res.render("task/task-board", {
             spaces: space,
             tasks,
@@ -373,10 +442,12 @@ exports.boardPageRender = async (req, res) => {
             spaceCollaborators,
             currentUserRole,
             moment, 
+            projectDueDate,
             userWorkload: JSON.stringify(userWorkload),
             currentPage: 'board',
             layout: "../views/layouts/task", 
             priority: tasks.map(task => task.taskPriority), 
+            query: req.query,
         });
     } catch (error) {
         console.log(error);

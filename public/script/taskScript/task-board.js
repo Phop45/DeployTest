@@ -207,3 +207,351 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 });
+
+
+// filter section
+document.addEventListener("DOMContentLoaded", () => {
+  const currentUserId = "<%= user._id %>"; // Current user ID from the server
+  const clearFilter = document.getElementById("clearFilter");
+  const filterText = document.getElementById("filterText");
+
+  // Check for filters in the URL and show/hide the clearFilter
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has("filter")) {
+    clearFilter.style.display = "block";
+  } else {
+    clearFilter.style.display = "none";
+  }
+
+  // Filter tasks assigned to the current user
+  const assignToMeBtn = document.getElementById("assignToMe");
+  if (assignToMeBtn) {
+    assignToMeBtn.addEventListener("click", () => {
+      const filterTasks = () => {
+        document.querySelectorAll(".task.task-item").forEach(task => {
+          const assignedUsers = Array.from(task.querySelectorAll(".userProfile img"));
+          task.style.display = assignedUsers.some(user => user.dataset.userId === currentUserId)
+            ? "block"
+            : "none";
+        });
+      };
+
+      // Initial filtering
+      filterTasks();
+
+      // Observe task list for changes and reapply the filter dynamically
+      const taskBoard = document.querySelector(".board-container"); // Replace with your task board's container
+      const observer = new MutationObserver(() => {
+        filterTasks(); // Reapply the filter whenever a change is detected
+      });
+
+      // Start observing the task board for DOM changes
+      observer.observe(taskBoard, { childList: true, subtree: true });
+
+      // Highlight the active filter
+      document.querySelectorAll(".filterItemWrap").forEach(item => item.classList.remove("active"));
+      assignToMeBtn.classList.add("active");
+    });
+  }
+
+  // Filter tasks due this week
+  const dueDateWeekBtn = document.getElementById("dueDateWeek");
+  if (dueDateWeekBtn) {
+    dueDateWeekBtn.addEventListener("click", () => {
+      window.location.href = '?filter=dueThisWeek';
+    });
+  }
+
+  // Filter tasks by priority
+  document.querySelectorAll('.priItemOprion').forEach(item => {
+    item.addEventListener('click', function () {
+      const priority = this.getAttribute("data-label");
+      window.location.href = `?filter=priority&priority=${priority}`;
+
+      // Highlight active priority filter
+      document.querySelectorAll('.priItemOprion').forEach(option => option.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Filter tasks by assignee
+  document.querySelectorAll('.assignee-profile').forEach(item => {
+    item.addEventListener('click', function () {
+      const assigneeId = this.getAttribute("data-assignee-id");
+      window.location.href = `?filter=assignee&assigneeId=${assigneeId}`;
+
+      // Highlight active collaborator
+      document.querySelectorAll('.assignee-profile').forEach(option => option.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Highlight active filter (assignToMe, dueDateWeek, priorities, assignees)
+  const filter = urlParams.get("filter");
+  const priority = urlParams.get("priority");
+  const assigneeId = urlParams.get("assigneeId");
+
+  if (filter === "assignToMe") {
+    filterText.textContent = "มอบหมายให้ฉัน";
+  } else if (filter === "dueThisWeek") {
+    filterText.textContent = "ครบกำหนดอาทิตย์นี้";
+  } else if (priority) {
+    if (priority === "urgent") {
+      filterText.textContent = "ความสำคัญ: ด่วน";
+    } else if (priority === "normal") {
+      filterText.textContent = "ความสำคัญ: ปกติ";
+    } else if (priority === "low") {
+      filterText.textContent = "ความสำคัญ: ต่ำ";
+    }
+  } else if (assigneeId) {
+    const assigneeProfile = document.querySelector(`.assignee-profile[data-assignee-id="${assigneeId}"]`);
+    if (assigneeProfile) {
+      const assigneeName = assigneeProfile.querySelector(".customTooltip")?.textContent || "ผู้รับมอบหมาย";
+      filterText.textContent = `ผู้รับมอบหมาย: ${assigneeName}`;
+    }
+  } else {
+    filterText.textContent = "กรองข้อมูล";
+  }
+
+  if (filter === "assignToMe") {
+    const assignToMeElement = document.querySelector(".assignToMe");
+    assignToMeElement.classList.add("active");
+    const checkIcon = assignToMeElement.querySelector(".check-icon");
+    if (checkIcon) {
+      checkIcon.style.display = "inline";
+    }
+  }
+  else if (filter === "dueThisWeek") {
+    const dueDateWeekElement = document.querySelector(".dueDateWeek");
+    dueDateWeekElement.classList.add("active");
+    const checkIcon = dueDateWeekElement.querySelector(".check-icon");
+    if (checkIcon) {
+      checkIcon.style.display = "inline";
+    }
+  }
+  else if (priority) {
+    document.querySelectorAll(".priItemOprion").forEach(option => {
+      if (option.getAttribute("data-label") === priority) {
+        option.classList.add("active");
+      }
+    });
+  }
+  else if (assigneeId) {
+    document.querySelectorAll(".assignee-profile").forEach(profile => {
+      if (profile.getAttribute("data-assignee-id") === assigneeId) {
+        const assigneeImage = profile.querySelector(".assigneeImage");
+        const fallbackProfile = profile.querySelector(".fallback-profile-filter");
+
+        // Add active class to both assigneeImage and fallback-profile-filter
+        if (assigneeImage) assigneeImage.classList.add("active");
+        if (fallbackProfile) fallbackProfile.classList.add("active");
+      }
+    });
+  }
+  else if (filter === "unAssign") {
+    filterText.textContent = "ไม่มีผู้รับมอบหมาย";
+    const unAssignElement = document.querySelector(".unAssign");
+    unAssignElement.classList.add("active");
+    const checkIcon = unAssignElement.querySelector(".check-icon");
+    if (checkIcon) {
+      checkIcon.style.display = "inline";
+    }
+  }
+});
+
+// filter trigger
+document.addEventListener("DOMContentLoaded", () => {
+  const filterToggle = document.querySelector(".filterToggle");
+  const filterDropdown = document.querySelector(".filterDropdown");
+
+  if (filterToggle && filterDropdown) {
+    filterToggle.addEventListener("click", () => {
+      // Toggle the active class to show/hide the dropdown
+      filterDropdown.classList.toggle("active");
+
+      // Position the dropdown dynamically under the toggle
+      const toggleRect = filterToggle.getBoundingClientRect();
+    });
+
+    // Hide the dropdown when clicking outside of it
+    document.addEventListener("click", (event) => {
+      if (!filterToggle.contains(event.target) && !filterDropdown.contains(event.target)) {
+        filterDropdown.classList.remove("active");
+      }
+    });
+  }
+});
+
+
+// drag and drop
+// drag and drop
+document.addEventListener('DOMContentLoaded', () => {
+  // Handle drag start for task items
+  document.querySelectorAll('.task-item').forEach(item => {
+    item.addEventListener('dragstart', handleDragStart);
+  });
+
+  // Handle dragover and drop for columns
+  document.querySelectorAll('.column').forEach(column => {
+    column.addEventListener('dragover', handleDragOver);
+    column.addEventListener('drop', handleDrop);
+  });
+
+  let draggedTask = null;
+
+  // Handle drag start
+  function handleDragStart(event) {
+    draggedTask = event.target;
+    event.dataTransfer.setData("text/plain", draggedTask.dataset.id);
+  }
+
+  // Allow dragover to enable dropping
+  function handleDragOver(event) {
+    event.preventDefault();
+  }
+
+  // Handle drop with role-based logic
+  async function handleDrop(event) {
+    event.preventDefault();
+
+    if (!draggedTask) return;
+
+    const taskId = draggedTask.dataset.id;
+    const currentStatus = draggedTask.dataset.status;
+    const targetStatus = event.currentTarget.dataset.status;
+    const userRole = event.currentTarget.dataset.role;
+
+    if (!taskId || !currentStatus || !targetStatus || !userRole) {
+      console.error("Missing required data attributes for drag-and-drop.");
+      return;
+    }
+
+    const taskHasIncompleteSubtasks = await checkIncompleteSubtasks(taskId);
+
+    let confirmationMessage = "";
+    let newStatus = targetStatus;
+    let markSubtasksCompleted = false;
+
+    if (userRole === 'owner' || userRole === 'reporter') {
+      if (newStatus === 'finished') {
+        confirmationMessage = `คุณต้องการเปลี่ยนสถานะของงานและงานย่อยทั้งหมดเป็นเสร็จสิ้นหรือไม่?`; // "Do you want to mark the task and all subtasks as finished?"
+        markSubtasksCompleted = true;
+      } else {
+        confirmationMessage = "คุณต้องการเปลี่ยนสถานะของงานหรือไม่?";
+      }
+      showAlert(confirmationMessage, taskId, newStatus, markSubtasksCompleted);
+    } 
+    else if (userRole === "member") {
+      if (currentStatus === "inProgress" && targetStatus !== "inProgress") {
+        newStatus = "pending";
+        markSubtasksCompleted = true;
+      } else if (
+        (currentStatus === "pending" || currentStatus === "fix") &&
+        targetStatus === "finished"
+      ) {
+        newStatus = "pending";
+        markSubtasksCompleted = true;
+      } else if (
+        (currentStatus === "pending" || currentStatus === "fix") &&
+        targetStatus === "inProgress"
+      ) {
+        confirmationMessage = "คุณต้องการยกเลิกการส่งงานใช่หรือไม่";
+        showAlert(confirmationMessage, taskId, targetStatus, false);
+        return;
+      }
+  
+      if (currentStatus === newStatus) return;
+  
+      if (taskHasIncompleteSubtasks.hasIncompleteSubtasks) {
+        confirmationMessage = `<span>คุณยังมีงานย่อยอีก <span id="incompleteCount">${taskHasIncompleteSubtasks.incompleteCount} งาน</span> ที่ยังไม่เสร็จสิ้น</span>` + 
+                              `<span>ต้องการทำงานย่อยทั้งหมดให้เสร็จสมบูรณ์แล้ว และส่งงานนี้หรือไม่</span>`;
+        markSubtasksCompleted = true;
+      } else {
+        confirmationMessage = "คุณแน่ใจว่าต้องการส่งงานนี้หรือไม่?";
+      }
+  
+      showAlert(
+        confirmationMessage,
+        taskId,
+        newStatus,
+        taskHasIncompleteSubtasks,
+        markSubtasksCompleted
+      );
+    }
+  }
+
+  // Check if the task has incomplete subtasks
+  async function checkIncompleteSubtasks(taskId) {
+    try {
+      const response = await fetch(`/task/${taskId}/check-subtasks`);
+      const data = await response.json();
+  
+      // Ensure the response contains the expected fields
+      return {
+        hasIncompleteSubtasks: data.hasIncompleteSubtasks || false,
+        incompleteCount: data.incompleteCount || 0
+      };
+    } catch (error) {
+      console.error("Failed to check subtasks:", error);
+      return { hasIncompleteSubtasks: false, incompleteCount: 0 };
+    }
+  }
+
+  // Show custom alert popup with dynamic message
+  function showAlert(message, taskId, newStatus, taskHasIncompleteSubtasks, markSubtasksCompleted) {
+      // Set dynamic message for the alert popup with HTML content
+      document.getElementById('alertMessage').innerHTML = message;
+
+      // Display alert and overlay
+      document.querySelector('.alertPopup').classList.add('show');
+      document.getElementById('overlay').classList.add('show-overlay');
+
+      // Cancel button handler
+      document.getElementById('cancelBtn').addEventListener('click', () => {
+          closeAlert();
+      });
+
+      // Confirm button handler
+      document.getElementById('confirmBtn').addEventListener('click', () => {
+          updateTaskStatus(taskId, newStatus, taskHasIncompleteSubtasks, markSubtasksCompleted);
+          closeAlert();
+      });
+
+      // Close the alert when the close icon is clicked
+      document.getElementById('closeAlert').addEventListener('click', () => {
+          closeAlert();
+      });
+  }
+
+
+  // Close the alert popup and remove overlay
+  function closeAlert() {
+    document.querySelector('.alertPopup').classList.remove('show');
+    document.getElementById('overlay').classList.remove('show-overlay');
+  }
+
+  async function updateTaskStatus(taskId, newStatus, markSubtasksCompleted) {
+    try {
+      const response = await fetch(`/task/${taskId}/update-status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          newStatus,
+          markSubtasksCompleted,
+        }),
+      });
+
+      if (response.ok) {
+        console.log("Task and subtasks updated successfully.");
+        location.reload();
+      } else {
+        alert("Failed to update task status. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      alert("An error occurred. Please try again.");
+    }
+  }
+});

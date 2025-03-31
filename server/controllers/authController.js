@@ -107,10 +107,8 @@ exports.login = async (req, res, next) => {
       user.isOnline = true;
 
       await user.save();
-      // await logUserActivity(req.user._id, 'เข้าสู่ระบบ');
-      // await logFeatureUsage('เข้าสู่ระบบ');
 
-      return res.redirect(user.role === 'admin' ? '/adminPage' : '/space');
+      return res.redirect(user.role === 'admin' ? '/adminPage' : '/dashboard');
     });
   })(req, res, next);
 };

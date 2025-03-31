@@ -517,13 +517,14 @@ document.addEventListener("DOMContentLoaded", function () {
     // Handle project cover upload
     const projectCoverInput = document.getElementById("projectCover");
     const coverPreview = document.getElementById("coverPreview");
+
     if (projectCoverInput && coverPreview) {
         projectCoverInput.addEventListener("change", function (event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    coverPreview.src = e.target.result;
+                    coverPreview.src = e.target.result; // Preview the selected image
                 };
                 reader.readAsDataURL(file);
             }

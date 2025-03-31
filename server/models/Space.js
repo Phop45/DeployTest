@@ -6,7 +6,7 @@ const collaboratorSchema = new Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     role: { 
         type: String, 
-        enum: ['owner', 'admin', 'member', 'guest'], 
+        enum: ['owner', 'reporter', 'member', 'guest'], 
         default: 'member'
     },
     joinDate: { type: Date, default: Date.now }
@@ -32,7 +32,7 @@ const spaceSchema = new Schema({
     },
     projectCover: {
         type: String,
-        default: "/public/spacePictures/defultBackground.jpg"
+        default: "https://res.cloudinary.com/dibbpr0zu/image/upload/v1743406589/defultBackground_vjda8s.jpg"
     },
 }, {
     timestamps: true 
