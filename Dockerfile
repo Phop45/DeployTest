@@ -13,20 +13,23 @@ RUN apt-get update && apt-get install -y \
     libpixman-1-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Install nodemon globally
+RUN npm install -g nodemon
+
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json (or yarn.lock) to install dependencies
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install production dependencies
-RUN npm install --only=production
+# Install production and development dependencies
+RUN npm install
 
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port your app is running on
+# Expose the application port
 EXPOSE 3000
 
-# Run your app
+# Use nodemon as the start command
 CMD ["npm", "start"]
