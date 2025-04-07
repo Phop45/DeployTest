@@ -1,20 +1,32 @@
-# Use the official Node.js image as the base image
-FROM node:18
+# Use a base image that has the necessary build tools
+FROM node:18-slim
 
-# Set the working directory
+# Install necessary libraries for canvas
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpango1.0-dev \
+    libcairo2-dev \
+    pkg-config \
+    libjpeg-dev \
+    libgif-dev \
+    libpng-dev \
+    libpixman-1-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package.json and package-lock.json (or yarn.lock) to install dependencies
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install production dependencies
+RUN npm install --only=production
 
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 5001
+# Expose the port your app is running on
+EXPOSE 3000
 
-# Define the command to run the app
-CMD ["node", "app.js"]
+# Run your app
+CMD ["npm", "start"]
