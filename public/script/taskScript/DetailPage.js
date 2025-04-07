@@ -954,3 +954,131 @@ document.addEventListener("DOMContentLoaded", function() {
         isVisible = !isVisible;
     });
 });
+
+// file scetion
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. File Icon Assignment Function
+    function setFileIcons() {
+        const fileItems = document.querySelectorAll('#fileItemlist li');
+        fileItems.forEach(item => {
+            const iconElement = item.querySelector('.file-icon');
+            const fileName = item.querySelector('span').innerText.toLowerCase();
+
+            if (fileName.endsWith('.pdf')) {
+                iconElement.className = 'fa-solid fa-file-pdf';
+                iconElement.style.color = '#e74c3c';
+            } else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+                iconElement.className = 'fa-solid fa-file-word';
+                iconElement.style.color = '#2e86de';
+            } else if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png')) {
+                iconElement.className = 'fa-solid fa-file-image';
+                iconElement.style.color = '#27ae60';
+            } else {
+                iconElement.className = 'fa-solid fa-file';
+                iconElement.style.color = '#7f8c8d';
+            }
+        });
+    }
+
+    // 2. File Upload Display
+    const fileUpload = document.getElementById('fileUpload');
+    const fileNameDisplay = document.getElementById('fileName');
+    if (fileUpload && fileNameDisplay) {
+        fileUpload.addEventListener('change', (event) => {
+            const files = event.target.files;
+            fileNameDisplay.textContent = files.length > 0 
+                ? Array.from(files).map(file => file.name).join(', ') 
+                : 'ไม่ได้เลือกไฟล์ใด';
+        });
+    }
+
+    // 3. Relative Time Calculation in Thai
+    function timeAgo(date) {
+        const now = new Date();
+        const uploadedDate = new Date(date);
+        const seconds = Math.floor((now - uploadedDate) / 1000);
+
+        const intervals = {
+            year: 31536000,
+            month: 2592000,
+            week: 604800,
+            day: 86400,
+            hour: 3600,
+            minute: 60,
+            second: 1,
+        };
+
+        for (const [unit, value] of Object.entries(intervals)) {
+            const interval = Math.floor(seconds / value);
+            if (interval >= 1) {
+                const unitNames = {
+                    year: 'ปี',
+                    month: 'เดือน',
+                    week: 'สัปดาห์',
+                    day: 'วัน',
+                    hour: 'ชั่วโมง',
+                    minute: 'นาที',
+                    second: 'วินาที'
+                };
+                return `${interval} ${unitNames[unit]}ที่แล้ว`;
+            }
+        }
+        return 'เมื่อครู่นี้';
+    }
+
+    // Update relative time displays
+    document.querySelectorAll('.file-time').forEach(timeElement => {
+        const uploadedAt = timeElement.getAttribute('data-uploaded');
+        if (uploadedAt) {
+            const timeTextElement = timeElement.querySelector('.time-text');
+            if (timeTextElement) {
+                timeTextElement.textContent = timeAgo(uploadedAt);
+            }
+        }
+    });
+
+    // 4. File Deletion Handling
+    document.querySelectorAll('.deleteFile').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const fileId = button.getAttribute('data-id');
+            if (!fileId) {
+                console.error('No file ID found');
+                return;
+            }
+
+            if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้?\nไฟล์จะถูกลบอย่างถาวร')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/deleteFile/${fileId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const fileElement = button.closest('.file-item, .attachment-item, [data-file-id]');
+                    if (fileElement) {
+                        fileElement.remove();
+                    }
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message || 'ลบไฟล์ไม่สำเร็จ');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert(`เกิดข้อผิดพลาด: ${error.message}`);
+            }
+        });
+    });
+
+    // Initial icon setup
+    setFileIcons();
+});

@@ -10,7 +10,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const flash = require('connect-flash');
 const LocalStrategy = require('passport-local').Strategy;
-const User = require('./server/models/User'); 
+const User = require('./server/models/User');
 const moment = require('moment');
 const bodyParser = require('body-parser');
 const lineWebhook = require('./server/routes/lineWebhook');
@@ -18,6 +18,7 @@ const cors = require('cors');
 const http = require("http");
 const socketIo = require("socket.io");
 const Chat = require('./server/models/Chat');
+const getNotifications = require('./server/middleware/notificationMiddleware.js');
 
 const app = express();
 const port = process.env.PORT || 5001;
@@ -26,15 +27,16 @@ const io = socketIo(server);
 
 app.set('io', io);
 
+require('./server/scheduled/deleteOldProjects');
+
 const corsOptions = {
   origin: '*', // Update with your client URL or '*' for all origins
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
   credentials: true, // Include cookies in CORS requests
 };
-// Apply CORS middleware before other routes
+
 app.use(cors(corsOptions));
-// Handle OPTIONS requests (Preflight requests)
 app.options('*', cors(corsOptions));
 
 // เชื่อมต่อฐานข้อมูล
@@ -92,7 +94,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/img', express.static(path.join(__dirname, 'public/img')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 app.use('/docUploads', express.static(path.join(__dirname, 'docUploads')));
 app.use(methodOverride('_method'));
 app.use('/webhook', lineWebhook);
@@ -124,7 +126,7 @@ app.use((req, res, next) => {
 app.use(async (req, res, next) => {
   if (req.isAuthenticated()) {
     try {
-      req.user.lastActive = Date.now(); 
+      req.user.lastActive = Date.now();
       await req.user.save();
     } catch (error) {
       console.error('Error updating lastActive:', error);
@@ -135,7 +137,7 @@ app.use(async (req, res, next) => {
 
 // ** Add the checkUserActivity function here **
 const checkUserActivity = async () => {
-  const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000; 
+  const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
 
   try {
     await User.updateMany(
@@ -158,6 +160,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(require('express-ejs-layouts'));
 app.use('/static', express.static(path.join(__dirname, 'node_modules')));
+app.use(getNotifications);
 
 // Routes
 app.use('/', require('./server/routes/auth'));
@@ -180,6 +183,19 @@ app.get('*', (req, res) => {
   res.status(404).render('404');
 });
 
+app.get('/notifications/unread', async (req, res) => {
+  if (req.user) {
+      const unreadCount = await Notification.countDocuments({
+          user: req.user._id,
+          status: 'unread',
+      });
+
+      res.json({ unreadCount });
+  } else {
+      res.json({ unreadCount: 0 });
+  }
+});
+
 // WebSocket Setup
 // ตั้งค่า usersInChat ใน app
 const usersInChat = new Map(); // เก็บข้อมูลผู้ใช้ที่อยู่ในหน้าแชท
@@ -187,7 +203,41 @@ app.set('usersInChat', usersInChat);
 
 io.on('connection', (socket) => {
 
-  socket.on('disconnect', () => {
+  const userId = socket.handshake.query.userId;
+
+  if (userId) {
+    socket.join(userId);
+  }
+
+  // Handle new comment event
+  socket.on('newComment', async ({ taskId, userId, text }) => {
+    try {
+      const task = await task.findById(taskId);
+      if (!task) return;
+
+      // Create a new comment
+      const newComment = {
+        text,
+        createdBy: userId,
+        createdAt: new Date(),
+      };
+
+      // Add the comment to the task
+      task.comments.push(newComment);
+      await task.save();
+
+      // Populate the comment with user details
+      const populatedComment = {
+        text: newComment.text,
+        createdBy: await User.findById(userId).select('firstName lastName profileImage'),
+        createdAt: newComment.createdAt,
+      };
+
+      // Broadcast the comment to all clients
+      io.emit('commentAdded', populatedComment);
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
   });
 
   // เมื่อผู้ใช้อยู่ในหน้าแชท

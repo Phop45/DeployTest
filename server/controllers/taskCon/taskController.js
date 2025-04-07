@@ -4,7 +4,7 @@ const Spaces = require('../../models/Space');
 const SubTask = require('../../models/SubTask');
 const User = require("../../models/User");
 const Status = require("../../models/Status");
-const Notification = require('../../models/Noti');
+const Notification = require('../../models/Noti'); 
 const moment = require('moment');
 const fs = require('fs');
 const path = require('path');
@@ -12,15 +12,16 @@ const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 const Tag = require('../../models/Tag');
 const upload = require('../../middleware/upload'); 
+const { console } = require("inspector");
+const { sendEmail, sendTaskStatusEmails } = require('../../../emailService'); // Import email service
 
 moment.locale('th');
 
 
 const extractTaskParameters = async (tasks) => {
   const taskNames = tasks.map(task => task.taskName);
-  const taskDetail = tasks.map(task => task.detail);
-  const taskStatuses = tasks.map(task => task.taskStatuses);
-  const taskTypes = tasks.map(task => task.taskType);
+  const taskDetail = tasks.map(task => task.taskDetail);
+  const taskStatus = tasks.map(task => task.taskStatus);
   const taskPriority = tasks.map(task => task.taskPriority);
   const taskTag = tasks.map(task => task.taskTag);
 
@@ -38,7 +39,7 @@ const extractTaskParameters = async (tasks) => {
     return date.toLocaleDateString(undefined, options);
   });
 
-  return { taskNames, taskDetail, taskStatuses, taskTypes, dueDate, dueTime, createdAt, taskPriority, taskTag };
+  return { taskNames, taskDetail, taskStatus, dueDate, dueTime, createdAt, taskPriority, taskTag };
 };
 function getRandomPastelColor() {
   const hue = Math.floor(Math.random() * 360);
@@ -46,6 +47,20 @@ function getRandomPastelColor() {
   const lightness = 85 + Math.random() * 10; // Lightness between 85-95
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
+const formatDateToThai = (date) => {
+  if (!date || isNaN(new Date(date).getTime())) {
+    return 'ไม่มีวันครบกำหนด'; // Return the "no due date" message for invalid or null dates.
+  }
+
+  return new Date(date).toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+
+
 
 /// create task controller
 exports.createTask = async (req, res) => {
@@ -149,10 +164,10 @@ exports.createTask = async (req, res) => {
     }
 
     // Handle file attachments
-    const attachments = req.files ? req.files.map(file => ({
-      path: file.path,
-      originalName: file.originalname,
-    })) : [];
+    // const attachments = req.files ? req.files.map(file => ({
+    //   path: file.path,
+    //   originalName: file.originalname,
+    // })) : [];
 
     // Create a new task
     const newTask = new Task({
@@ -167,7 +182,7 @@ exports.createTask = async (req, res) => {
       project: mongoose.Types.ObjectId(spaceId),
       user: mongoose.Types.ObjectId(userId),
       assignedUsers: validAssignedUsers,
-      attachments,
+      // attachments,
     });
 
     await newTask.save();
@@ -263,7 +278,6 @@ exports.addTask2 = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
-
 
 exports.addTask_underBoard = async (req, res) => {
   try {
@@ -417,13 +431,14 @@ exports.deleteTasks = async (req, res) => {
   }
 };
 
-
-
 exports.pendingTask = async (req, res) => {
   try {
     const space = await Spaces.findOne({
-      _id: req.params.id,
-      $or: [{ user: req.user._id }, { collaborators: { $elemMatch: { user: req.user._id, role: 'Leader' } } }]
+        _id: req.params.id,
+        $or: [
+            { user: req.user._id },
+            { collaborators: { $elemMatch: { user: req.user._id, role: { $in: ['owner', 'reporter'] } } } } // Collaborators with 'owner' or 'reporter' role
+        ]
     }).lean();
 
     if (!space) {
@@ -431,8 +446,8 @@ exports.pendingTask = async (req, res) => {
     }
 
     const tasks = await Task.find({
-      space: req.params.id,
-      taskStatuses: 'รอตรวจ' // Filter tasks with 'Pending' status
+      project: req.params.id,
+      taskStatus: 'pending'
     })
       .populate({
         path: 'assignedUsers',
@@ -441,7 +456,7 @@ exports.pendingTask = async (req, res) => {
       .lean();
 
     // Get the user's role from the collaborators array
-    const currentUserRole = space.collaborators.find(collab => collab.user.toString() === req.user._id.toString())?.role || 'Member';
+    const currentUserRole = space.collaborators.find(collab => collab.user.toString() === req.user._id.toString())?.role || 'member';
     res.render("task/pending-task", {
       tasks,
       spaces: space,
@@ -461,24 +476,67 @@ exports.pendingTask = async (req, res) => {
 
 exports.pendingDetail = async (req, res) => {
   try {
-    const taskId = ObjectId(req.params.id);
+    const taskId = mongoose.Types.ObjectId(req.params.id);
     const spaceId = ObjectId(req.query.spaceId);
+    const loggedInUserId = req.user._id.toString();
+
+    if (!mongoose.Types.ObjectId.isValid(taskId) || !mongoose.Types.ObjectId.isValid(spaceId)) {
+      return res.status(400).send("Invalid task or space ID.");
+    }
 
     const task = await Task.findById(taskId)
-      .populate('assignedUsers', 'profileImage username')
+      .populate('comment.createdBy', 'firstName lastName profileImage')
+      .populate('approvedBy', 'firstName lastName profileImage')
+      .populate('attachments.uploadedBy', 'firstName lastName profileImage')
+      .populate('assignedUsers', 'profileImage firstName lastName googleEmail')
+      .populate({
+        path: 'activityLogs.createdBy',
+        select: 'profileImage firstName lastName',
+      })
+      .populate({
+        path: 'activityLogs.userId',
+        select: 'profileImage firstName lastName',
+      })
+      .populate({
+        path: 'taskTags._id',
+        select: 'tagName color',
+      })
+      .populate({
+        path: 'comment.createdBy',
+        select: 'firstName lastName profileImage',
+      })
       .lean();
 
-    const spaces = await Spaces.findById(spaceId).lean();
+    const space = await Spaces.findById(spaceId)
+      .populate('collaborators.user', 'profileImage firstName lastName googleEmail')
+      .lean();
+
     const subtasks = await SubTask.find({ task: taskId })
-      .populate('assignee', 'profileImage username')
+      .populate('assignee', 'profileImage firstName lastName googleEmail')
       .sort({ createdAt: -1 })
       .lean();
     const inProgressSubtasks = await SubTask.find({ task: taskId, subTask_status: 'กำลังทำ' })
       .sort({ createdAt: -1 })
       .lean();
 
-    const { taskNames, dueDate, dueTime, taskStatuses, taskDetail, taskPriority, taskTag } =
+    const spaceUsers = (space.collaborators || [])
+      .filter(collab => collab.user)
+      .map(collab => ({
+        ...collab.user,
+        username: collab.user._id.toString() === loggedInUserId
+          ? 'ฉัน'
+          : `${collab.user.firstName} ${collab.user.lastName}`,
+      }))
+      .sort((a, b) => {
+        if (a._id.toString() === loggedInUserId) return -1;
+        if (b._id.toString() === loggedInUserId) return 1;
+        return 0;
+      });
+
+    const { taskNames, dueDate, dueTime, taskStatus, taskDetail, taskPriority } =
       await extractTaskParameters([task]);
+
+    const formattedTaskDetail = taskDetail || 'ไม่มีคำอธิบาย';
 
     const thaiCreatedAt = task.createdAt.toLocaleDateString('th-TH', {
       month: 'long',
@@ -488,95 +546,98 @@ exports.pendingDetail = async (req, res) => {
     const formattedSubtasks = subtasks.map(subtask => ({
       ...subtask,
       subTask_dueDate: subtask.subTask_dueDate
-        ? subtask.subTask_dueDate.toLocaleDateString('th-TH', {
-          month: 'long',
-          day: 'numeric',
-        })
+        ? formatDateToThai(subtask.subTask_dueDate)
         : 'N/A',
     }));
 
-    const assignedUsers = task.assignedUsers || [];
+    const assignedUsers = (task.assignedUsers || []).map(user => ({
+      ...user,
+      username: `${user.firstName} ${user.lastName}`,
+      profileImage: user.profileImage || '/public/img/profileImage/userDefault.jpg',
+    }));
+
+    const statusMapping = {
+      pending: 'รอตรวจ',
+      inProgress: 'กำลังทำ',
+      fix: 'แก้ไข',
+      finished: 'เสร็จสิ้น',
+    };
+
+    const priorityMapping = {
+      urgent: { color: '#DE350B', icon: 'fa-angles-up', text: 'ด่วน', textColor: '#DE350B' },
+      normal: { color: '#FFAB00', icon: 'fa-grip-lines', text: 'ปกติ', textColor: '#FFAB00' },
+      low: { color: '#4C9AFF', icon: 'fa-angle-down', text: 'ต่ำ', textColor: '#4C9AFF' },
+    };
+
+    const activityLogsWithFormattedDates = task.activityLogs.map(log => {
+      if (log.details && log.details.fieldChanged === 'dueDate') {
+        log.details.oldValue = formatDateToThai(log.details.oldValue);
+        log.details.newValue = formatDateToThai(log.details.newValue);
+      }
+      return log;
+    });
+
+    const formattedDueDate = dueDate ? formatDateToThai(dueDate) : 'ไม่มีวันครบกำหนด';
+    
+    const taskTags = (task.taskTags || []).map(tag => ({
+      tagName: tag._id?.tagName || tag.tagName,
+      color: tag._id?.color || tag.color,
+    }));
+    const allTags = await Tag.find({ user: req.user._id }).lean();
+    const taskTagsIds = task.taskTags.map(tag => tag._id.toString());
+    const availableTags = allTags.filter(tag => !taskTagsIds.includes(tag._id.toString()));
+
+    const collaborators = space.collaborators || [];
+    const approvers = collaborators
+      .filter(collab => collab.role === 'owner' || collab.role === 'reporter')
+      .map(collab => collab.user);
+
+    task.attachments.forEach(attachment => {
+      attachment.uploadedAtFormatted = formatDateToThai(attachment.uploadedAt);
+      attachment.uploadedByName = attachment.uploadedBy
+        ? `${attachment.uploadedBy.firstName} ${attachment.uploadedBy.lastName}`
+        : 'Unknown User';
+      attachment.uploadedByProfileImage = attachment.uploadedBy
+        ? attachment.uploadedBy.profileImage || '/public/img/profileImage/userDefault.jpg'
+        : '/public/img/profileImage/userDefault.jpg'; // Default image if no profile picture
+    });
 
     res.render("task/detail-pending-task", {
       user: req.user,
       currentUserId: req.user._id.toString(),
+      taskId: task._id.toString(),
       task,
       attachments: task.attachments || [],
       subtasks: formattedSubtasks,
       inProgressSubtasks,
       tasks: [task],
       taskNames,
-      dueDate,
+      dueDate: formattedDueDate,
       dueTime: dueTime[0],
-      taskDetail,
-      taskStatuses,
+      taskDetail: formattedTaskDetail,
+      taskStatus,
       createdAt: thaiCreatedAt,
       taskPriority,
-      taskTag,
-      spaces,
+      taskTags,
+      allTags,
+      availableTags,
+      spaces: space,
       spaceId,
       assignedUsers,
+      spaceUsers,
+      statusMapping,
+      priorityMapping,
+      approvers,
+      activityLogs: activityLogsWithFormattedDates,
       userName: req.user.username,
       userImage: req.user.profileImage,
       layout: '../views/layouts/Detail',
       mainTaskDueDate: new Date(dueDate),
+      formatDateToThai,
     });
   } catch (error) {
     console.error('Error fetching task details:', error);
     res.status(500).send("Internal Server Error");
-  }
-};
-
-// Controller function to delete a file
-exports.deleteFile = async (req, res) => {
-  try {
-    const fileId = req.params.id;
-
-    // Find the task that contains the file attachment by its ID
-    const task = await Task.findOne({ 'attachments._id': fileId });
-
-    if (!task) {
-      return res.status(404).json({ error: 'File not found' });
-    }
-
-    // Find the specific file in the attachments array and remove it
-    const file = task.attachments.id(fileId);
-    const filePath = file.path; // Get the path to the file
-
-    file.remove(); // Remove the file from the task's attachments
-    await task.save(); // Save the updated task
-
-    // Optionally delete the file from the filesystem
-    fs.unlink(path.join(__dirname, '..', filePath), (err) => {
-      if (err) {
-        console.error('Error deleting file from filesystem:', err);
-      }
-    });
-
-    // Send a success response
-    res.status(200).json({ message: 'File deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting file:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-exports.addComment = async (req, res) => {
-  try {
-    const { comment } = req.body; // Get the comment from the request
-    const taskId = req.params.id; // Assume taskId is passed in the URL
-
-    // Push the comment as an object to the activityLogs
-    await Task.findByIdAndUpdate(taskId, {
-      $push: {
-        activityLogs: { text: comment, type: 'comment' }
-      }
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error adding comment:', error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
 
@@ -695,9 +756,6 @@ exports.updateTaskStatus = async (req, res) => {
   }
 };
 
-
-
-// Update subtask status
 // Update subtask status
 exports.updateSubtaskStatus = async (req, res) => {
   try {
@@ -731,9 +789,332 @@ exports.getTaskSubtasks = async (req, res) => {
       const subtasks = await SubTask.find({ task: taskId });
       res.status(200).send({ subtasks });
 
-      console.log('Fetched subtasks for task:', taskId, subtasks); 
   } catch (error) {
       console.error(error);
       res.status(500).send({ message: 'Failed to fetch subtasks' });
+  }
+};
+
+// upload file
+exports.uploadAttachments = async (req, res) => {
+  const { taskId, spaceId } = req.params; // Assuming you have spaceId in params
+  const userId = req.user._id;
+
+  // Check if files are uploaded
+  if (!req.files || (!req.files.taskAttachments && !req.files.userSubmission)) {
+    req.flash('error', 'No files were uploaded');
+    return res.redirect(`/task/${taskId}/detail?spaceId=${spaceId}`);
+  }
+
+  const attachments = [];
+
+  // Helper function to process file attachments
+  const processFiles = (files, attachmentType) => {
+    files.forEach(file => {
+      let filePath = file.mimetype.startsWith('image') && file.compressedPath
+        ? file.compressedPath
+        : `/uploads/${file.filename}`;
+
+      // Clean path if needed
+      filePath = filePath.endsWith(',') ? filePath.slice(0, -1) : filePath;
+
+      attachments.push({
+        path: filePath,
+        originalName: file.originalname,
+        fileSize: file.size,
+        fileType: file.mimetype,
+        uploadedBy: userId,
+        attachmentType: attachmentType,
+        relatedTask: taskId,
+        uploadedAt: new Date()
+      });
+    });
+  };
+
+  // Process files
+  if (req.files.taskAttachments) {
+    processFiles(req.files.taskAttachments, 'taskAttachment');
+  }
+  if (req.files.userSubmission) {
+    processFiles(req.files.userSubmission, 'userSubmission');
+  }
+
+  try {
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      { $push: { attachments: { $each: attachments } } },
+      { new: true }
+    );
+
+    if (!updatedTask) {
+      req.flash('error', 'Task not found');
+      return res.redirect(`/task/${taskId}/detail?spaceId=${spaceId}`);
+    }
+
+    req.flash('success', 'Files uploaded successfully');
+    return res.redirect(`/task/${taskId}/detail?spaceId=${spaceId}`);
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    req.flash('error', error.name === 'CastError' ? 'Invalid task ID' : 'Upload failed');
+    return res.redirect(`/task/${taskId}/detail?spaceId=${spaceId}`);
+  }
+};
+
+// delete file
+exports.deleteFile = async (req, res) => {
+  try {
+    const fileId = req.params.id;
+    const userId = req.user._id;
+
+    // Find the task containing the file attachment
+    const task = await Task.findOne({
+      'attachments._id': fileId,
+      $or: [
+        { user: userId },
+        { 'attachments.uploadedBy': userId }
+      ]
+    });
+
+    if (!task) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'File not found in database' 
+      });
+    }
+
+    const attachment = task.attachments.id(fileId);
+    if (!attachment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Attachment not found'
+      });
+    }
+
+    let filePath = attachment.path;
+
+    // Normalize path (remove leading slash if present)
+    if (filePath.startsWith('/')) {
+      filePath = filePath.substring(1);
+    }
+    const fullPath = path.join(__dirname, '../../../public', filePath);
+
+    // Delete the physical file
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath);
+      console.log(`Successfully deleted file: ${fullPath}`);
+    } else {
+      console.warn(`File not found at: ${fullPath}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Physical file not found'
+      });
+    }
+
+    // Remove the attachment from the task
+    task.attachments.pull({ _id: fileId });
+    await task.save();
+
+    // ADDED: Send success response
+    return res.status(200).json({
+      success: true
+    });
+
+  } catch (error) {
+    console.error('File deletion error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+exports.handleApproval = async (req, res) => {
+  try {
+    const { id } = req.params; // Task ID
+    const { action } = req.body; // Action: 'approve' or 'reject'
+    const userId = req.user._id; // Approver's ID
+
+    // Find the task
+    const task = await Task.findById(id)
+      .populate('assignedUsers')
+      .populate({ path: 'project', model: 'Spaces' });
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // Update task fields
+    task.taskStatus = action === 'approve' ? 'finished' : 'fix';
+    task.approvedBy = action === 'approve' ? userId : null;
+    task.approvedAt = action === 'approve' ? new Date() : null;
+    task.approvedBy = action === 'reject' ? userId : null;
+    task.approvedAt = action === 'reject' ? new Date() : null;
+    await task.save();
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // Find the approver's name
+    const approver = await User.findById(userId).select('firstName lastName');
+    if (!approver) {
+      return res.status(404).json({ message: 'Approver not found' });
+    }
+
+    const approverName = `${approver.firstName} ${approver.lastName}`;
+    const taskName = task.taskName;
+    const spaceId = task.project?._id; // Space ID
+
+    // Prepare the notification message
+    const message = action === 'approve'
+      ? `งานชื่อ "${taskName}" ได้รับการอนุมัติโดย ${approverName}.`
+      : `งานชื่อ "${taskName}" ได้รับการปฏิเสธโดย ${approverName} และกรุณาแก้ไข.`;
+
+    // 🔥 Send response FIRST
+    res.status(200).json({ message: `Task ${action}d successfully.` });
+    
+    // Prepare the task details link
+    const taskDetailLink = `https://deploytest-8mln.onrender.com/task/${task._id}/detail?spaceId=${spaceId}`;
+
+    // ✉️ Now do email sending and notifications in the background
+    sendTaskStatusEmails(task.assignedUsers, taskName, action, taskDetailLink, message);
+
+    const type = action === 'approve' ? 'taskApproved' : 'taskRejected';
+    const notification = new Notification({
+      userGroup: task.assignedUsers.map(user => ({
+        user: user._id,
+        status: 'unread',
+      })),
+      triggeredBy: userId,
+      type,
+      message,
+      relatedEntityType: 'task',
+      relatedEntityId: task._id,
+      space: spaceId,
+      isActionable: false,
+      dueDate: task.dueDate || null,
+    });
+
+    await notification.save();
+
+    const io = req.app.get('io');
+    for (const assignedUser of task.assignedUsers) {
+      io.to(assignedUser._id.toString()).emit('newNotification', {
+        _id: notification._id,
+        message,
+        triggeredBy: {
+          profileImage: approver.profileImage || '/default-profile.png',
+        },
+        createdAt: notification.createdAt,
+        userGroup: notification.userGroup,
+      });
+
+      const unreadCount = await Notification.countDocuments({
+        'userGroup.user': assignedUser._id,
+        'userGroup.status': 'unread',
+      });
+      io.to(assignedUser._id.toString()).emit('updateUnreadCount', unreadCount);
+    }
+
+  } catch (err) {
+    console.error('❌ handleApproval error:', err);
+    return res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.addComment = async (req, res) => {
+  try {
+      const { taskId } = req.params;  // Get task ID from request params
+      const { commentInput } = req.body;  // Get comment text from body
+      const userId = req.user._id;  // Get the logged-in user ID
+
+      // Ensure the task exists
+      const task = await Task.findById(taskId);
+      if (!task) {
+          console.log('Task not found.');
+          return res.status(404).json({ message: 'Task not found' });
+      }
+
+      // Prepare attachment data if there are any files
+      const attachments = [];
+      if (req.attachments && req.attachments.length > 0) {
+          for (let file of req.attachments) {
+              // Push attachment data directly into the attachments array of the comment
+              const attachmentData = {
+                  path: file.path.replace('public/', ''),  // Store relative file path
+                  originalName: file.originalName,  // Store original file name
+                  fileSize: file.fileSize,  // Store file size
+                  fileType: file.fileType,  // Store MIME type of the file
+                  uploadedBy: userId,  // Reference the user uploading the file
+                  taskId: taskId,  // Link the attachment to the task
+                  attachmentType: 'commentAttachment',  // This is a comment attachment
+              };
+              attachments.push(attachmentData);  // Add attachment data to array
+          }
+      } else {
+          console.log('No attachments to add to the comment.');
+      }
+
+      // Create the comment object
+      const newComment = {
+          text: commentInput || '',  // Add text if provided
+          createdBy: userId,  // Link the comment to the user who created it
+          attachments: attachments,  // Attach the files to the comment
+      };
+
+      // Save the comment to the task
+      task.comment.push(newComment);
+      await task.save();  // Save the updated task
+
+      res.status(200).json({ success: true, message: 'Comment added successfully', comment: newComment });
+  } catch (error) {
+      console.error('Error adding comment:', error);
+      res.status(500).json({ message: 'Error adding comment' });
+  }
+};
+
+exports.deleteComment = async (req, res) => {
+  const { commentId } = req.params;
+
+  try {
+    // Find the task containing the comment
+    const task = await Task.findOne({ 'comment._id': commentId });
+
+    if (!task) {
+        console.log('Task not found');  // Debug log
+        return res.status(404).send({ error: 'Task not found' });
+    }
+
+     // Find the comment to delete
+     const comment = task.comment.id(commentId);
+
+   if (!comment) {
+     return res.status(404).json({ message: 'Comment not found.' });
+    }
+
+    // Delete physical files associated with the comment
+    if (comment.attachments && comment.attachments.length > 0) {
+      for (const attachment of comment.attachments) {
+        const filePath = path.join(__dirname, '../../../public', attachment.path);
+
+        // Check if the file exists before attempting to delete
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath); // Delete the file
+        } else {
+          console.warn(`File not found: ${filePath}`);
+        }
+      }
+    }
+
+    // Remove the comment from the task
+    comment.remove();
+    await task.save();
+
+    res.status(200).send({ message: 'Comment and attachments deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting comment:', error);  // Debug log
+    res.status(500).send({ error: 'Error deleting comment' });
   }
 };

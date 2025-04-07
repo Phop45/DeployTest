@@ -672,3 +672,9 @@ body{
 .no-spaces:hover .add-btn-noSpace i{
     font-size: 90px;
 }
+
+.headWrpaRight{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

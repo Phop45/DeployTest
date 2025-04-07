@@ -26,9 +26,13 @@ const spaceSchema = new Schema({
         default: null
     },
     collaborators: [collaboratorSchema],
-    deleted: {
-        type: Boolean,
-        default: false
+    deleted: { 
+        type: Boolean, 
+        default: false 
+    },
+    deletedAt: { 
+        type: Date, 
+        default: null 
     },
     projectCover: {
         type: String,

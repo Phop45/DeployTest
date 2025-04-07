@@ -1,4 +1,4 @@
-<%- include('../partials/topNavigation.ejs', { spaces }) %>
+<%- include('../partials/topNavigation.ejs', { spaces, unreadCount }) %>
 <%- include('../partials/sideNavigation.ejs', { spaces }) %>
 
 <div class="content">
@@ -8,8 +8,15 @@
         <div class="textheard-space">โปรเจกต์ทั้งหมด</div>
       <span class="subText">จัดการและจัดระเบียบโปรเจกต์ทั้งหมดของคุณในที่เดียว</span>
       </div>
-      <a href="/createProject" class="add-btn btn" id="spaceCreate"><i class='bx bx-plus-circle'></i> 
-        เพิ่มโปรเจกต์ใหม่</a>
+      <div class="headWrpaRight">
+        <a href="/project/recover " class="recoverBtn" id="recoverBtn" data-tooltip="กู้คืนโปรเจกต์ที่ถูกลบ">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+        <a href="/createProject" class="add-btn btn" id="spaceCreate"><i class='bx bx-plus-circle'></i> 
+          เพิ่มโปรเจกต์ใหม่
+        </a>
+      </div>
+      
     </div>
 
     <div class="sortData">
@@ -57,7 +64,6 @@
                 <div class="theme">
                   <img src="<%= spaces[i].projectCover %>"  alt="taskbackground">
                 </div>
-                <% console.log(spaces[i].projectCover); %>
               </a>
 
                 <div class="detailInfo">
@@ -174,7 +180,6 @@
         element.addEventListener('click', (event) => {
             event.preventDefault(); 
             const spaceId = element.getAttribute('data-space-id');
-            console.log(`Triggered for spaceId: ${spaceId}`);
 
             // Find the corresponding file input
             const fileInput = document.getElementById(`file-input-${spaceId}`);
@@ -199,8 +204,7 @@
     // Handle file upload once a file is selected
     document.querySelectorAll('input[type="file"]').forEach((fileInput) => {
         fileInput.addEventListener('change', (event) => {
-            const spaceId = fileInput.id.split('-')[2]; // Extract spaceId from input ID
-            console.log(`File selected for spaceId: ${spaceId}:`, fileInput.files[0]);
+            const spaceId = fileInput.id.split('-')[2]; 
 
             // Call uploadFile function to submit the form
             uploadFile(spaceId);

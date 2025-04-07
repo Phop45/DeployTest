@@ -17,9 +17,9 @@ router.post(
 router.post('/checkExistingProject', isLoggedIn,projectController.checkExistingProject);
 
 router.get('/getUsers', isLoggedIn,projectController.getUsers);
-router.delete('/space/delete/:id', isLoggedIn, projectController.deleteSpace);
-router.put('/space/:id/recover', isLoggedIn, projectController.recoverSpace);
-router.get('/subject/recover', isLoggedIn, projectController.ShowRecover);
+router.delete('/space/delete/:id', isLoggedIn, projectController.deleteProject);
+router.put('/space/recover/:id', isLoggedIn, projectController.recoverSpace);
+router.get('/project/recover', isLoggedIn, projectController.ShowRecover);
 
 router.post('/updateSpacePicture/:id', isLoggedIn, uploadCovers.single('projectCover'), compressAndUploadImage, projectController.edit_Update_SpacePicture);
 router.post('/updateSpaceName/:id', isLoggedIn, projectController.edit_Update_SpaceName);

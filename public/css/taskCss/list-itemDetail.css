@@ -1092,7 +1092,7 @@ td img {
 
 /* activity */
 .activity {
-    width: 35%;
+    width: 100%;
     height: 100%;
     background-color: #F7F8F9;
     border-left: 1.5px solid var(--line);

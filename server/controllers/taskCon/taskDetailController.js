@@ -64,15 +64,19 @@ function getRandomPastelColor() {
 
 exports.detailPageRender = async (req, res) => {
     try {
-        const taskId = mongoose.Types.ObjectId(req.params.id); 
-        const spaceId = ObjectId(req.query.spaceId);
+        const { id: taskId } = req.params; 
+        const { spaceId } = req.query; 
         const loggedInUserId = req.user._id.toString();
 
         if (!mongoose.Types.ObjectId.isValid(taskId) || !mongoose.Types.ObjectId.isValid(spaceId)) {
             return res.status(400).send("Invalid task or space ID.");
         }
         
-        const task = await Task.findById(taskId)
+        // Convert to ObjectId
+        const taskObjectId = mongoose.Types.ObjectId(taskId);
+        const spaceObjectId = mongoose.Types.ObjectId(spaceId);
+
+        const task = await Task.findById(taskObjectId)
             .populate('assignedUsers', 'profileImage firstName lastName googleEmail')
             .populate({
                 path: 'activityLogs.createdBy',
@@ -88,15 +92,15 @@ exports.detailPageRender = async (req, res) => {
             })
             .lean();
 
-        const space = await Spaces.findById(spaceId)
+        const space = await Spaces.findById(spaceObjectId)
             .populate('collaborators.user', 'profileImage firstName lastName googleEmail')
             .lean();
 
-        const subtasks = await SubTask.find({ task: taskId })
+        const subtasks = await SubTask.find({ task: taskObjectId })
             .populate('assignee', 'profileImage firstName lastName googleEmail')
             .sort({ createdAt: -1 })
             .lean();
-        const inProgressSubtasks = await SubTask.find({ task: taskId, subTask_status: 'กำลังทำ' })
+        const inProgressSubtasks = await SubTask.find({ task: taskObjectId, subTask_status: 'กำลังทำ' })
             .sort({ createdAt: -1 })
             .lean();
 
@@ -136,7 +140,7 @@ exports.detailPageRender = async (req, res) => {
         }));
 
         const statusMapping = {
-            toDo: 'ยังไม่ได้ทำ',
+            pending: 'รอตรวจ',
             inProgress: 'กำลังทำ',
             fix: 'แก้ไข',
             finished: 'เสร็จสิ้น',
