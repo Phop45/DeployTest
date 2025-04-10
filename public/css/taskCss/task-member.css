@@ -29,7 +29,7 @@
     margin-left: 70px;
     display: flex;
     flex-direction: column;
-    height: 92vh;
+    height: 93vh;
     overflow: hidden;
 }
 
@@ -60,24 +60,23 @@
 .search-member #searchMemberInput {
     font-size: 16px;
     font-weight: 400;
-    border: 1.5px solid rgba(151, 151, 151, .6);
-    border-radius: 5px;
-    padding: 10px 15px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 25px;
     width: 300px;
-    height: 40px;
     padding-right: 30px;
     text-overflow: ellipsis;
 }
 
 #searchMemberInput:focus {
     outline: none;
-    border: 1.5px solid var(--light);
+    border: 1.5px solid var(--btn);
 }
 
 .search-member #userSelect {
     width: 300px;
-    border-radius: 5px;
-    border: 1.5px solid rgba(55, 53, 47, 0.50);
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
     transition: 0.2s ease;
     padding: 0 15px;
 }
@@ -87,10 +86,9 @@
 }
 
 .roleSelect {
-    border: 1.5px solid rgba(55, 53, 47, 0.50);
-    border-radius: 5px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
     transition: 0.3s;
-    height: 40px;
     width: fit-content !important;
     display: flex;
     align-items: center;
@@ -101,15 +99,21 @@
     color: black;
 }
 
+.dropdown-menu.show {
+    overflow: hidden;
+}
+
 .roleSelect .dropdown-menu {
-    border-radius: 5px;
+    border-radius: 10px;
     padding-top: 0;
     padding-bottom: 0;
     margin-top: 23px !important;
     margin-left: -20px !important;
-    border: 1.5px solid rgba(151, 151, 151, .6);
+    border: 1.5px solid var(--line);
+    box-shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
 }
-.changeRole .dropdown-menu{
+
+.changeRole .dropdown-menu {
     border-radius: 5px;
     padding-top: 0;
     padding-bottom: 0;
@@ -122,8 +126,8 @@
     transition: 0.3s;
 }
 
-#roleLeader span {
-    border-left: 5px solid #5C54E5;
+#roleReporter span {
+    border-left: 5px solid #3B82F6;
     padding-left: 10px;
 }
 
@@ -140,6 +144,14 @@
 .roleLeader {
     border: 2px solid #5C54E5;
     color: #5C54E5;
+    padding: 5px 20px;
+    border-radius: 5px;
+    font-weight: 400;
+}
+
+.roleReporter {
+    border: 2px solid #3B82F6;
+    color: #3B82F6;
     padding: 5px 20px;
     border-radius: 5px;
     font-weight: 400;
@@ -170,8 +182,7 @@
 .roleSelect .dropdown-menu .dropdown-item,
 .changeRole .dropdown-item {
     font-size: 16px;
-    padding-top: 15px;
-    padding-bottom: 15px;
+    padding: 20px;
     cursor: pointer;
     transition: 0.3s;
 }
@@ -196,11 +207,11 @@
     padding: 0 15px;
     opacity: 0.7;
     height: 40px;
+    transition: all 0.3s;
 }
 
 #addMemberBtn:hover {
     opacity: 1;
-    transition: 0.3s;
 }
 
 
@@ -295,7 +306,7 @@ tbody td:nth-child(4) {
 
 .secside {
     position: absolute;
-    height: 92vh;
+    height: 93vh;
     z-index: 10;
 }
 
@@ -376,38 +387,44 @@ tbody td:nth-child(4) {
 
 .addSection .addleft #filterMemberInput {
     width: 500px;
-    height: 40px;
-    border: 1.5px solid rgba(151, 151, 151, .6);
-    border-radius: 5px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
     font-size: 16px;
     font-weight: 400;
-    padding: 5px 45px;
+    padding: 10px 45px;
+    position: relative;
 }
 
 .addSection .addleft #filterMemberInput:focus {
     outline: none;
-    border: 1.5px solid var(--light);
+    border: 1.5px solid var(--btn);
+}
+
+.addleft {
+    position: relative;
 }
 
 .addleft .fa-magnifying-glass {
     position: absolute;
     font-size: 20px;
     transform: translateY(50%);
-    left: 155px;
+    left: 18px;
+    top: 2px;
+    z-index: 100;
+    opacity: 0.7;
 }
 
 .roleSelect {
-    border: 1.5px solid rgba(151, 151, 151, .6);
-    border-radius: 5px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
     padding: 10px 20px;
     width: 150px;
     cursor: pointer;
+    transition: all 0.3s;
 }
 
-.memberSelect:hover,
 .roleSelect:hover {
-    background-color: var(--grey);
-    transition: 0.3s;
+    background-color: #e4e9f6;
 }
 
 .addSection .memberSelect #memberDropdown {
@@ -452,8 +469,8 @@ tbody td:nth-child(4) {
 }
 
 .memberSelect .dropdown-item img {
-    height: 35px;
-    width: 35px;
+    height: 40px;
+    width: 40px;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -492,17 +509,17 @@ tbody td:nth-child(4) {
 }
 
 #searchResultsDropdown {
-    max-height: 150px;
+    max-height: 350px;
     overflow-y: auto;
     position: absolute;
     z-index: 1000;
     top: 120%;
-    /* Positioned below the input */
     left: 0;
     right: 0;
     display: none;
-    border: 1.5px solid rgba(151, 151, 151, .6);
-    border-radius: 5px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
 }
 
 .profile-img {
@@ -528,6 +545,7 @@ tbody td:nth-child(4) {
 .status-indicator.online {
     background: #23bd5a;
 }
+
 .logStatus.online {
     padding: 5px 15px;
     background: #cff6dd;
@@ -540,6 +558,7 @@ tbody td:nth-child(4) {
 .status-indicator.offline {
     background: #cc2c39;
 }
+
 .logStatus.offline {
     padding: 5px 15px;
     background: #ffaab0;
@@ -573,12 +592,6 @@ tbody td:nth-child(4) {
     font-size: 16px;
 }
 
-.dropdown-item .resultEmail {
-    font-size: 16px;
-    color: var(--more-line);
-    margin-left: 5px;
-}
-
 .dropdown-item img {
     width: 30px;
     height: 30px;
@@ -605,25 +618,39 @@ tbody td:nth-child(4) {
 
 
 /* Table section */
-.memberTable{
-    margin: 10px 50px;
+.memberTable {
+    margin: 0 50px;
     width: 93%;
-    height: 65vh;
-    min-height: 65vh;
+    height: 55vh;
+    min-height: 55vh;
     overflow: auto;
 }
 
 .table-wrap {
-    overflow-x: scroll; 
+    overflow-x: auto;
+    /* Allows horizontal scrolling */
+    overflow-y: auto;
+    /* Allows vertical scrolling */
+    max-height: 400px;
+    /* Adjust to your needs */
+    border: 1px solid #ddd;
+    position: relative;
 }
 
 .table {
     min-width: 1000px !important;
     width: 100%;
-    -webkit-box-shadow: 0px 5px 12px -12px rgba(0, 0, 0, 0.29);
-    -moz-box-shadow: 0px 5px 12px -12px rgba(0, 0, 0, 0.29);
+    border-collapse: collapse;
+    /* Prevent double borders */
     box-shadow: 0px 5px 12px -12px rgba(0, 0, 0, 0.29);
     margin-top: 0;
+}
+
+.table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    /* Ensure it stays above tbody rows */
 }
 
 .table thead th {
@@ -632,10 +659,11 @@ tbody td:nth-child(4) {
     font-size: 16px;
     font-weight: 400;
     color: white;
+    background: var(--topnav);
+    /* Ensure it matches your header styling */
 }
 
 .table thead tr {
-    background: var(--topnav);
     border-bottom: 4px solid #eceffa;
 }
 
@@ -672,12 +700,11 @@ tbody td:nth-child(4) {
 }
 
 .table tbody td .img {
-    border-radius: 50%;
     display: flex;
-    justify-content: center;
     align-items: center;
     flex-direction: row;
     gap: 20px;
+    margin-left: 20px;
 }
 
 .table tbody td .email span {
@@ -693,6 +720,7 @@ tbody td:nth-child(4) {
     font-size: 12px;
     color: #dc3545;
 }
+
 .alert {
     position: relative;
     padding: 0.75rem 1.25rem;
@@ -701,11 +729,7 @@ tbody td:nth-child(4) {
     border-radius: 0.25rem;
     height: 90px;
 }
-.alert .img{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+
 .alert-heading {
     color: inherit;
 }
@@ -725,11 +749,13 @@ tbody td:nth-child(4) {
     padding: 0.75rem 1.25rem;
     color: inherit;
 }
-.alert .name{
+
+.alert .name {
     font-size: 16px;
     font-weight: 300;
     color: var(--text1);
 }
+
 #optionBtn .dropdown-toggle {
     background-color: transparent;
     border: none;
@@ -744,9 +770,11 @@ tbody td:nth-child(4) {
 #optionBtn .dropdown-toggle:hover {
     color: #000;
 }
-#optionBtn .dropdown-toggle:focus{
+
+#optionBtn .dropdown-toggle:focus {
     outline: none;
 }
+
 #optionBtn .dropdown-menu {
     min-width: 150px;
 }
@@ -755,11 +783,11 @@ tbody td:nth-child(4) {
     display: none !important;
 }
 
-.add-member-container{
+.add-member-container {
     background-color: #f8f9fd;
 }
 
-.otpItem{
+.otpItem {
     padding: 10px 20px;
     font-size: 16px;
     font-weight: 300;
@@ -768,7 +796,8 @@ tbody td:nth-child(4) {
     align-items: center;
     transition: 0.3s;
 }
-.otpItem i{
+
+.otpItem i {
     font-size: 18px;
     width: 25px;
     height: 25px;
@@ -776,4 +805,67 @@ tbody td:nth-child(4) {
     justify-content: center;
     align-items: center;
     margin-right: 10px;
+}
+
+.fallback-profile-member {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #5C54E5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 300;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.memberItemWrap {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.memberNameWrap {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px;
+}
+
+.dropdown-item .resultEmail {
+    font-size: 14px;
+    font-weight: 300;
+    color: gray;
+}
+
+.user-avatar-profile {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.fallback-profile-avatar-profile {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #5C54E5;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 300;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1)
+}
+
+.imgName {
+    text-align: start;
+}
+
+#anotherDisplayView{
+    height: 65vh;
+    min-height: 65vh;
+    margin-top: 25px;
 }

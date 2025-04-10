@@ -4,12 +4,7 @@ const User = require("../models/User");
 const crypto = require('crypto');
 const bcrypt = require("bcrypt");
 const { sendEmail } = require("../../emailService");
-// const logUserActivity = require('../utils/activityLogger');
-// const logFeatureUsage = require('../utils/featureLogger');
 const mongoose = require("mongoose");
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
 
 exports.googleCallback = async (accessToken, refreshToken, profile, done) => {
   try {

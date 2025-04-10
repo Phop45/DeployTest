@@ -114,6 +114,7 @@ exports.task_dashboard = async (req, res) => {
         const recentTasksCount = filteredTasks.length;
         const updatedTasksCount = filteredTasks.filter((task) => new Date(task.updatedAt) > new Date(task.createdAt)).length;
 
+
         const nextSevenDays = new Date();
         nextSevenDays.setDate(today.getDate() + 7);
         const dueNextSevenDaysCount = filteredTasks.filter((task) => task.dueDate && new Date(task.dueDate) >= today && new Date(task.dueDate) <= nextSevenDays).length;
@@ -128,7 +129,7 @@ exports.task_dashboard = async (req, res) => {
 
         // Status Chart
         const statusCounts = {
-            toDo: filteredTasks.filter(task => task.taskStatus === 'toDo').length || 0,
+            pending: filteredTasks.filter(task => task.taskStatus === 'pending').length || 0,
             inProgress: filteredTasks.filter(task => task.taskStatus === 'inProgress').length || 0,
             fix: filteredTasks.filter(task => task.taskStatus === 'fix').length || 0,
             finished: filteredTasks.filter(task => task.taskStatus === 'finished').length || 0,
@@ -152,7 +153,7 @@ exports.task_dashboard = async (req, res) => {
         };
 
         // Workload Distribution
-        const incompleteStatuses = ['toDo', 'inProgress', 'fix']; 
+        const incompleteStatuses = ['pending', 'inProgress', 'fix']; 
 
         const workloadChartData = space.collaborators
             .filter(collaborator => collaborator.user) // Exclude collaborators with null user
@@ -178,6 +179,19 @@ exports.task_dashboard = async (req, res) => {
                     incompleteTasks,
                 };
             });
+        
+        const pendingTaskCount = filteredTasks.filter(task => task.taskStatus === 'pending').length;
+
+        const periodToThai = {
+            today: 'วันนี้',
+            '7day': '7 วันที่ผ่านมา',
+            '1month': '1 เดือนที่ผ่านมา',
+            sinceCreate: 'ทั้งหมด',
+        };
+
+        // Get the Thai equivalent of the selected period
+        const selectedPeriodThai = periodToThai[period] || '7 วันที่ผ่านมา';
+        const periodText = `ในช่วง ${selectedPeriodThai}`;
 
         // Render the Dashboard
         res.render('task/task-dashboard', {
@@ -196,14 +210,9 @@ exports.task_dashboard = async (req, res) => {
             priorityCounts,
             workloadChartData,
             startDate,
-            selectedPeriod: period, 
-            periodText: {
-                today: 'วันนี้',
-                '7day': 'ในช่วง 7 วันที่ผ่านมา',
-                '1month': 'ในช่วง 1 เดือนที่ผ่านมา',
-                sinceCreate: 'ตั้งแต่สร้างโปรเจกต์',
-            }[period],
-
+            pendingTaskCount,
+            selectedPeriod: selectedPeriodThai, 
+            periodText: periodText, 
             users: space.collaborators.map(c => c.user), 
             layout: '../views/layouts/task',
             currentPage: 'dashboard',
@@ -283,7 +292,6 @@ exports.boardPageRender = async (req, res) => {
         const collaborator = space.collaborators?.find(c => c.user && c.user._id.toString() === userId.toString());
         const currentUserRole = isOwner ? 'Owner' : collaborator?.role || 'member';
 
-        console.log('Current user role:', currentUserRole);
         // Fetch tasks and populate required fields
         let tasks = await Task.find({ project: spaceId, deleted: false })
             .populate('assignedUsers', 'profileImage firstName lastName')
@@ -335,7 +343,6 @@ exports.boardPageRender = async (req, res) => {
                 .lean();
 
             task.subTaskId = subtasks.map(subtask => subtask._id);
-            console.log(`Subtasks for task ${task._id}:`, task.subTaskId); 
 
             // Group subtasks by assignee and calculate completion percentage
             const assigneeProgress = subtasks.reduce((acc, subtask) => {
@@ -431,6 +438,7 @@ exports.boardPageRender = async (req, res) => {
             workload.percentage = workload.totalTasks > 0 ? Math.round((workload.completedTasks / workload.totalTasks) * 100) : 0;
         }
         const projectDueDate = space.projectDueDate ? space.projectDueDate.toISOString().split('T')[0] : null;
+        const pendingTaskCount = tasksByStatus.pending.length;
         
         res.render("task/task-board", {
             spaces: space,
@@ -443,6 +451,7 @@ exports.boardPageRender = async (req, res) => {
             currentUserRole,
             moment, 
             projectDueDate,
+            pendingTaskCount,
             userWorkload: JSON.stringify(userWorkload),
             currentPage: 'board',
             layout: "../views/layouts/task", 

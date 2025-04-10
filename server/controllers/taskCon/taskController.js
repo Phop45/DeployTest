@@ -13,10 +13,9 @@ const ObjectId = mongoose.Types.ObjectId;
 const Tag = require('../../models/Tag');
 const upload = require('../../middleware/upload'); 
 const { console } = require("inspector");
-const { sendEmail, sendTaskStatusEmails } = require('../../../emailService'); // Import email service
+const { sendTaskApprovalEmail, sendTaskStatusEmails } = require('../../../emailService');
 
 moment.locale('th');
-
 
 const extractTaskParameters = async (tasks) => {
   const taskNames = tasks.map(task => task.taskName);
@@ -58,9 +57,6 @@ const formatDateToThai = (date) => {
     day: 'numeric',
   });
 };
-
-
-
 
 /// create task controller
 exports.createTask = async (req, res) => {
@@ -451,10 +447,12 @@ exports.pendingTask = async (req, res) => {
     })
       .populate({
         path: 'assignedUsers',
-        select: 'displayName profileImage'
+        select: 'firstName lastName profileImage'
       })
+      .populate('attachments.uploadedBy', 'displayName')
       .lean();
-
+    
+      const pendingTaskCount = tasks.length;
     // Get the user's role from the collaborators array
     const currentUserRole = space.collaborators.find(collab => collab.user.toString() === req.user._id.toString())?.role || 'member';
     res.render("task/pending-task", {
@@ -464,6 +462,7 @@ exports.pendingTask = async (req, res) => {
       user: req.user,
       userName: req.user.firstName,
       userImage: req.user.profileImage,
+      pendingTaskCount,
       currentPage: 'pending-task',
       layout: "../views/layouts/task",
       currentUserRole,
@@ -724,7 +723,7 @@ exports.updateTaskStatus = async (req, res) => {
     const { newStatus, markSubtasksCompleted } = req.body;
 
     // Find the task
-    const task = await Task.findById(taskId);
+    const task = await Task.findById(taskId).populate('assignedUsers');  // Ensure assigned users are populated
     if (!task) {
       return res.status(404).send({ message: 'Task not found' });
     }
@@ -736,7 +735,7 @@ exports.updateTaskStatus = async (req, res) => {
     // Handle subtasks when task status changes to "pending"
     if (newStatus === 'pending') {
       const result = await SubTask.updateMany(
-        { task: taskId, subTask_status: { $ne: 'finished' } }, // Only update subtasks not already finished
+        { task: taskId, subTask_status: { $ne: 'finished' } },
         { $set: { subTask_status: 'finished' } }
       );
     }
@@ -749,7 +748,73 @@ exports.updateTaskStatus = async (req, res) => {
       );
     }
 
-    res.status(200).send({ message: 'Task and subtasks updated successfully' });
+    // Find the space related to the task
+    const space = await Spaces.findById(task.project);
+    if (!space) {
+      return res.status(404).send({ message: 'Space not found' });
+    }
+
+    // Find collaborators with 'owner' or 'reporter' roles
+    const usersToNotify = await Promise.all(space.collaborators
+      .filter(collab => ['owner', 'reporter'].includes(collab.role))  // Filter by 'owner' and 'reporter' roles
+      .map(async (collab) => {
+        const user = await User.findById(collab.user);  // Fetch the full user object
+        return user;
+      })
+    );
+    
+    // If no users to notify, return a message
+    if (usersToNotify.length === 0) {
+      return res.status(404).send({ message: 'No collaborators with the specified roles found' });
+    }
+
+    const message = `คุณมีงานใหม่ที่รอการอนุมัติ: ${task.taskName}`;
+
+    // Prepare the notification to be saved in DB
+    const notification = new Notification({
+      userGroup: usersToNotify.map(userId => ({
+        user: userId,
+        status: 'unread',
+      })),
+      triggeredBy: req.user._id,
+      type: 'sendTaskApproval',
+      message,
+      relatedEntityType: 'task',
+      relatedEntityId: task._id,
+      space: space._id,
+      isActionable: true,
+      dueDate: task.dueDate || null,
+    });
+
+    await notification.save();
+
+    // Send approval emails to the 'owner' and 'reporter' users
+    const taskDetailLink = `https://deploytest-8mln.onrender.com/task/${task._id}/pendingDetail?spaceId=${space._id}`;
+    console.log('Sending task approval email to users...');
+    // Send approval emails to the 'owner' and 'reporter' users
+    await sendTaskApprovalEmail(usersToNotify, task.taskName, taskDetailLink, message);
+    console.log('Task approval email sent successfully.');
+
+    // Send WebSocket notifications
+    const io = req.app.get('io');
+    for (const userId of userIds) {
+      io.to(userId.toString()).emit('newNotification', {
+        _id: notification._id,
+        message,
+        triggeredBy: { profileImage: req.user.profileImage || '/default-profile.png' },
+        createdAt: notification.createdAt,
+        userGroup: notification.userGroup,
+      });
+
+      // Update unread count
+      const unreadCount = await Notification.countDocuments({
+        'userGroup.user': userId,
+        'userGroup.status': 'unread',
+      });
+      io.to(userId.toString()).emit('updateUnreadCount', unreadCount);
+    }
+
+    res.status(200).send({ message: 'Task and subtasks updated successfully and notifications sent' });
   } catch (error) {
     console.error('Error updating task status:', error);
     res.status(500).send({ message: 'Failed to update task status' });
@@ -930,6 +995,103 @@ exports.deleteFile = async (req, res) => {
   }
 };
 
+// Controller to handle "send to approve" functionality
+exports.sendToApprove = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+
+    // Find the task and populate the necessary fields
+    const task = await Task.findById(taskId)
+      .populate('assignedUsers')
+      .populate({ path: 'project', model: 'Spaces' }); 
+
+    if (!task) {
+      return res.status(404).send({ message: 'Task not found' });
+    }
+
+    // Allow status change only from 'inProgress' or 'fix' to 'pending'
+    if (!['inProgress', 'fix'].includes(task.taskStatus)) {
+      return res.status(400).send({ 
+        message: 'Task must be in progress or fix status to be sent for approval' 
+      });
+    }
+
+    task.taskStatus = 'pending';
+    await task.save();
+
+    // Mark all subtasks as 'finished' (optional)
+    const result = await SubTask.updateMany(
+      { task: taskId, subTask_status: { $ne: 'finished' } },
+      { $set: { subTask_status: 'finished' } }
+    );
+
+    // Get projectName from the populated task.project
+    const projectName = task.project.projectName;
+
+    // Find collaborators with 'owner' or 'reporter' roles
+    const usersToNotify = await Promise.all(
+      task.project.collaborators
+        .filter((collab) => ['owner', 'reporter'].includes(collab.role))
+        .map(async (collab) => {
+          const user = await User.findById(collab.user);
+          return user;
+        })
+    );
+
+    if (usersToNotify.length === 0) {
+      return res.status(404).send({ message: 'No collaborators with the specified roles found' });
+    }
+
+    const message = `คุณมีงานใหม่ที่รอการอนุมัติ: ${task.taskName}`;
+
+    // Save notification to DB
+    const notification = new Notification({
+      userGroup: usersToNotify.map((user) => ({
+        user: user._id,
+        status: 'unread',
+      })),
+      triggeredBy: req.user._id,
+      type: 'sendTaskApproval',
+      message,
+      relatedEntityType: 'task',
+      relatedEntityId: task._id,
+      space: task.project._id,  // Reference the space object
+      isActionable: true,
+      dueDate: task.dueDate || null,
+    });
+
+    await notification.save();
+
+    // Send approval emails
+    const taskDetailLink = `https://deploytest-8mln.onrender.com/task/${task._id}/pendingDetail?spaceId=${task.project._id}`;
+    await sendTaskApprovalEmail(usersToNotify, task, projectName, taskDetailLink, message);
+
+    // Send WebSocket notifications
+    const io = req.app.get('io');
+    for (const user of usersToNotify) {
+      io.to(user._id.toString()).emit('newNotification', {
+        _id: notification._id,
+        message,
+        triggeredBy: { profileImage: req.user.profileImage || '/default-profile.png' },
+        createdAt: notification.createdAt,
+        userGroup: notification.userGroup,
+      });
+
+      // Update unread count
+      const unreadCount = await Notification.countDocuments({
+        'userGroup.user': user._id,
+        'userGroup.status': 'unread',
+      });
+      io.to(user._id.toString()).emit('updateUnreadCount', unreadCount);
+    }
+
+    res.status(200).send({ message: 'Task sent for approval successfully and notifications sent' });
+  } catch (error) {
+    console.error('Error sending task for approval:', error);
+    res.status(500).send({ message: 'Failed to send task for approval' });
+  }
+};
+
 exports.handleApproval = async (req, res) => {
   try {
     const { id } = req.params; // Task ID
@@ -945,12 +1107,19 @@ exports.handleApproval = async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
 
-    // Update task fields
-    task.taskStatus = action === 'approve' ? 'finished' : 'fix';
-    task.approvedBy = action === 'approve' ? userId : null;
-    task.approvedAt = action === 'approve' ? new Date() : null;
-    task.approvedBy = action === 'reject' ? userId : null;
-    task.approvedAt = action === 'reject' ? new Date() : null;
+    // Update task fields based on action
+    if (action === 'approve') {
+      task.taskStatus = 'finished';
+      task.approvedBy = userId;
+      task.approvedAt = new Date();
+    } else if (action === 'reject') {
+      task.taskStatus = 'fix';
+      task.approvedBy = userId;
+      task.approvedAt = new Date();
+    } else {
+      return res.status(400).json({ message: 'Invalid action specified' });
+    }
+
     await task.save();
 
     if (!task) {

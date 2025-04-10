@@ -27,6 +27,7 @@ router.get('/space/item/:id/pedding', isLoggedIn, taskController.pendingTask);
 
 router.delete('/deleteFile/:id', isLoggedIn, taskController.deleteFile);
 
+router.post('/task/:taskId/send-to-approve',isLoggedIn, taskController.sendToApprove);
 router.post('/task/:taskId/update-status',isLoggedIn, taskController.updateTaskStatus);
 router.post('/subtask/:subtaskId/update-status', isLoggedIn, taskController.updateSubtaskStatus);
 router.get('/task/:taskId/subtasks',isLoggedIn, taskController.getTaskSubtasks);

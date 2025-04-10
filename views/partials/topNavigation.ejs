@@ -75,7 +75,18 @@
                                         <div class="notiContent">
                                             <span class="firstLine">
                                                 <span><%= notification.message %></span>
-                                                <a href="/task/<%= notification.relatedEntityId %>/detail?spaceId=<%= notification.space %>" class="taskLink" style="color: blue; text-decoration: underline;">View Task</a>
+                                                
+                                                <% if (notification.type === 'roleChange') { %>
+                                                    <a href="/space/item/<%= notification.space %>/member" class="taskLink" style="color: blue; text-decoration: underline;">คลิกเพื่อดูรายละเอียดเพิ่มเติม</a>
+                                                <% } else if (notification.type === 'taskApproved') { %>
+                                                    <a href="/task/<%= notification.relatedEntityId %>/detail?spaceId=<%= notification.space %>" class="taskLink" style="color: blue; text-decoration: underline;">คลิกเพื่อดูรายละเอียดเพิ่มเติม</a>
+                                                <% } else if (notification.type === 'space-invitation') { %>
+                                                    <a href="/space/item/<%= notification.space %>/dashboard?period=7day" class="taskLink" style="color: blue; text-decoration: underline;">คลิกเพื่อดูรายละเอียดเพิ่มเติม</a>
+                                                <% } else if (notification.type === 'space-member-removal') { %>
+                                                    <span></span>
+                                                <% } else { %>
+                                                    <span></span>
+                                                <% } %>
                                             </span>
                                             <span class="secondLine">
                                                 แจ้งเตือนเมื่อ: <%= new Date(notification.createdAt).toLocaleString() %>

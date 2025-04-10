@@ -29,9 +29,6 @@
                 <div class="detailHeader">
                     <div class="headerFirst">
                         <h1 class="detailText">รายละเอียด</h1>
-                        <div class="task-summary hidden">
-                            <p>สถานะ, ผู้รับผิดชอบ, ความสำคัญ, แท็กงาน, วันครบกำหนด, เวลาครบกำหนด</p>
-                        </div>
                     </div>
                 </div>
                 <div class="grid-container">
@@ -349,8 +346,11 @@
 
         <div class="activitySection">
             <div class="approveSection">
-                <div class="textTopic">
-                    <h1>การอนุมัติ</h1>
+                <div class="textTopicApprove">
+                    <h1><i class="fa-regular fa-square-check" style="margin-right: 10px;"></i> การอนุมัติ</h1>
+                    <span class="approveText">
+                        <span style="color: red; margin-right: 5px;">*</span>จำเป็นต้องได้รับการอนุมัติเพื่อทำให้งานเสร็จสิ้น หรืออาจถูกปฏิเสธเพื่อแก้ไขเพิ่มเติม
+                    </span>
                 </div>
 
                 <% if (task.taskStatus === 'pending') { %>
@@ -366,22 +366,28 @@
                           </button>
                         </div>
                       </div>
-                
-                      <span class="approveText">
-                        จำเป็นต้องได้รับการอนุมัติเพื่อทำให้งานเสร็จสิ้น หรืออาจถูกปฏิเสธเพื่อแก้ไขเพิ่มเติม
-                      </span>
-                
+
                       <div class="approversShow">
-                        <% approvers.forEach(approver => { %>
-                          <div class="approversItem">
-                            <img src="<%= approver.profileImage %>" alt="Approver Image"
-                              onerror="this.onerror=null; this.src='/public/img/profileImage/userDefalt.jpg';"
-                              style="width: 40px; height: 40px; border-radius: 50%;">
-                            <div class="approverDetails">
-                              <span class="approversName"><%= approver.firstName %> <%= approver.lastName %></span>
-                            </div>
-                          </div>
-                        <% }) %>
+                        <span class="approversTitle">ผู้ตรวจ</span>
+                        <div class="approversItemWrap">
+                            <% approvers.forEach(approver=> { %>
+                                <div class="approversItem">
+                                    <img src="<%= approver.profileImage %>" alt="Approver Image" class="user-avatar" style="width: 50px; height: 50px; border-radius: 50%;"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="fallback-profile-approver" style="display: none; ">
+                                        <span>
+                                            <%= approver.firstName[0] %>
+                                        </span>
+                                    </div>
+                                    <div class="approverDetails">
+                                        <span class="approversName">
+                                            <%= approver.firstName %> <%= approver.lastName %>
+                                        </span>
+                                        <span class="approverEmail"><%= approver.googleEmail %> </span>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
                       </div>
                     </div>
                   <% } 
@@ -390,38 +396,45 @@
                     <!-- AFTER APPROVAL -->
                     <div class="atferApprove">
                       <% if (task.taskStatus === 'finished') { %>
-                        <span class="approveText" id="approveText">
-                          งานถูกตรวจเรียบร้อย โดยงานของคุณเสร็จสิ้น<br>
-                          ตรวจเมื่อวันที่ <%= formatDateToThai(task.approvedAt || task.updatedAt) %><br>
-                          เวลา: <%= new Date(task.approvedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) %> น.
+                        <span class="afterApproveText" id="approveText">
+                          งานถูกตรวจเรียบร้อย โดยงานของคุณ <span id="approveStatusApprove">เสร็จสิ้น</span> <br>
+                          <span style="color: gray; font-weight: 300;">
+                            ตรวจเมื่อวันที่ <%= formatDateToThai(task.approvedAt || task.updatedAt) %><br>
+                            เวลา: <%= new Date(task.approvedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) %> น.
+                          </span>
                         </span>
                       <% } else if (task.taskStatus === 'fix') { %>
-                        <span class="approveText" id="rejectText">
-                          งานถูกตรวจเรียบร้อย โดยมีการแก้ไข<br>
-                          ตรวจเมื่อวันที่ <%= formatDateToThai(task.approvedAt || task.updatedAt) %><br>
-                          เวลา: <%= new Date(task.approvedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) %> น.
+                        <span class="afterApproveText" id="rejectText">
+                          งานถูกตรวจเรียบร้อย โดยมีการ <span id="approveStatusReject">แก้ไข</span><br>
+                          <span style="color: gray; font-weight: 300;">
+                            ตรวจเมื่อวันที่ <%= formatDateToThai(task.approvedAt || task.updatedAt) %><br>
+                            เวลา: <%= new Date(task.approvedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) %> น.
+                          </span>
                         </span>
                       <% } %>
                 
                       <div class="afterApproversShow">
                         <span class="afterApproversShowText">ผู้อนุมัติ</span>
-                        <% if (task.approvedBy) { %>
-                          <div class="approversItem">
-                            <img src="<%= task.approvedBy.profileImage || '/public/img/profileImage/userDefault.jpg' %>" 
-                                 alt="Approver Image"
-                                 onerror="this.onerror=null; this.src='/public/img/profileImage/userDefault.jpg';"
-                                 style="width: 40px; height: 40px; border-radius: 50%;">
-                            <div class="approverDetails">
-                              <span class="approversName">
-                                <%= task.approvedBy.firstName %> <%= task.approvedBy.lastName %>
-                              </span>
-                            </div>
-                          </div>
-                        <% } else { %>
-                          <div class="approversItem">
-                            <span class="approversName">ยังไม่มีผู้อนุมัติ</span>
-                          </div>
-                        <% } %>
+                        
+                        <div class="afterApproversItemWrap">
+                            <% if (task.approvedBy) { %>
+                                <div class="approversItem">
+                                    <img src="<%= task.approvedBy.profileImage %>" alt="Approver Image" class="user-avatar" style="width: 50px; height: 50px; border-radius: 50%;"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="fallback-profile-approver" style="display: none; ">
+                                        <span>
+                                            <%= task.approvedBy.firstName[0] %>
+                                        </span>
+                                    </div>
+                                    <div class="approverDetails">
+                                        <span class="approversName">
+                                            <%= task.approvedBy.firstName %> <%= task.approvedBy.lastName %>
+                                        </span>
+                                        <span class="approverEmail"><%= task.approvedBy.googleEmail %> </span>
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>  
                       </div>                      
                     </div>
                   <% } %>
@@ -429,73 +442,113 @@
 
             <div class="activity">
                 <div class="textTopic">
-                    <h1>กิจกรรมที่เกิดขึ้น</h1>
+                    <h1><i class="fa-solid fa-message" style="margin-right: 10px;"></i> กิจกรรมที่เกิดขึ้น</h1>
+                    <span class="approveText">
+                        <span style="color: red; margin-right: 5px;">*</span>จำเป็นต้องได้รับการอนุมัติเพื่อทำให้งานเสร็จสิ้น หรืออาจถูกปฏิเสธเพื่อแก้ไขเพิ่มเติม
+                    </span>
                 </div>
     
                 <div class="messageAct">
                     <div class="activityUpdate">
-                        <% task.activityLogs.forEach(log => { %>
-                          <p class="log <%= log.type === 'comment' ? 'comment-log' : '' %>">
-                            <%= log.text %>
-                          </p>
-                        <% }) %>
-                    
                         <% task.comment.forEach(comment => { %>
-                            <p class="log comment-log">
-                                <img src="<%= comment.createdBy?.profileImage || '/public/img/profileImage/userDefault.jpg' %>" class="comment-user-img" alt="user" />
-                                <strong><%= comment.createdBy?.firstName %> <%= comment.createdBy?.lastName %></strong>: <%= comment.text %>
-                                <br><small><%= formatDateToThai(comment.createdAt) %></small>
-                                <button class="delete-comment-btn" data-comment-id="<%= comment._id %>">Delete</button>
-                    
-                                <!-- Attachments Section -->
+                        <div class="comment-container">
+                            <div class="comment-header">
+                                <img
+                                    src="<%= comment.createdBy?.profileImage || '/public/img/profileImage/userDefault.jpg' %>"
+                                    class="comment-user-img"
+                                    alt="user"
+                                />
+                                <div class="comment-user-info">
+                                    <strong><%= comment.createdBy?.firstName %> <%= comment.createdBy?.lastName %></strong>
+                                    <small class="comment-date"><%= formatDateToThai(comment.createdAt) %></small>
+                                </div>
+                                <button
+                                    class="delete-comment-btn"
+                                    data-comment-id="<%= comment._id %>"
+                                    title="Delete Comment"
+                                >
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="comment-body">
+                                <p class="comment-text"><%= comment.text %></p>
                                 <% if (comment.attachments && comment.attachments.length > 0) { %>
-                                    <div class="comment-attachments">
-                                        <% comment.attachments.forEach(attachment => { %>
-                                            <div class="attachment-item">
-                                              <% const ext = attachment.originalName.split('.').pop().toLowerCase(); %>
-                                              <a href="/<%= attachment.path %>" target="_blank" class="attachment-link" title="Preview">
-                                                <% if (attachment.previewPath) { %>
-                                                  <!-- Show Preview Image -->
-                                                  <img src="/<%= attachment.previewPath %>" alt="Preview" class="attachment-preview" />
-                                                <% } else if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) { %>
-                                                  <!-- Show Image -->
-                                                  <img src="/<%= attachment.path %>" alt="<%= attachment.originalName %>" class="attachment-preview" />
-                                                <% } else { %>
-                                                  <!-- Generic File Icon -->
-                                                  <i class="fa-solid fa-file" style="font-size: 24px;"></i>
-                                                  <span class="attachment-name"><%= attachment.originalName %></span>
-                                                <% } %>
-                                              </a>
-                                              <a href="/<%= attachment.path %>" download="<%= attachment.originalName %>" class="download-link">
-                                                <i class="fa-solid fa-download"></i> Download
-                                              </a>
-                                            </div>
-                                          <% }) %>
-                                    </div>
+                                <div class="comment-attachments">
+                                    <% comment.attachments.forEach(attachment => { %>
+                                        <div class="attachment-item">
+                                            <% const ext = attachment.originalName.split('.').pop().toLowerCase(); %>
+                                            <% if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) { %>
+                                            <!-- Image File -->
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                target="_blank"
+                                                class="attachment-link"
+                                                title="<%= attachment.originalName %>"
+                                            >
+                                                <img
+                                                    src="/<%= attachment.path %>"
+                                                    alt="<%= attachment.originalName %>"
+                                                    class="attachment-preview-large"
+                                                />
+                                            </a>
+                                            <% } else { %>
+                                            <!-- Non-Image File -->
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                download="<%= attachment.originalName %>"
+                                                class="attachment-link"
+                                                title="<%= attachment.originalName %>"
+                                            >
+                                                <i class="fa-solid fa-file" style="font-size: 48px;"></i>
+                                                <span class="attachment-name"><%= attachment.originalName %></span>
+                                            </a>
+                                            <% } %>
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                download="<%= attachment.originalName %>"
+                                                class="download-link"
+                                                title="Download <%= attachment.originalName %>"
+                                            >
+                                                <i class="fa-solid fa-download"></i>
+                                            </a>
+                                        </div>
+                                        <% }) %>
+                                </div>
                                 <% } %>
-                            </p>
+                            </div>
+                        </div>
                         <% }) %>
                     </div>
-                  </div>
-                  
-                  
-    
+                </div>
+                
                 <!-- Comment Input Section -->
                 <div class="commentSection">
-                    <form id="addCommentForm" action="/task/<%= taskId %>/add-comment" method="POST">
-                        <input type="text" id="commentInput" name="commentInput" placeholder="เพิ่มความคิดเห็น" class="form-control" required>
-                        <div class="d-flex align-items-center">
-                            <label for="commentFileUpload" class="btn btn-sm btn-light me-2">
-                                <i class="fa-solid fa-paperclip"></i>
-                                <input type="file" id="commentFileUpload" name="commentFileUpload" multiple
-                                    accept=".jpg, .jpeg, .png, .pdf, .docx, .zip, .xls, .pptx, .raw" style="display:none;">
+                    <form id="addCommentForm" action="/task/<%= taskId %>/add-comment" method="POST" enctype="multipart/form-data">
+                        <input
+                            id="commentInput"
+                            name="commentInput"
+                            placeholder="เพิ่มความคิดเห็น..."
+                            class="form-control comment-textarea"
+                            required
+                        ></input>
+                        <div class="comment-controls">
+                            <label for="commentFileUpload" class="btn upload-btn">
+                                <i class="fa-solid fa-paperclip"></i> เพิ่มไฟล์
+                                <input
+                                    type="file"
+                                    id="commentFileUpload"
+                                    name="commentFileUpload"
+                                    multiple
+                                    accept=".jpg, .jpeg, .png, .pdf, .docx, .zip, .xls, .pptx, .raw"
+                                    style="display:none;"
+                                />
                             </label>
-                          <button type="submit" class="btn btn-primary" id="sendComment" name="sendComment">
-                            <i class="fa-regular fa-paper-plane"></i>
-                          </button>
+                            <button type="submit" class="btn submit-btn" id="sendComment" name="sendComment">
+                                <i class="fa-regular fa-paper-plane"></i> ส่ง
+                            </button>
                         </div>
                     </form>
-                </div>
+                </div>                
             </div>
         </div>
     </div>
@@ -546,7 +599,6 @@
         });
       });
     
-
     document.getElementById('addCommentForm').addEventListener('submit', async function (e) {
         e.preventDefault();
     
@@ -579,9 +631,6 @@
         }
     });
     
-    
-    
-
     // Optional loader logic
     document.addEventListener('DOMContentLoaded', function () {
         function showLoader() {
@@ -628,9 +677,6 @@
                     return;
                 }
 
-                // Show the overlay and spinner while waiting for the approval process
-                showLoader();
-
                 const response = await fetch(`/task/${taskId}/approval`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -645,14 +691,12 @@
                 }
 
                 alert(data.message);
-                window.location.reload(); // Reload the page after the approval action
-
+                window.location.reload(); 
             } catch (err) {
                 console.error('🔴 Approval Error:', err);
                 alert(err.message || 'เกิดข้อผิดพลาด');
             } finally {
                 isProcessing = false;
-                hideLoader(); // Hide the overlay and spinner once done
             }
         }
 

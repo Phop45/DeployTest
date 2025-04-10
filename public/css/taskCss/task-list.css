@@ -174,20 +174,22 @@ tbody tr td {
     width: 200px;
     height: 60px;
     max-width: 200px;
-    overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     border: none;
-    border-bottom: 1px solid rgba(55, 53, 47, 0.1); 
-    font-size: 14px;
+    border-bottom: 1px solid rgba(55, 53, 47, 0.1);
+    font-size: 16px;
     font-weight: 300;
     vertical-align: middle;
 }
 
-tbody td:first-child,
 .table-head th:first-child {
+    padding: 20px;
+}
+
+tbody td:first-child {
     width: 12%;
-    padding-left: 20px;
+    padding: 25px 20px;
 }
 
 .table {
@@ -199,9 +201,11 @@ tbody td:first-child,
 
 .table-responsive {
     max-height: 500px;
+    min-height: 500px;
     overflow-y: auto;
+    overflow-x: visible;
     position: relative;
-    border-radius: 10px 10px 0 0;
+    border-radius: 10px;
 }
 
 .shadow {
@@ -213,6 +217,7 @@ tbody td:first-child,
     margin: 0 50px;
     margin-bottom: 20px;
     border: none;
+    border-radius: 10px;
 }
 
 .card-body {
@@ -455,17 +460,17 @@ tbody td:first-child,
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-left: 10px;
 }
 
 #memberAll img {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
 }
 
-#accept{
+#accept {
     padding: 6px 15px;
     color: #16a34a;
     border: 1px solid #bbf7d0;
@@ -474,11 +479,13 @@ tbody td:first-child,
     font-size: 16px;
     transition: all 0.3s;
 }
-#accept:hover{
+
+#accept:hover {
     background-color: #dcfce7;
     color: #15803d;
 }
-#reject{
+
+#reject {
     padding: 6px 15px;
     color: #dc2626;
     border: 1px solid #fecaca;
@@ -487,20 +494,22 @@ tbody td:first-child,
     font-size: 16px;
     transition: all 0.3s;
 }
-#reject:hover{
+
+#reject:hover {
     background-color: #fee2e2;
     color: #b91c1c;
 }
 
 .fileAll,
-.fileAllDropdown{
+.fileAllDropdown {
     border: 1px solid #e2e8f0;
     padding: 8px 15px;
     border-radius: 5px;
     position: relative;
 }
+
 .fileShow,
-.fileShowDropdown{
+.fileShowDropdown {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -508,45 +517,63 @@ tbody td:first-child,
     font-size: 16px;
     font-weight: 400;
 }
-.fileNameWrap{
+
+.fileNameWrap {
     display: flex;
     align-items: center;
     gap: 10px;
     width: 70%;
 }
-.fileName{
+
+.fileName {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     display: block;
+    text-decoration: none;
+    color: black;
 }
-.fileSize{
+.attachment-link{
+    text-decoration: none;
+    color: black;
+    width: 90px;
+}
+.fileSize {
     color: gray;
     font-weight: 300;
     font-size: 14px;
 }
-.fileShowDropdown .fa-chevron-down{
+
+.fileShowDropdown .fa-chevron-down {
     font-size: 12px;
 }
-.moreFile{
+
+.moreFile {
     display: none;
+    position: absolute;
+    top: 120%;
+    /* Ensure it flows below the parent */
+    left: 0;
+    /* Align to the left of the parent */
     background-color: white;
     border-radius: 5px;
-    margin-top: 10px;
-    position: absolute;
-    z-index: 99;
-    width: 16.5%;
-    box-shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.25), 
-                0 0 1px rgba(9, 30, 66, 0.31);
+    z-index: 105;
+    min-width: 200px;
+    /* Ensure it’s wide enough for content */
+    box-shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.25),
+        0 0 1px rgba(9, 30, 66, 0.31);
 }
+
 .moreFile.show {
     display: block;
 }
+
 .fa-chevron-down.rotate {
     transform: rotate(180deg);
     transition: transform 0.3s ease;
 }
-.attachItem{
+
+.attachItem {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -554,4 +581,66 @@ tbody td:first-child,
     font-size: 16px;
     font-weight: 400;
     padding: 15px;
+}
+
+.attachItem:last-child {
+    border-bottom: none;
+    /* Remove border for the last item */
+}
+
+.add-member-container {
+    background-color: #f8f9fd;
+}
+
+.fileSection .fileAllDropdown .moreFile {
+    display: none;
+}
+
+.fileSection .fileAllDropdown.active .moreFile {
+    display: block;
+}
+
+.fileSection .fileShowDropdown {
+    cursor: pointer;
+}
+
+.user-info {
+    display: inline-block;
+    position: relative;
+}
+
+.user-info .tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 120%;
+    /* Position tooltip below the image */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.user-info:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.user-info.over-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    font-size: 14px;
+    color: #555;
+    font-weight: bold;
 }

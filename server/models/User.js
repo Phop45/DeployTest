@@ -54,9 +54,9 @@ const UserSchema = new Schema({
         type: Date,
         default: Date.now,
     },
-    isOnline: {
-        type: Boolean,
-        default: false,
+    isOnline: { 
+        type: Boolean, 
+        default: false 
     },
     preferences: {
         notifications: {

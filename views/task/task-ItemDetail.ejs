@@ -45,14 +45,14 @@
                         </button>
                     </div>
                 </form>
-                <% if (taskStatus !=='pending' ) { %>
+                <% if (taskStatus !== 'pending') { %>
                     <div class="sendTask">
                         <button type="button" id="sendTask" onclick="checkWork('<%= taskId %>')">
                             <span>ส่งงาน</span>
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
                     </div>
-                    <% } %>
+                <% } %>
             </div>
             <!-- Task Name -->
 
@@ -585,14 +585,94 @@
             </div>
         </div>
 
-        <div class="activity">
+        <div class="mainActivity">
             <div class="textTopic">
                 <h1>กิจกรรมที่เกิดขึ้น</h1>
                 <button id="clearLogsButton" data-task-id="<%= task._id %>">เครียร์แจ้งเตือน</button>
             </div>
 
             <div class="messageAct">
+                <div class="selectMessage">
+                    <div class="showActivity" onclick="filterContent('activity')">
+                        กิจกรรม
+                    </div>
+                    <div class="showComment" onclick="filterContent('comment')">
+                        คอมเมนต์
+                    </div>
+                </div>
+                
+
                 <div class="activityUpdate" id="activityUpdate">
+                    <% task.comment.filter(comment => !comment.deleted).forEach(comment => { %>
+                        <div class="comment-container">
+                            <div class="comment-header">
+                                <img
+                                    src="<%= comment.createdBy?.profileImage || '/public/img/profileImage/userDefault.jpg' %>"
+                                    class="comment-user-img"
+                                    alt="user"
+                                />
+                                <div class="comment-user-info">
+                                    <strong><%= comment.createdBy?.firstName %> <%= comment.createdBy?.lastName %></strong>
+                                    <small class="comment-date"><%= formatDateToThai(comment.createdAt) %></small>
+                                </div>
+                                <button
+                                    class="delete-comment-btn"
+                                    data-comment-id="<%= comment._id %>"
+                                    title="Delete Comment"
+                                >
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="comment-body">
+                                <p class="comment-text">
+                                    <span style="color: red;">ได้คอมเมนต์: </span><%= comment.text %></p>
+                                <% if (comment.attachments && comment.attachments.length > 0) { %>
+                                <div class="comment-attachments">
+                                    <% comment.attachments.forEach(attachment => { %>
+                                        <div class="attachment-item">
+                                            <% const ext = attachment.originalName.split('.').pop().toLowerCase(); %>
+                                            <% if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) { %>
+                                            <!-- Image File -->
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                target="_blank"
+                                                class="attachment-link"
+                                                title="<%= attachment.originalName %>"
+                                            >
+                                                <img
+                                                    src="/<%= attachment.path %>"
+                                                    alt="<%= attachment.originalName %>"
+                                                    class="attachment-preview-large"
+                                                />
+                                            </a>
+                                            <% } else { %>
+                                            <!-- Non-Image File -->
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                download="<%= attachment.originalName %>"
+                                                class="attachment-link"
+                                                title="<%= attachment.originalName %>"
+                                            >
+                                                <i class="fa-solid fa-file" style="font-size: 48px;"></i>
+                                                <span class="attachment-name"><%= attachment.originalName %></span>
+                                            </a>
+                                            <% } %>
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                download="<%= attachment.originalName %>"
+                                                class="download-link"
+                                                title="Download <%= attachment.originalName %>"
+                                            >
+                                                <i class="fa-solid fa-download"></i>
+                                            </a>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% }) %>
+                    
                     <% task.activityLogs .filter(log=> !log.deleted)
                         .forEach(log => {
                         const details = log.details || {};
@@ -804,12 +884,37 @@
                             </div>
                             <% }) %>
                         </div>
+                        
                 </div>
             </div>
         </div>
 </div>
 
 <script>
+    function filterContent(contentType) {
+        const activityContent = document.getElementById("activityContent");
+        const commentContent = document.getElementById("commentContent");
+
+        // Toggle visibility based on the selected button
+        if (contentType === "activity") {
+            activityContent.style.display = "block";
+            commentContent.style.display = "none";
+        } else if (contentType === "comment") {
+            activityContent.style.display = "none";
+            commentContent.style.display = "block";
+        }
+
+        // Optional: Add active class for styling
+        document.querySelectorAll('.selectMessage div').forEach(button => {
+            button.classList.remove('active');
+        });
+        if (contentType === "activity") {
+            document.querySelector('.showActivity').classList.add('active');
+        } else if (contentType === "comment") {
+            document.querySelector('.showComment').classList.add('active');
+        }
+    }
+    
     document.addEventListener('DOMContentLoaded', () => {
         const sendTaskButton = document.querySelector('.sendTask');
         const statusDiv = document.querySelector('.status-div');
@@ -838,25 +943,33 @@
 
     async function checkWork(taskId) {
         try {
-            const response = await fetch(`/tasks/${taskId}/update-status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: 'pending' }), // New status to set
+            const button = document.getElementById("sendTask");
+            if (button) {
+                button.disabled = true;
+                button.innerText = "Sending...";
+            }
+    
+            const response = await fetch(`/task/${taskId}/send-to-approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
             });
-
+    
             if (!response.ok) {
                 throw new Error(`Unhandled status: ${response.statusText}`);
             }
-
+    
             const result = await response.json();
-            console.log('Task updated:', result);
-            alert('Task status updated successfully!');
+            alert('Task sent for approval successfully!');
             window.location.reload();
         } catch (error) {
-            console.error('Error updating task status:', error.message);
-            alert('Failed to update task status.');
+            console.error('Error sending task for approval:', error.message);
+            alert(`Failed to send task for approval: ${error.message}`);
+        } finally {
+            const button = document.getElementById("sendTask");
+            if (button) {
+                button.disabled = false;
+                button.innerText = "ส่งงาน";
+            }
         }
     }
 

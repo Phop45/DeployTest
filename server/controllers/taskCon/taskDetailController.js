@@ -55,6 +55,7 @@ const formatDateToThai = (dueDate) => {
     const formattedDate = `${day} ${thaiMonths[month]} ${year}`;
     return formattedDate;
 };
+
 function getRandomPastelColor() {
     const hue = Math.floor(Math.random() * 360);
     const saturation = 70 + Math.random() * 10; // Saturation between 70-80
@@ -87,10 +88,19 @@ exports.detailPageRender = async (req, res) => {
                 select: 'profileImage firstName lastName',
             })
             .populate({
-                path: 'taskTags._id', 
+                path: 'taskTags._id',
                 select: 'tagName color',
             })
+            .populate({
+                path: 'comment.createdBy',
+                select: 'profileImage firstName lastName',
+            })
+            .populate({
+                path: 'comment.attachments.uploadedBy',
+                select: 'firstName lastName',
+            })
             .lean();
+
 
         const space = await Spaces.findById(spaceObjectId)
             .populate('collaborators.user', 'profileImage firstName lastName googleEmail')
@@ -194,6 +204,7 @@ exports.detailPageRender = async (req, res) => {
             statusMapping,
             priorityMapping,
             activityLogs: activityLogsWithFormattedDates, 
+            formatDateToThai,
             userName: req.user.username,
             userImage: req.user.profileImage,
             layout: '../views/layouts/Detail',
