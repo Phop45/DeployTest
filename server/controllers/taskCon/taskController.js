@@ -999,6 +999,7 @@ exports.deleteFile = async (req, res) => {
 exports.sendToApprove = async (req, res) => {
   try {
     const { taskId } = req.params;
+    const previousTaskName = req.body.previousTaskName;
 
     // Find the task and populate the necessary fields
     const task = await Task.findById(taskId)
@@ -1017,6 +1018,24 @@ exports.sendToApprove = async (req, res) => {
     }
 
     task.taskStatus = 'pending';
+
+    // Get the username (firstName + lastName)
+    const user = await User.findById(req.user._id);
+    const userName = `${user.firstName} ${user.lastName}`;
+
+    // Push activity log
+    task.activityLogs.push({
+      type: 'action',
+      details: {
+        fieldChanged: 'sendTask',
+        oldValue: previousTaskName,
+        newValue: task.taskName,
+        whoChange: `${userName} ได้ส่งงาน กรุณารอการอนุมัติ`,
+      },
+      createdBy: req.user._id,
+      createdAt: new Date(),
+    });
+
     await task.save();
 
     // Mark all subtasks as 'finished' (optional)
@@ -1055,7 +1074,7 @@ exports.sendToApprove = async (req, res) => {
       message,
       relatedEntityType: 'task',
       relatedEntityId: task._id,
-      space: task.project._id,  // Reference the space object
+      space: task.project._id,  
       isActionable: true,
       dueDate: task.dueDate || null,
     });

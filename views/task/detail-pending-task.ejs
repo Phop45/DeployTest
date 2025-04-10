@@ -180,7 +180,6 @@
 
             <div class="attachments-section">
                 <h3><i class="fa-solid fa-paperclip" style="padding-right: 10px;"></i> ไฟล์ที่แนบมากับงาน </h3>
-                <div class="fileItemSec">
                     <div class="fileItemSec">
                         <% if (attachments.length > 0) { %>
                             <ul id="fileItemlist">
@@ -236,8 +235,6 @@
                             <p id="noFile">ไม่มีไฟล์ที่อัปโหลด</p>
                         <% } %>
                     </div>
-                                   
-                </div>
             </div>
 
             <% if (subtasks.length > 0) { %>
@@ -259,17 +256,15 @@
                             <tbody id="subtaskTableBodyNew">
                                 <% subtasks.forEach((subtask) => { %>
                                     <tr class="task-row" data-subtask-id="<%= subtask._id %>"
-                                        style="opacity: <%= subtask.subTask_status === 'เสร็จสิ้น' ? '0.5' : '1' %>;"
-                                        onclick="showSubtaskFullView('<%= subtask._id %>')">
+                                        style="opacity: <%= subtask.subTask_status === 'finifhed' ? '0.5' : '1' %>;">
                                         <td class="inputCheck">
-                                            <input type="checkbox" class="checkbox" <%= subtask.subTask_status === 'เสร็จสิ้น' ? 'checked' : '' %>
-                                            <%= subtask.assignee && String(subtask.assignee._id) === String(user._id) ? '' : 'disabled' %>
-                                            onclick="event.stopPropagation()" />
                                         </td>
                                         <td><%= subtask.subtask_Name %></td>
                                         <td><%= subtask.subTask_dueDate %></td>
                                         <td>
-                                            <div class="statusWrape"><%= subtask.subTask_status %></div>
+                                            <div class="statusWrape" style="background-color: <%= subtask.subTask_status === 'inProgress' ? '#6EACDA' : '#4caf50' %>;">
+                                                <%= subtask.subTask_status === 'inProgress' ? 'กำลังทำ' : 'เสร็จสิ้น' %>
+                                            </div>
                                         </td>
                                         <td>
                                             <% if (subtask.assignee) { %>
@@ -288,60 +283,6 @@
                     </div>
                 </div>
                 <% } %>
-                
-            <!-- Subtask Full Page View -->
-            <div class="full-subtask-page-view" id="fullPageViewSubtask" style="display: none;" data-subtask-id="">
-                <div class="back-button">
-                    <button onclick="closeSubtaskFullView()">
-                        <i class="fa-solid fa-arrow-left"></i> กลับไปที่งาน
-                    </button>
-                    <button onclick="deleteSubtask()" class="deleteSub">
-                        <i class="fa-solid fa-trash-can"></i> ลบงานย่อย
-                    </button>
-                </div>
-                <div class="full-content">
-                    <form id="updateSubtaskForm" action="/updateSubtask" method="POST">
-                        <div class="nameSec">
-                            <h1 class="SubtaskName" id="taskName-text">
-                                <span id="subtaskNameText">subtask_Name</span>
-                            </h1>
-                            <input type="text" id="SubtaskName" name="SubtaskName" value="" style="display: none;"
-                                onblur="saveSubTaskName()">
-                        </div>
-                        <div class="SubTaskdetailSec">
-                            <div class="grid-container">
-                                <div class="grid-item topic">
-                                    <div class="sub-detail-name"><i class="fa-solid fa-circle-half-stroke"></i> สถานะ
-                                    </div>
-                                    <div class="detail-data">
-                                        <button type="button" class="status-btn" id="subtaskStatusText"
-                                            onclick="toggleStatus()">กำลังทำ</button>
-                                    </div>
-                                </div>
-                                <div class="grid-item topic">
-                                    <div class="sub-detail-name"><i class="fa-regular fa-calendar-check"></i>
-                                        วันครบกำหนด</div>
-                                    <div class="sub-detail-data" id="subtaskDueDateText">subTask_dueDate</div>
-                                </div>
-                                <div class="grid-item topic">
-                                    <div class="sub-detail-name"><i class="fa-regular fa-circle-user"></i> ผู้รับผิดชอบ
-                                    </div>
-                                    <div class="sub-detail-data">
-                                        <img src="<%= userImage %>"
-                                            onerror="this.onerror=null; this.src='/public/img/profileImage/userDefalt.jpg';">
-                                        <%= userName %>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="SubDescription-box">
-                                <textarea name="subtaskDescription" id="subtaskDescription"
-                                    placeholder="เพิ่มคำอธิบายของงานได้ที่นี่..."></textarea>
-                            </div>
-                            <input type="hidden" id="subtaskId" name="subtaskId" value="">
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
 
         <div class="activitySection">
@@ -533,7 +474,7 @@
                         ></input>
                         <div class="comment-controls">
                             <label for="commentFileUpload" class="btn upload-btn">
-                                <i class="fa-solid fa-paperclip"></i> เพิ่มไฟล์
+                                <i class="fa-solid fa-paperclip"></i>
                                 <input
                                     type="file"
                                     id="commentFileUpload"

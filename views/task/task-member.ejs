@@ -41,9 +41,6 @@
                                     <li class="dropdown-item" onclick="selectRole('member')" id="roleMember">
                                         <span>สมาชิก</span>
                                     </li>
-                                    <li class="dropdown-item" onclick="selectRole('guest')" id="roleGuest">
-                                        <span>ผู้เยี่ยมชม</span>
-                                    </li>
                                 </ul>
                             </div>
                 
@@ -96,7 +93,23 @@
                                                         <%= collab.role === 'owner' ? 'เจ้าของ' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>
                                                     </span>
                                                 </a>
-                                            <% } %>
+                                                <ul class="dropdown-menu" aria-labelledby="roleDropdown<%= collab._id %>">
+                                                    <li class="dropdown-item" 
+                                                        onclick="changeRole('<%= collab.user._id %>', 'reporter', '<%= collab._id %>')"
+                                                        id="roleReporter">
+                                                        <span>ผู้ช่วย</span>
+                                                    </li>
+                                                    <li class="dropdown-item" 
+                                                        onclick="changeRole('<%= collab.user._id %>', 'member', '<%= collab._id %>')"
+                                                        id="roleMember">
+                                                        <span>สมาชิก</span>
+                                                    </li>
+                                                </ul>
+                                            <% } else if (currentUserRole === 'member') { %>
+                                                <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : '' %>">
+                                                    <%= collab.role === 'owner' ? 'ผู้ดูแล' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'แขก' : collab.role %>
+                                                </span>
+                                            <% } %>                             
                                         </div>
                                     </td>
                                     <td>
@@ -138,6 +151,18 @@
                                                         <%= collab.role === 'owner' ? 'เจ้าของ' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>
                                                     </span>
                                                 </a>
+                                                <ul class="dropdown-menu" aria-labelledby="roleDropdown<%= collab._id %>">
+                                                    <li class="dropdown-item" 
+                                                        onclick="changeRole('<%= collab.user._id %>', 'reporter', '<%= collab._id %>')"
+                                                        id="roleReporter">
+                                                        <span>ผู้ช่วย</span>
+                                                    </li>
+                                                    <li class="dropdown-item" 
+                                                        onclick="changeRole('<%= collab.user._id %>', 'member', '<%= collab._id %>')"
+                                                        id="roleMember">
+                                                        <span>สมาชิก</span>
+                                                    </li>
+                                                </ul>
                                             <% } else if (currentUserRole === 'member') { %>
                                                 <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : '' %>">
                                                     <%= collab.role === 'owner' ? 'ผู้ดูแล' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>

@@ -1462,182 +1462,128 @@ td img {
 
 .attachments-section {
     margin-top: 40px;
+    padding: 20px;
+    border-radius: 10px;
 }
 
 .attachments-section h3 {
-    font-size: 20px;
-
-}
-
-.attachment {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
     display: flex;
     align-items: center;
     gap: 10px;
-    background-color: #32344E;
-    padding: 10px;
-    border-radius: 10px;
-    margin: 20px 0 5px;
 }
 
-#attach {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background-color: #3b3e49;
-    border-radius: 8px;
-    overflow: hidden;
-    width: 90%;
-}
-
-.attachmentLabel {
-    background-color: var(--btn);
-    color: #fff;
-    padding: 8px 15px;
-    cursor: pointer;
-    white-space: nowrap;
-    border-radius: 8px 0 0 8px;
-    font-size: 14px;
-}
-
-#fileUpload {
-    display: none;
-}
-
-#fileName {
-    color: #b0b3bc;
-    font-size: 14px;
-    white-space: nowrap;
-    padding-left: 5px;
-    font-weight: 300;
-}
-
-button.btn {
-    background-color: var(--btn);
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.3s;
-    opacity: 0.8;
-    font-size: 14px;
-}
-
-button.btn:hover {
-    opacity: 1;
-}
-
-/* File item */
 .fileItemSec {
-    width: 100%;
-    overflow-x: auto;
-    /* Enable horizontal scrolling */
-    overflow-y: hidden;
-    /* Hide vertical overflow */
-    scrollbar-width: thin;
-    padding: 10px;
-}
-
-/* File Item List */
-#fileItemlist {
-    list-style: none;
-    padding-left: 0;
     display: flex;
-    flex-direction: row;
+    flex-wrap: wrap;
     gap: 20px;
-    justify-content: start;
-    width: max-content;
+    padding: 10px;
+    justify-content: space-between;
 }
 
-/* Individual File Item */
+#fileItemlist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
 #fileItem {
-    border: 1px solid var(--line);
-    width: 150px;
-    height: 160px;
+    width: 200px;
+    height: auto;
+    border: 1px solid #ddd;
     border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    background-color: white;
+    justify-content: flex-start;
+    text-align: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s, box-shadow 0.3s;
-    overflow: hidden;
-    text-align: center;
-    overflow: hidden;
 }
 
-#fileItemlist::-webkit-scrollbar {
-    height: 8px;
-    /* Set height of the scrollbar */
-}
-
-#fileItemlist::-webkit-scrollbar-thumb {
-    background: #888;
-    /* Color of the scrollbar thumb */
-    border-radius: 10px;
-    /* Rounded corners */
-}
-
-#fileItemlist::-webkit-scrollbar-thumb:hover {
-    background: #555;
-    /* Color on hover */
-}
-
-/* Hover Effect */
 #fileItem:hover {
-    transform: scale(1.05);
+    transform: translateY(-5px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Icon Styles */
-#fileItem i {
-    font-size: 70px;
+.attachment-preview {
+    width: 100%;
+    height: auto;
+    max-height: 120px;
+    object-fit: cover;
+    border-radius: 5px;
     margin-bottom: 10px;
+}
+
+.fileName {
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fileWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.file-time {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.download-icon-link {
+    text-decoration: none;
+    font-size: 14px;
+    color: #007bff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
     transition: color 0.3s;
 }
 
-/* File Name Container */
-.fileName {
-    width: 130px;
-    text-align: center;
-    font-weight: 500;
-    font-size: 14px;
-    color: #333;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    padding: 0 10px;
+.download-icon-link:hover {
+    color: #0056b3;
 }
 
-/* Ensure the extension is visible */
-.file-text {
-    direction: rtl;
-    /* Align from the right to show extension */
-    text-align: center;
-    /* Keep overall alignment consistent */
-    display: inline-block;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    width: 100%;
-
+.deleteFile {
+    cursor: pointer;
+    font-size: 16px;
+    color: #dc3545;
+    transition: color 0.3s;
 }
 
-#file_input_help {
-    font-size: 14px;
-    color: var(--text1);
+.deleteFile:hover {
+    color: #b71c1c;
 }
 
-#noFile {
-    display: none;
+.uploader-profile-img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 5px;
 }
-
-.deleteFile .fa-solid {
-    font-size: 16px !important;
-    color: var(--cancle);
-}
-
 
 .user-profile {
     position: relative;
@@ -1772,6 +1718,7 @@ button.btn:hover {
 #commentInput {
     width: 70%;
     font-size: 14px;
+
 }
 
 #commentInput:focus {
@@ -2713,15 +2660,15 @@ body.loaded .loader {
 
 .commentSection {
     border-radius: 8px;
-    background-color: #f7f9fc;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-left: 0;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 #addCommentForm{
     width: 100%;
     display: flex;
+    align-items: center;
     flex-direction: row;
+    padding: 0 20px;
 }
 .comment-textarea {
     width: 100%;

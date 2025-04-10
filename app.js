@@ -172,6 +172,7 @@ app.use('/', require('./server/routes/taskRou/taskRoutes'));
 app.use('/', require('./server/routes/taskRou/taskPageRoutes'));
 app.use('/', require('./server/routes/taskRou/taskDetailRoutes'));
 app.use('/', require('./server/routes/taskRou/taskComplaintRouter'));
+app.use('/', require('./server/routes/taskRou/taskCalendarRoutes'));
 app.use('/', require('./server/routes/notiRoutes'));
 app.use('/', require('./server/routes/subtaskRoutes'));
 app.use('/', require('./server/routes/settingRoutes'));
@@ -197,13 +198,7 @@ app.get('/notifications/unread', async (req, res) => {
   }
 });
 
-// WebSocket Setup
-// ตั้งค่า usersInChat ใน app
-const usersInChat = new Map(); // เก็บข้อมูลผู้ใช้ที่อยู่ในหน้าแชท
-app.set('usersInChat', usersInChat);
-
 io.on('connection', (socket) => {
-
   const userId = socket.handshake.query.userId;
 
   if (userId) {
@@ -244,6 +239,7 @@ io.on('connection', (socket) => {
   // เมื่อผู้ใช้อยู่ในหน้าแชทกลุ่ม
   socket.on('join space chat', async ({ userId, spaceId }) => {
     socket.join(`space_${spaceId}`);
+    console.log(`ผู้ใช้ ${userId} เข้าร่วมแชท ${spaceId}`);
 
     // เพิ่มผู้ใช้ลงในรายการผู้ใช้ที่ใช้งานอยู่
     if (!usersInChat.has(spaceId)) {
@@ -274,6 +270,7 @@ io.on('connection', (socket) => {
           updatedAt: new Date()
         });
 
+        console.log(`[SERVER] อัปเดต readCount สำหรับข้อความ ${msg._id}: ${readCount} คน`);
       }
     } catch (error) {
       console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายข้อความว่าอ่านแล้ว:', error);
@@ -286,6 +283,87 @@ io.on('connection', (socket) => {
       usersInChat.set(spaceId, new Set());
     }
     usersInChat.get(spaceId).add(userId);
+
+    console.log(`User ${userId} is in chat for space ${spaceId}`);
+
+    // อัปเดตสถานะ readBy สำหรับข้อความที่ยังไม่ได้อ่าน
+    const unreadMessages = await Chat.find({
+      spaceId,
+      readBy: { $ne: userId },
+      type: 'group'
+    });
+
+    unreadMessages.forEach(async (msg) => {
+      if (msg.userId.toString() !== userId.toString()) {
+        msg.readBy.push(userId);
+        await msg.save();
+
+        // ส่งอีเวนต์ (ไม่มี log)
+        io.emit('message read update', {
+          messageId: msg._id.toString(),
+          readByCount: msg.readBy.filter(id => id.toString() !== msg.userId.toString()).length,
+        });
+      }
+    });
+  });
+});
+
+const usersInChat = new Map();
+const processingMessages = new Set();
+app.set('usersInChat', usersInChat);
+
+io.on('connection', (socket) => {
+  console.log('🔌 User connected:', socket.id);
+
+  // เมื่อผู้ใช้อยู่ในหน้าแชทกลุ่ม
+  socket.on('join space chat', async ({ userId, spaceId }) => {
+    socket.join(`space_${spaceId}`);
+    console.log(`ผู้ใช้ ${userId} เข้าร่วมแชท ${spaceId}`);
+
+    // เพิ่มผู้ใช้ลงในรายการผู้ใช้ที่ใช้งานอยู่
+    if (!usersInChat.has(spaceId)) {
+      usersInChat.set(spaceId, new Set());
+    }
+    usersInChat.get(spaceId).add(userId);
+
+    // ทำเครื่องหมายข้อความที่ยังไม่ได้อ่านว่าอ่านแล้ว
+    try {
+      const messagesToUpdate = await Chat.find({
+        spaceId,
+        readBy: { $ne: userId },
+        type: 'group',
+        userId: { $ne: userId } // ไม่นับข้อความที่ผู้ใช้ส่งเอง
+      });
+
+      // อัปเดตทีละข้อความเพื่อให้สามารถ emit อีเวนต์ได้ถูกต้อง
+      for (const msg of messagesToUpdate) {
+        msg.readBy.push(userId);
+        await msg.save();
+
+        // ส่งการอัพเดตสถานะการอ่านสำหรับแต่ละข้อความ
+        const readCount = msg.readBy.filter(id => id.toString() !== msg.userId.toString()).length;
+
+        io.to(`space_${spaceId}`).emit('message read update', {
+          messageId: msg._id.toString(),
+          readByCount: readCount,
+          updatedAt: new Date()
+        });
+
+        console.log(`[SERVER] อัปเดต readCount สำหรับข้อความ ${msg._id}: ${readCount} คน`);
+      }
+    } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายข้อความว่าอ่านแล้ว:', error);
+    }
+  });
+
+  // เมื่อผู้ใช้อยู่ในหน้าแชทกลุ่ม
+  socket.on('user in chat', async ({ userId, spaceId }) => {
+    if (!usersInChat.has(spaceId)) {
+      usersInChat.set(spaceId, new Set());
+    }
+    usersInChat.get(spaceId).add(userId);
+
+    console.log(`User ${userId} is in chat for space ${spaceId}`);
 
     // อัปเดตสถานะ readBy สำหรับข้อความที่ยังไม่ได้อ่าน
     const unreadMessages = await Chat.find({
@@ -312,6 +390,7 @@ io.on('connection', (socket) => {
   socket.on('user left chat', ({ userId, spaceId }) => {
     if (usersInChat.has(spaceId)) {
       usersInChat.get(spaceId).delete(userId);
+      console.log(`User ${userId} left chat for space ${spaceId}`);
     }
   });
 
@@ -339,6 +418,7 @@ io.on('connection', (socket) => {
 
   // ตรวจจับอัปเดตสถานะการอ่าน
   socket.on('message read update', (data) => {
+    console.log('[CLIENT] Received message read update:', data);
 
     // อัปเดต DOM
     const messageElement = document.querySelector(`.message[data-message-id="${data.messageId}"]`);
@@ -372,6 +452,8 @@ io.on('connection', (socket) => {
             readByCount: readCount // ส่งจำนวนคนที่อ่านแล้ว
           });
 
+          // Log ค่าเพื่อตรวจสอบ
+          console.log(`[SERVER] อัปเดต readCount สำหรับข้อความ ${msg._id}: ${readCount} คน`);
         });
       });
   });
@@ -400,9 +482,11 @@ io.on('connection', (socket) => {
         io.to(`space_${spaceId}`).emit('new group message', populatedMessage);
         io.emit('update last group message', populatedMessage);
       }
+      console.log(`[NEW MSG] Message ${newMessage._id} created with readBy: [${userId}]`);
     } catch (error) {
       console.error('Error handling send message:', error);
     }
+    console.log(`[NEW MSG] Message ${newMessage._id} created with readBy: [${userId}]`);
   });
 
   // เมื่อผู้ใช้อยู่ในหน้าแชทส่วนตัว
@@ -445,11 +529,13 @@ io.on('connection', (socket) => {
       });
     });
 
+    console.log(`User ${userId} joined private chat with ${targetUserId}`);
   });
 
   // เมื่อผู้ใช้ออกจากหน้าแชทส่วนตัว
   socket.on('user left private chat', ({ userId, targetUserId }) => {
     socket.leave(`private_${userId}_${targetUserId}`);
+    console.log(`User ${userId} left private chat with ${targetUserId}`);
 
     if (usersInChat.has(userId)) {
       usersInChat.get(userId).delete(targetUserId);
@@ -627,6 +713,8 @@ io.on('connection', (socket) => {
         return;
       }
 
+      console.log(`[READ] User ${userId} อ่านข้อความ ${messageId}`);
+
       const message = await Chat.findById(messageId);
       if (!message) {
         console.error('ไม่พบข้อความ');
@@ -642,6 +730,8 @@ io.on('connection', (socket) => {
         const updatedMessage = await Chat.findById(messageId)
           .populate('readBy', '_id')
           .lean();
+
+        console.log(`[READ] อัปเดตสำเร็จ:`, updatedMessage.readBy);
 
         // ส่งอัปเดตไปทั้งสองฝ่าย
         io.to(`private_${userId}_${targetUserId}`).emit('private message read update', {

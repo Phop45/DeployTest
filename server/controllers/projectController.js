@@ -9,6 +9,7 @@ const moment = require("moment");
 const multer = require("multer");
 const path = require("path");
 const Task = require('../models/Task');
+const { sendSpaceMemberAddedEmail }= require('../../emailService');
 const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
 moment.locale('th');
@@ -99,7 +100,6 @@ exports.allProjectPage = async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 };
-
 
 // create project controller
 exports.createProject = async (req, res) => {
@@ -201,7 +201,7 @@ exports.createProject = async (req, res) => {
                             user: member.id,
                             role: "member",
                         });
-
+    
                         // Create notification for each added member
                         const notificationMessage = `${req.user.username} ได้เพิ่มคุณเข้าโปรเจกต์ ${projectName} แล้ว`;
                         const notification = new Notification({
@@ -211,8 +211,17 @@ exports.createProject = async (req, res) => {
                             type: 'memberAdded',
                             message: notificationMessage,
                         });
-
+    
                         await notification.save();
+    
+                        // Send email notification
+                        const userToNotify = await User.findById(member.id);
+                        if (userToNotify) {
+                            const spaceDetailLink = `https://deploytest-8mln.onrender.com/space/item/${newSpace._id}/dashboard?period=7day`;
+                            const emailMessage = `คุณได้รับเชิญเข้าร่วมโปรเจกต์ "${projectName}" ในบทบาท "สมาชิก"`;
+    
+                            await sendSpaceMemberAddedEmail(userToNotify, newSpace, spaceDetailLink, emailMessage);
+                        }
                     }
                 }
             }

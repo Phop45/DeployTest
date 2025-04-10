@@ -6,6 +6,9 @@
             </div>
             <h3 class="Name" id="projectName" onclick="makeEditable(this)"><%= spaces.projectName %></h3>
         </div>
+        <div class="roleDisplay">
+            
+        </div>
     </div>
     <div class="list">
         <ul class="nav navi-tabs">
@@ -23,7 +26,7 @@
     
     
             <li class="nav-items top-item-nav <%= currentPage === 'task_calenda' ? 'active' : '' %>">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="/space/item/<%= spaces._id %>/calendar">
                     <i class="fa-solid fa-calendar-days"></i> ปฎิทิน
                 </a>
             </li>
@@ -55,7 +58,7 @@
 
             <li class="nav-items top-item-nav <%= currentPage === 'task_setting' ? 'active' : '' %>">
                 <% if (spaces.collaborators.some(collab => collab.user._id.toString() === user._id.toString() && ['owner'].includes(collab.role))) { %>
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="/space/item/<%= spaces._id %>/setting">
                         <i class="fa-solid fa-gear"></i> ตั้งค่าโปรเจกต์
                     </a>
                 <% } %>

@@ -45,10 +45,18 @@
                         </button>
                     </div>
                 </form>
-                <% if (taskStatus !== 'pending') { %>
+                <% if (task.taskStatus === 'inProgress') { %>
+                    <!-- Send button for active work -->
                     <div class="sendTask">
                         <button type="button" id="sendTask" onclick="checkWork('<%= taskId %>')">
                             <span>ส่งงาน</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                <% } else if (task.taskStatus === 'fix') { %>
+                    <div class="sendTask">
+                        <button type="button" id="sendTask" onclick="checkWork('<%= taskId %>')">
+                            <span>ส่งแก้ไข</span>
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
                     </div>
@@ -357,16 +365,15 @@
                         <tbody id="subtaskTableBodyNew">
                             <% subtasks.forEach((subtask)=> { %>
                                 <tr class="task-row" data-subtask-id="<%= subtask._id %>"
-                                    style="opacity: <%= subtask.subTask_status === 'เสร็จสิ้น' ? '0.5' : '1' %>;"
-                                    onclick="showSubtaskFullView('<%= subtask._id %>')">
+                                    style="opacity: <%= subtask.subTask_status === 'finished' ? '0.5' : '1' %>;">
                                     <td class="inputCheck">
-                                        <input type="checkbox" class="checkbox" <%=subtask.subTask_status==='เสร็จสิ้น'
-                                            ? 'checked' : '' %>
-                                        <%= subtask.assignee && String(subtask.assignee._id)===String(user._id) ? ''
-                                            : 'disabled' %>
-                                            onclick="event.stopPropagation()"
-                                            />
-                                    </td>
+                                        <% if (subtask.assignee && String(subtask.assignee._id) === String(user._id)) { %>
+                                            <input type="checkbox" class="checkbox" 
+                                                <%= subtask.subTask_status === 'finished' ? 'checked' : '' %>
+                                                <%= subtask.subTask_status === 'finished' ? '' : '' %> 
+                                                onclick="event.stopPropagation(); toggleSubtaskStatus('<%= subtask._id %>');" />
+                                        <% } %>
+                                    </td>                                    
                                     <td>
                                         <%= subtask.subtask_Name %>
                                     </td>
@@ -374,8 +381,8 @@
                                         <%= subtask.subTask_dueDate %>
                                     </td>
                                     <td>
-                                        <div class="statusWrape">
-                                            <%= subtask.subTask_status %>
+                                        <div class="statusWrape" style="background-color: <%= subtask.subTask_status === 'inProgress' ? '#6EACDA' : '#4caf50' %>;">
+                                            <%= subtask.subTask_status === 'inProgress' ? 'กำลังทำ' : 'เสร็จสิ้น' %>
                                         </div>
                                     </td>
                                     <td>
@@ -592,16 +599,6 @@
             </div>
 
             <div class="messageAct">
-                <div class="selectMessage">
-                    <div class="showActivity" onclick="filterContent('activity')">
-                        กิจกรรม
-                    </div>
-                    <div class="showComment" onclick="filterContent('comment')">
-                        คอมเมนต์
-                    </div>
-                </div>
-                
-
                 <div class="activityUpdate" id="activityUpdate">
                     <% task.comment.filter(comment => !comment.deleted).forEach(comment => { %>
                         <div class="comment-container">
@@ -673,12 +670,17 @@
                         </div>
                     <% }) %>
                     
-                    <% task.activityLogs .filter(log=> !log.deleted)
-                        .forEach(log => {
+                    <% task.activityLogs.filter(log => !log.deleted).forEach(log => {
                         const details = log.details || {};
                         const oldValue = details.oldValue || 'ไม่ทราบ';
-                        const newValue = details.newValue || 'ไม่ทราบ'; %>
-
+                        const newValue = details.newValue || 'ไม่ทราบ';
+                    
+                        // Skip rendering if the fieldChanged is 'dueDate'
+                        if (details.fieldChanged === 'dueDate') {
+                            return; // Skip this log
+                        }
+                    %>
+                        
                         <div class="log-entry">
                             <div class="log-entry-detail">
                                 <!-- Display user profile image -->
@@ -726,6 +728,15 @@
                                                     </div>
                                                 </div>
 
+                                                <% } else if (details.fieldChanged==='sendTask' ) { %>
+                                                    <div class="statusLog">
+                                                        <p id="logText_sendTask">
+                                                            <span id="whoChange">
+                                                                <%= details.whoChange %>
+                                                            </span>
+                                                        </p>
+                                                    </div>
+
                                                 <% } else if (details.fieldChanged==='priority' ) { %>
                                                     <div class="prorityLog">
                                                         <p id="logText">
@@ -753,7 +764,7 @@
                                                         </div>
                                                     </div>
 
-                                                    <% } else if (details.fieldChanged==='dueDate' ) { %>
+                                                    <% } else if (details.fieldChanged === 'dueDate') { %>
                                                         <div class="dueDateLog">
                                                             <p id="logText">
                                                                 <span id="whoChange">
@@ -762,14 +773,15 @@
                                                             </p>
                                                             <div class="logDetail">
                                                                 <span class="previous-dueDate">
-                                                                    <%= oldValue %>
+                                                                    <%= details.oldValue || 'ไม่มีวันครบกำหนด' %>
                                                                 </span>
                                                                 <i class="fa-solid fa-arrow-right toArrow"></i>
                                                                 <span class="new-dueDate">
-                                                                    <%= newValue %>
+                                                                    <%= details.newValue || 'ไม่มีวันครบกำหนด' %>
                                                                 </span>
                                                             </div>
                                                         </div>
+
                                                         <% } else if (details.fieldChanged==='dueTime' ) { %>
                                                             <div class="dueTimeLog">
                                                                 <p id="logText">
@@ -887,10 +899,30 @@
                         
                 </div>
             </div>
-        </div>
+    </div>
 </div>
 
 <script>
+    function toggleSubtaskStatus(subtaskId) {
+        fetch('/toggleSubtaskStatus', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                subtaskId: subtaskId
+            }),
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();  // Reload the page to reflect the updated subtask status
+            } else {
+                return response.json().then(error => alert(error.message));
+            }
+        })
+        .catch(error => console.error('Error updating subtask status:', error));
+    }
+    
     function filterContent(contentType) {
         const activityContent = document.getElementById("activityContent");
         const commentContent = document.getElementById("commentContent");
@@ -946,7 +978,7 @@
             const button = document.getElementById("sendTask");
             if (button) {
                 button.disabled = true;
-                button.innerText = "Sending...";
+                button.innerText = "กำลังส่ง...";
             }
     
             const response = await fetch(`/task/${taskId}/send-to-approve`, {
@@ -959,7 +991,7 @@
             }
     
             const result = await response.json();
-            alert('Task sent for approval successfully!');
+            alert('ส่งงานสำเร็จ!');
             window.location.reload();
         } catch (error) {
             console.error('Error sending task for approval:', error.message);
@@ -1075,23 +1107,31 @@
         });
     });
 
+    // Update visibility of the checkTaskButton based on checkbox status
     function updateCheckTaskButtonVisibility() {
         const checkboxes = document.querySelectorAll('#subtaskTableBodyNew .checkbox');
         const allChecked = checkboxes.length > 0 && [...checkboxes].every((checkbox) => checkbox.checked);
         const hasSubtasks = checkboxes.length > 0;
         const detailSection = document.querySelector('.detail');
-
+    
+        // Ensure .checkTask exists before trying to modify it
         const checkTaskButton = document.querySelector('.checkTask');
-
-        if (allChecked || !hasSubtasks) {
-            checkTaskButton.style.display = 'block';
-            detailSection.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            checkTaskButton.style.display = 'none'; // Hide the button
+    
+        if (checkTaskButton) {  // Check if the button exists
+            // Show button if all checkboxes are checked or if there are no subtasks
+            if (allChecked || !hasSubtasks) {
+                checkTaskButton.style.display = 'block';
+                if (detailSection) {  // Check if the detailSection exists before scrolling
+                    detailSection.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } else {
+                checkTaskButton.style.display = 'none'; // Hide the button if not all subtasks are checked
+            }
         }
     }
+    
 
-    // Attach listeners to all checkboxes
+    // Attach listeners to all checkboxes (to respond to changes)
     function addCheckboxListeners() {
         const checkboxes = document.querySelectorAll('#subtaskTableBodyNew .checkbox');
         checkboxes.forEach((checkbox) => {
@@ -1099,9 +1139,21 @@
         });
     }
 
-    // Initialize everything on DOMContentLoaded
+    // Initialize everything when DOM is fully loaded
     document.addEventListener('DOMContentLoaded', () => {
         addCheckboxListeners();
-        updateCheckTaskButtonVisibility(); // Initial check
+        updateCheckTaskButtonVisibility(); // Initial check to ensure the button's visibility is correct
+    });
+
+    // Optional: Use MutationObserver for dynamically added checkboxes (if subtasks are dynamically rendered)
+    const observer = new MutationObserver(() => {
+        addCheckboxListeners();  // Re-attach event listeners when new checkboxes are added
+        updateCheckTaskButtonVisibility(); // Recheck visibility
+    });
+
+    // Observe changes in the DOM within the subtask table
+    observer.observe(document.querySelector('#subtaskTableBodyNew'), {
+        childList: true, // Observe addition/removal of subtasks
+        subtree: true    // Observe all descendants of the container
     });
 </script>

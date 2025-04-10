@@ -4,7 +4,7 @@ const taskPageController = require('../../controllers/taskCon/taskPageController
 const chatController = require('../../controllers/chatController');
 const upload = require('../../middleware/upload-chat');
 const { isLoggedIn } = require('../../middleware/checkAuth');
-// const taskSettingController = require('../../controllers/taskCon/taskSettingController');
+const taskSettingController = require('../../controllers/taskCon/taskSettingController');
 
 router.get('/space/item/:id/dashboard', isLoggedIn, taskPageController.task_dashboard);
 router.get('/space/item/:id/task_list', isLoggedIn, taskPageController.task_list);
@@ -14,6 +14,8 @@ router.get('/space/item/:id/granttChart', isLoggedIn, taskPageController.granttC
 router.get('/getTasks', isLoggedIn, taskPageController.getTasks);
 
 router.get('/space/item/:id/chat', isLoggedIn, chatController.renderChatPage);
+router.get('/space/item/:id/setting', isLoggedIn, taskSettingController.projecttasksetting);
+
 router.post('/space/item/:id/chat', isLoggedIn, chatController.postMessage);
 router.post('/space/item/:id/chat/:messageId/read', isLoggedIn, chatController.markAsRead);
 

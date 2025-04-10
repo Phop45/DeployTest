@@ -543,7 +543,7 @@ body{
     padding: 5px 10px;
     background-color: #f1f5f9;
     border-radius: 10px;
-    width: 60%;
+    width: 45%;
 }
 
 .seleteWrap {
@@ -679,4 +679,14 @@ body{
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.recoverBtn{
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: gray;
 }

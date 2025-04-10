@@ -1,4 +1,3 @@
-
 // Subtask Form Toggles
 function cancelSubtaskNew() {
     document.getElementById('subtaskNameInputMainNew').value = '';
@@ -125,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const statusElement = subtaskRow.querySelector('.statusWrape');
                     checkbox.checked = status;
                     subtaskRow.style.opacity = status ? '0.5' : '1';
-                    statusElement.textContent = status ? 'เสร็จสิ้น' : 'กำลังทำ';
+                    statusElement.textContent = status ? 'finished' : 'inProgress';
                     statusElement.classList.toggle('completed', status);
                 }
             });
@@ -139,7 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
         checkbox.addEventListener('change', function () {
             const subtaskRow = this.closest('tr');
             const subtaskId = subtaskRow.dataset.subtaskId;
-
+    
+            // Prevent checkbox change from toggling immediately; we handle the update via the backend
+            const isChecked = this.checked;
+    
+            // Make a PUT request to toggle the status of the subtask
             fetch('/toggleSubtaskStatus', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -155,8 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return response.json();
             })
             .then(data => {
+                // Update UI based on the new status
                 const statusElement = subtaskRow.querySelector('.statusWrape');
-                if (data.status === 'เสร็จสิ้น') {
+                if (data.subtask.subTask_status === 'finished') {
                     subtaskRow.style.opacity = '0.4'; // Visually indicate completion
                     statusElement.textContent = 'เสร็จสิ้น';
                     statusElement.style.backgroundColor = '#4CAF50'; // Green for completed
@@ -167,17 +171,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     statusElement.style.backgroundColor = '#6EACDA'; // Blue for in progress
                     statusElement.classList.remove('completed');
                 }
+    
+                // Reload the page to ensure the updated state is reflected
+                window.location.reload(); 
             })
             .catch(error => console.error('Error:', error));
         });
     });
+    
 
     // Set initial background colors based on the status when the page loads
     document.querySelectorAll('.statusWrape').forEach(statusElement => {
         const status = statusElement.textContent.trim();
-        if (status === 'เสร็จสิ้น') {
+        if (status === 'finished') {
             statusElement.style.backgroundColor = '#4CAF50'; // Green for completed
-        } else if (status === 'กำลังทำ') {
+        } else if (status === 'inProgress') {
             statusElement.style.backgroundColor = '#6EACDA'; // Blue for in progress
         }
     });
@@ -460,10 +468,10 @@ async function toggleSubtaskStatusInFullView() {
         const subtaskRow = document.querySelector(`tr[data-subtask-id="${subtaskId}"]`);
         if (subtaskRow) {
             const statusElement = subtaskRow.querySelector('.statusWrape');
-            subtaskRow.style.opacity = data.status === 'เสร็จสิ้น' ? '0.4' : '1';
+            subtaskRow.style.opacity = data.status === 'finished' ? '0.4' : '1';
             statusElement.textContent = data.status;
 
-            if (data.status === 'เสร็จสิ้น') {
+            if (data.status === 'finished') {
                 statusElement.classList.add('completed');
             } else {
                 statusElement.classList.remove('completed');
@@ -514,7 +522,7 @@ document.getElementById('updateButton').addEventListener('click', updateSubtask)
 
 // Helper function to update the button's background color
 function updateStatusButtonColor(button, status) {
-    button.style.backgroundColor = status === 'กำลังทำ' ? '#1090e0' : '#4CAF50';
+    button.style.backgroundColor = status === 'inProgress' ? '#1090e0' : '#4CAF50';
 }
 
 // Handle form submission (for other fields like taskName, taskDetail)

@@ -1,24 +1,26 @@
 <script src="/socket.io/socket.io.js"></script>
 <style>
   body {
-
     background-color: #f7f7f7;
   }
 
+  .content {
+    background-color: white;
+    margin: 0 0 0 70px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
   .chat-container {
-    max-width: 80%;
-    margin: 20px auto;
+    max-width: 100%;
+    margin: 20px 30px;
     display: flex;
     border: #ebebeb solid 1px;
     box-shadow: 0 20px 25px -5px rgb(0 0 0 / .1), 0 8px 10px -6px rgb(0 0 0 / .1);
     border-radius: 16px;
     background-color: #ffffff;
-  }
-
-  .chat-container,
-  .messages {
-    opacity: 1;
-    transition: opacity 0.3s;
   }
 
   .chat-seccon {
@@ -50,15 +52,7 @@
     margin-left: 10px;
   }
 
-  .avatar,
-  .profileimage-chat {
-    width: 30px;
-    height: 30px;
-    aspect-ratio: 1/1;
-  }
-
   .messages {
-    min-height: 200px;
     height: 100%;
     overflow-y: auto;
   }
@@ -78,7 +72,6 @@
   }
 
   .message-bubble {
-    min-width: 120px;
     max-width: 70%;
     padding: 10px;
     border-radius: 10px;
@@ -804,7 +797,8 @@
 </head>
 
 <body>
-  <%- include('../task/task_component/task-navbar.ejs') %>
+  <div class="content">
+    <%- include('../task/task_component/task-navbar.ejs') %>
     <div class="chat-container">
       <div class="chat-seccon">
         <div class="user-list">
@@ -819,7 +813,7 @@
             <ul>
               <li class="<%= currentPage === 'group_chat' ? 'active' : '' %>" data-space-id="<%= spaces._id %>">
                 <a href="/space/item/<%= spaces._id %>/chat">
-                  <img loading="lazy" class="profileimage-chat" src="<%= spaces.projectCover %>" alt="Group Chat" width="30">
+                  <img class="profileimage-chat" src="<%= spaces.projectCover %>" alt="Group Chat" width="30">
                   <div class="conmessage">
                     <div class="nameconuser">
                       <div class="nameuser">แชทกลุ่ม <%= spaces.projectName %>
@@ -871,7 +865,7 @@
                   <li class="<%= currentChatUserId === collab.user._id.toString() ? 'active' : '' %>"
                     data-user-id="<%= collab.user._id %>"> <a
                       href="/space/item/<%= spaces._id %>/chat/private/<%= collab.user._id %>">
-                      <img loading="lazy" class="profileimage-chat" src="<%= collab.user.profileImage %>" alt="Profile" width="30">
+                      <img class="profileimage-chat" src="<%= collab.user.profileImage %>" alt="Profile" width="30">
                       <div class="conmessage">
                         <div class="nameconuser">
                           <div class="name-chat nameuser">
@@ -931,8 +925,7 @@
             <picture>
               <source srcset="<%= convertToWebp(spaces.projectCover) %>" type="image/webp">
               <source srcset="<%= spaces.projectCover %>" type="image/jpeg">
-              <img loading="lazy" class="profileimage-chat" src="<%= resizeImage(spaces.projectCover, 80) %>"
-                srcset="<%= resizeImage(spaces.projectCover, 160) %> 2x" alt="Group Chat">
+              <img class="profileimage-chat" src="<%= spaces.projectCover %>" alt="Group Chat">
             </picture>
             <div class="chatgroupname">
               <span id="groupname">แชทกลุ่ม <%= spaces.projectName %></span>
@@ -960,7 +953,7 @@
 
                             <% if (msg.userId && msg.userId._id && msg.userId._id.toString() !==user._id.toString()) {
                               %>
-                              <img loading="lazy" src="<%= msg.userId.profileImage || '/path/to/default/avatar.png' %>" alt="User"
+                              <img src="<%= msg.userId.profileImage || '/path/to/default/avatar.png' %>" alt="User"
                                 class="avatar">
                               <% } %>
 
@@ -978,27 +971,27 @@
                                       </div>
 
                                       <!-- แสดงไฟล์แนบ -->
-                                      <% if (msg.files && msg.files.length > 0) { %>
+                                      <% if (msg.files && msg.files.length> 0) { %>
                                         <div class="attached-files" style="margin-top: 10px;">
-                                          <% msg.files.forEach(file => { %>
+                                          <% msg.files.forEach(file=> { %>
                                             <% if (file.mimetype.startsWith('image/')) { %>
                                               <div class="file-preview" style="margin-bottom: 5px;">
-                                                <img loading="lazy" src="<%= file.url %>" alt="<%= file.originalname %>"
+                                                <img src="<%= file.url %>" alt="<%= file.originalname %>"
                                                   style="max-width: 200px; max-height: 200px; cursor: pointer;"
                                                   onclick="showImageModal('<%= file.url %>')">
                                               </div>
-                                            <% } else { %>
-                                              <div class="file-preview" style="margin-bottom: 5px;">
-                                                <a href="<%= file.url %>" download="<%= file.originalname %>"
-                                                  style="display: inline-block; padding: 5px 10px; background: #f0f0f0; border-radius: 4px;">
-                                                  <i class="bx bx-file"></i>
-                                                  <%= file.originalname %>
-                                                </a>
-                                              </div>
-                                            <% } %>
-                                          <% }) %>
+                                              <% } else { %>
+                                                <div class="file-preview" style="margin-bottom: 5px;">
+                                                  <a href="<%= file.url %>" download="<%= file.originalname %>"
+                                                    style="display: inline-block; padding: 5px 10px; background: #f0f0f0; border-radius: 4px;">
+                                                    <i class="bx bx-file"></i>
+                                                    <%= file.originalname %>
+                                                  </a>
+                                                </div>
+                                                <% } %>
+                                                  <% }) %>
                                         </div>
-                                      <% } %>
+                                        <% } %>
 
                                           <div class="message-time">
                                             <%= formatTime(messageDate) %>
@@ -1039,15 +1032,15 @@
               </div>
               <div class="mention-list" id="mentionList">
                 <div class="mention-menu">
-                  <div class="mention-tab active" data-tab="people">People</div>
-                  <div class="mention-tab" data-tab="tasks">Tasks</div>
+                  <div class="mention-tab active" data-tab="people">สมาชิก</div>
+                  <div class="mention-tab" data-tab="tasks">งาน</div>
                 </div>
                 <ul id="mentionUserList"></ul>
                 <ul id="mentionTaskList"></ul>
               </div>
               <div class="forminput-chat">
                 <div class="chaticon">
-                  <div class="chat-img" id="icon-chat" title="เพิ่มรูปภาพ"><i class='bx bx-image-alt'></i></div>
+                  <div class="chat-img" id="icon-chat" title="เพิ่มรูปภาพ" style="display: none;"><i class='bx bx-image-alt'></i></div>
                   <div class="chat-file" id="icon-chat" title="เพิ่มไฟล์"><i class='bx bx-paperclip'></i></div>
                 </div>
                 <input type="text" id="messageInput" name="message" placeholder="พิมพ์ข้อความ..." autocomplete="off">
@@ -1058,6 +1051,7 @@
         </div>
       </div>
     </div>
+  </div>
 
     <script>
       // ฟังก์ชันค้นหาชื่อแชท
@@ -1228,54 +1222,13 @@
       });
 
       socket.on('connect', () => {
+        console.log('Connected to Socket.io server');
         // ส่งข้อมูลผู้ใช้ที่อยู่ในหน้าแชทไปยังเซิร์ฟเวอร์
         socket.emit('join space chat', {
           userId: '<%= user._id %>',
           spaceId: '<%= spaces._id %>'
         });
       });
-
-      let lastUpdate = 0;
-      socket.on('update', (data) => {
-        const now = Date.now();
-        if (now - lastUpdate > 100) { // จำกัดที่ 100ms
-          updateUI(data);
-          lastUpdate = now;
-        }
-      });
-
-      // จัดกลุ่มการอัปเดต DOM
-      function batchUpdates() {
-        let updateQueue = [];
-        let isUpdating = false;
-
-        return function (data) {
-          updateQueue.push(data);
-          if (!isUpdating) {
-            isUpdating = true;
-            requestAnimationFrame(() => {
-              processBatch(updateQueue);
-              updateQueue = [];
-              isUpdating = false;
-            });
-          }
-        }
-      }
-
-      function processBatch(messages) {
-        const fragment = document.createDocumentFragment();
-
-        messages.forEach(msg => {
-          const messageElement = createMessageElement(msg); // สร้างฟังก์ชันแยกสร้าง element
-          fragment.appendChild(messageElement);
-        });
-
-        messagesContainer.appendChild(fragment);
-
-        checkScrollPosition();
-      }
-
-      const processUpdate = batchUpdates();
 
       window.addEventListener('beforeunload', () => {
         socket.emit('leave space chat', {
@@ -1285,13 +1238,19 @@
       });
 
       socket.on('new group message', (msg) => {
-        processUpdate(msg);
+        console.log('Received new message:', msg); // เพิ่ม log นี้เพื่อตรวจสอบ
+
+        // ตรวจสอบว่าเป็นข้อความใหม่จริงๆ
+        if (!msg || !msg._id) {
+          console.error('Invalid message received:', msg);
+          return;
+        }
 
         // ถ้าผู้ใช้อยู่ด้านล่าง ให้เลื่อนไปที่ข้อความใหม่
         if (messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100) {
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-
+        addNewMessageToDOM(msg);
 
         // ทำเครื่องหมายว่าอ่านแล้วอัตโนมัติถ้าผู้ใช้อยู่ในแชท
         if (msg.userId._id.toString() !== '<%= user._id %>') {
@@ -1313,28 +1272,17 @@
       });
 
       function addNewMessageToDOM(msg) {
-        processUpdate(msg);
+        // ตรวจสอบว่าข้อความนี้มีอยู่แล้วใน DOM หรือไม่
+        const existingMessage = document.querySelector(`.message[data-message-id="${msg._id}"]`);
+        if (existingMessage) return;
 
         const messagesContainer = document.getElementById('messages');
         const messageDate = new Date(msg.createdAt);
-
-        // ตรวจสอบการเปลี่ยนวัน
-        const lastMessage = messagesContainer.lastElementChild;
-        if (lastMessage && lastMessage.classList.contains('message')) {
-          const lastMessageDate = new Date(lastMessage.dataset.timestamp);
-          if (isNewDay(lastMessageDate, messageDate)) {
-            const dateDivider = document.createElement('div');
-            dateDivider.classList.add('date-divider');
-            dateDivider.innerHTML = `<div class="message-date">${formatDate(messageDate)}</div>`;
-            messagesContainer.appendChild(dateDivider);
-          }
-        }
 
         // สร้าง element สำหรับข้อความใหม่
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', msg.userId._id === '<%= user._id %>' ? 'current-user' : 'other-user');
         messageElement.dataset.messageId = msg._id;
-        messageElement.dataset.timestamp = msg.createdAt;
 
         // สร้าง HTML สำหรับไฟล์แนบหากมี
         let filesHtml = '';
@@ -1344,7 +1292,7 @@
             if (file.mimetype.startsWith('image/')) {
               filesHtml += `
           <div class="file-preview" style="margin-bottom: 5px;">
-            <img loading="lazy" src="${file.url}" alt="${file.originalname}" 
+            <img src="${file.url}" alt="${file.originalname}" 
                  style="max-width: 200px; max-height: 200px; cursor:pointer;" 
                  onclick="showImageModal('${file.url}')">
           </div>
@@ -1365,7 +1313,7 @@
 
         // กำหนด HTML ของข้อความ
         messageElement.innerHTML = msg.userId._id !== '<%= user._id %>' ? `
-    <img loading="lazy" src="${msg.userId.profileImage || '/img/profileImage/Profile.jpeg'}" alt="User" class="avatar">
+    <img src="${msg.userId.profileImage || '/img/profileImage/Profile.jpeg'}" alt="User" class="avatar">
     <div class="message-bubble">
       <div id="chat-nameuser">${msg.userId.firstName} ${msg.userId.lastName}</div>
       <div class="message-content">${msg.message || ''}</div>
@@ -1377,13 +1325,12 @@
       <div class="message-content">${msg.message || ''}</div>
       ${filesHtml}
       <div class="message-time">${formatTime(messageDate)}
-        <span class="read-status">เห็นแล้ว: ${msg.readBy.length} คน</span>
+        <span class="read-status">เห็นแล้ว: ${msg.readBy ? msg.readBy.length : 0} คน</span>
       </div>
     </div>
   `;
 
         messagesContainer.appendChild(messageElement);
-        enableImagePreview(); // เรียกใช้ฟังก์ชันนี้เพื่อตั้งค่า event listeners สำหรับรูปภาพใหม่
 
         // เลื่อนไปด้านล่างหากอยู่ใกล้ด้านล่างอยู่แล้ว
         const nearBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
@@ -1391,9 +1338,9 @@
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
       }
-
       // อัปเดตจำนวนผู้ใช้ที่เห็นข้อความเมื่อได้รับข้อมูลจากเซิร์ฟเวอร์
       socket.on('message read update', (data) => {
+        console.log('[CLIENT] รับข้อมูล readCount:', data);
 
         // อัปเดต DOM
         const messageElement = document.querySelector(`.message[data-message-id="${data.messageId}"]`);
@@ -1570,24 +1517,30 @@
           console.error('Error loading task data:', error);
         }
       }
+
       // ฟังก์ชันเพิ่ม mention
       function insertMention(name, type, id) {
         const messageInput = document.getElementById('messageInput');
         const currentValue = messageInput.value;
         const atIndex = currentValue.lastIndexOf('@');
+        const spaceId = '<%= spaces._id %>'; 
 
         if (atIndex !== -1) {
           // แสดงแค่ @name ใน input
           const displayValue = `@${name}`;
-          // แต่เก็บข้อมูลทั้งหมดใน data attribute
           messageInput.value = currentValue.substring(0, atIndex) + displayValue + ' ';
 
+          // Include task mention with a clickable link
+          const mentionLink = type === 'task' 
+          ? `<a href="/task/${id}/detail?spaceId=${spaceId}" class="task-mention">@${name}</a>` 
+          : `@${name}`;
+          
           // สร้าง hidden element เพื่อเก็บข้อมูล mention แบบเต็ม
           const hiddenMention = document.createElement('input');
           hiddenMention.type = 'hidden';
           hiddenMention.className = 'mention-data';
           hiddenMention.dataset.display = displayValue;
-          hiddenMention.dataset.full = type === 'task' ? `@${name} (task:${id})` : `@${name}`;
+          hiddenMention.dataset.full = mentionLink;
 
           // เพิ่ม hidden element เข้าไปใน form
           document.getElementById('chatForm').appendChild(hiddenMention);
@@ -1596,6 +1549,15 @@
           document.getElementById('mentionList').style.display = 'none';
           messageInput.focus();
 
+          // Emit the mention event
+          const mentionData = {
+              userId: id,
+              spaceId,
+              mentionedBy: '<%= user.firstName %> <%= user.lastName %>',
+              projectName: '<%= spaces.projectName %>',
+              message: mentionLink,
+          };
+        
           // ส่งข้อมูล mention ไปยังเซิร์ฟเวอร์
           if (type === 'user') {
             const user = mentionData.people.find(u => u._id === id);
@@ -1631,7 +1593,7 @@
           if (user && user._id && user._id.toString() !== '<%= user._id %>') {
             const li = document.createElement('li');
             li.innerHTML = `
-        <img loading="lazy" src="${user.profileImage || '/img/profileImage/Profile.jpeg'}" alt="User">
+        <img src="${user.profileImage || '/img/profileImage/Profile.jpeg'}" alt="User">
         <span>${user.firstName} ${user.lastName}</span>
       `;
             li.addEventListener('click', () => {
@@ -1727,7 +1689,7 @@
               taskName: task.taskName,
               spaceId,
               projectName: space.projectName,
-              link: `/task/${taskId}/detail`
+              link: `/task/${taskId}/detail?spaceId=${spaceId}`
             });
           }
         } catch (error) {
@@ -1738,6 +1700,7 @@
 
     <script>
       socket.on('update last group message', (message) => {
+        console.log('🔄 อัปเดตข้อความล่าสุดของแชทกลุ่ม:', message);
 
         // หา li ที่เป็นของแชทกลุ่ม
         const groupChatElement = document.querySelector('li[data-space-id="' + message.spaceId + '"] .conuser');
@@ -1769,6 +1732,7 @@
       });
 
       socket.on('update last private message', (message) => {
+        console.log('🔄 อัปเดตข้อความล่าสุดของแชทส่วนตัว:', message);
 
         // หา userId ของผู้สนทนา
         const otherUserId = message.userId._id && message.userId._id.toString() === '<%= user._id %>'
@@ -1805,7 +1769,6 @@
     </script>
 
     <script>
-
       socket.on('update unread count', ({ spaceId, senderId, targetUserId, message }) => {
         const currentUserId = '<%= user._id %>';
 
@@ -2036,6 +1999,8 @@
       function displaySelectedFiles() {
         showImgFileChat.innerHTML = '';
 
+        console.log(`จำนวนไฟล์ที่เลือก: ${selectedFiles.length}`, selectedFiles);
+
         if (selectedFiles.length === 0) {
           showImgFileChat.style.display = 'none';
           return;
@@ -2128,6 +2093,7 @@
         fileInput.multiple = true;
         fileInput.onchange = (e) => {
           const files = Array.from(e.target.files);
+          console.log('ไฟล์ที่เลือกจากภาพ:', files.length, files);
           const validFiles = files.filter(file => file.type.startsWith('image/'));
           if (validFiles.length !== files.length) {
             alert('กรุณาเลือกเฉพาะไฟล์รูปภาพเท่านั้น!');
@@ -2145,6 +2111,7 @@
         fileInput.multiple = true;
         fileInput.onchange = (e) => {
           const files = Array.from(e.target.files);
+          console.log('ไฟล์ที่เลือกทั่วไป:', files.length, files);
           selectedFiles = [...selectedFiles, ...files];
           displaySelectedFiles();
         };
@@ -2263,21 +2230,21 @@
           modal = document.createElement('div');
           modal.id = 'imageModal';
           modal.innerHTML = `
-          <div class="modal-overlay" onclick="hideImageModal()"></div>
-          <div class="modal-content">
-            <img loading="lazy" src="" alt="Full size image" id="modalImage">
-            <a id="downloadBtn" href="#" download style="
-              margin-top: 10px;
-              padding: 8px 16px;
-              background: #ffffffcc;
-              color: #333;
-              text-decoration: none;
-              border-radius: 6px;
-              font-weight: bold;
-              transition: background 0.2s;
-            ">ดาวน์โหลดรูปภาพ</a>
-          </div>
-        `;
+  <div class="modal-overlay" onclick="hideImageModal()"></div>
+  <div class="modal-content">
+    <img src="" alt="Full size image" id="modalImage">
+    <a id="downloadBtn" href="#" download style="
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #ffffffcc;
+      color: #333;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: background 0.2s;
+    ">ดาวน์โหลดรูปภาพ</a>
+  </div>
+`;
 
 
           document.body.appendChild(modal);
@@ -2423,6 +2390,7 @@
 
     <script>
       document.addEventListener('DOMContentLoaded', () => {
+        console.log("⏳ หน้าเว็บโหลดเสร็จแล้ว (window.onload)");
 
         const toggleButton = document.querySelector('.headuser-list button');
         const userList = document.querySelector('.user-list');
@@ -2430,6 +2398,7 @@
 
         // โหลดค่าจาก localStorage
         const isCollapsed = localStorage.getItem('chatMenuCollapsed') === 'true';
+        console.log("📌 ค่าจาก localStorage ที่โหลดมา:", isCollapsed);
 
         // ตั้งค่าเริ่มต้นโดยไม่ใช้ setTimeout
         function setInitialState() {
@@ -2454,6 +2423,7 @@
 
           userList.classList.toggle('collapsed');
           localStorage.setItem('chatMenuCollapsed', willBeCollapsed.toString());
+          console.log("ค่าที่ถูกบันทึกลง localStorage:", localStorage.getItem('chatMenuCollapsed'));
         });
 
         // ตั้งค่า active ให้กับแชทปัจจุบัน
@@ -2466,6 +2436,7 @@
         });
       });
     </script>
+
     <script>
       const searchInput = document.getElementById('searchChatInput');
       const searchObserver = new IntersectionObserver((entries) => {

@@ -49,7 +49,7 @@ const activityLogSchema = new Schema({
 
 const taskSchema = new Schema({
     user: { type: Schema.ObjectId, ref: 'User', required: true },
-    project: { type: Schema.ObjectId, ref: 'Space', required: true },
+    project: { type: Schema.ObjectId, ref: 'Spaces', required: true },
     taskName: {
         type: String,
         required: true,

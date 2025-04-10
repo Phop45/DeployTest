@@ -49,8 +49,6 @@ exports.createSubTask = async (req, res) => {
     }
 };
 
-
-
 exports.deleteSubtask = async (req, res) => {
     try {
         const subtaskId = req.params.id;
@@ -83,7 +81,7 @@ exports.toggleSubTaskStatus = async (req, res) => {
             return res.status(403).json({ message: 'You are not authorized to update this subtask status' });
         }
 
-        // Toggle the status
+        // Toggle the status: if it's 'inProgress', change it to 'finished', and vice versa
         const newStatus = subtask.subTask_status === 'inProgress' ? 'finished' : 'inProgress';
         subtask.subTask_status = newStatus;
 
@@ -103,7 +101,6 @@ exports.toggleSubTaskStatus = async (req, res) => {
         res.status(500).json({ message: 'Error updating status' });
     }
 };
-
 
 exports.getSubtaskDetails = async (req, res) => {
     try {

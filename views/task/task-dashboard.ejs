@@ -348,8 +348,7 @@
   // count cards section
   document.addEventListener('DOMContentLoaded', function () {
     const tasks = <%- JSON.stringify(tasks) %>;
-    let currentFilteredTasks = [...tasks]; 
-
+    
     let isSortedNewestToOldestDueDate = true; // Default for due date (newest -> oldest)
     let isSortedNewestToOldestCreatedAt = true; // Default for created date (newest -> oldest)
 

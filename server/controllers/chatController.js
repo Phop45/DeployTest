@@ -123,34 +123,22 @@ exports.renderChatPage = async (req, res) => {
     try {
         const spaceId = req.params.id;
 
-        // Get space, messages, and tasks in parallel
-        const [space, messages] = await Promise.all([
+        const [space, messages, tasks] = await Promise.all([
             Spaces.findById(spaceId).populate('collaborators.user', 'firstName lastName profileImage').lean(),
             Chat.find({ spaceId, type: 'group' })
                 .populate('userId', 'firstName lastName profileImage')
                 .populate('readBy', 'firstName lastName')
                 .sort({ createdAt: 'asc' })
                 .lean(),
-            Task.find({ project: spaceId }).select('_id taskName').lean()
+            Task.find({ project: spaceId }).select('_id taskName status').lean() // Include status
         ]);
 
         if (!space) {
             return res.status(404).send("Space not found");
         }
 
-        // Retrieve tasks and populate fields
-        const tasks = await Task.find({ project: spaceId })
-            .populate('assignedUsers', 'firstName lastName profileImage')
-            .populate('activityLogs.createdBy', 'firstName lastName profileImage')
-            .populate({
-                path: 'subtasks',
-                model: 'SubTask',
-                populate: {
-                    path: 'assignee',
-                    select: 'firstName lastName profileImage',
-                },
-            })
-            .lean();
+        // Calculate pending task count
+        const pendingTaskCount = tasks.filter(task => task.status === 'pending').length;
 
         // Get last group message
         const lastGroupMessage = await Chat.findOne({ spaceId, type: 'group' })
@@ -184,14 +172,12 @@ exports.renderChatPage = async (req, res) => {
             })
         );
 
-        const pendingTasks = tasks.filter(task => task.taskStatus === 'pending');
-        const pendingTaskCount = pendingTasks.length;
-
         res.render('task/task-chat', {
             spaces: { ...space, collaborators: collaboratorsWithLastMessage },
             messages,
             lastGroupMessage,
             tasks,
+            pendingTaskCount, // Pass pendingTaskCount to the view
             user: req.user,
             layout: '../views/layouts/task',
             currentPage: 'task_chat',
@@ -201,8 +187,7 @@ exports.renderChatPage = async (req, res) => {
             formatTime,
             isNewDay,
             convertToWebp,
-            resizeImage,
-            pendingTaskCount,
+            resizeImage
         });
 
     } catch (error) {
@@ -210,6 +195,7 @@ exports.renderChatPage = async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 };
+
 
 // ส่งข้อความ
 exports.postMessage = async (req, res) => {
@@ -280,6 +266,8 @@ exports.getUnreadMentionsCount = async (req, res) => {
         })
             .populate('userId', 'firstName lastName') // ดึงข้อมูลผู้ส่งข้อความ
             .lean();
+
+        console.log('Unread Mentions:', unreadMentions); // Log ข้อมูล
 
         // ส่งข้อมูลกลับไปยัง Frontend
         return res.status(200).json({
@@ -557,6 +545,7 @@ exports.renderPrivateChatPage = async (req, res) => {
             .sort({ createdAt: 'asc' })
             .lean();
 
+        console.log(`[RENDER] พบข้อความทั้งหมด ${messages.length} รายการ`);
         messages.forEach(msg => {
             console.log(`- ข้อความ ID: ${msg._id}, อ่านแล้วโดย:`,
                 msg.readBy.map(u => u._id),
@@ -569,9 +558,10 @@ exports.renderPrivateChatPage = async (req, res) => {
             .sort({ createdAt: -1 })
             .lean();
 
-        // Get tasks for the space and count the pending ones
-        const tasks = await Task.find({ project: spaceId }).select('_id taskName taskStatus').lean();
-        const pendingTaskCount = tasks.filter(task => task.taskStatus === 'pending').length;
+        const pendingTaskCount = await Task.countDocuments({
+            spaceId,
+            status: 'pending', // Replace 'pending' with the actual condition for "tasks pending review"
+        });
 
         res.render('task/task-chat-private', {
             spaces: { ...space, collaborators: collaboratorsWithLastMessage },
@@ -579,12 +569,12 @@ exports.renderPrivateChatPage = async (req, res) => {
             user: req.user,
             targetUser,
             lastGroupMessage,
-            pendingTaskCount,
             layout: '../views/layouts/task',
             currentPage: 'task_chat_private',
             currentChatUserId: targetUserId,
             formatMessageContent,
             formatDate,
+            pendingTaskCount,
             formatTime,
             isNewDay,
         });

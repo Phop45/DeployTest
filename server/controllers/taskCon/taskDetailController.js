@@ -77,7 +77,10 @@ exports.detailPageRender = async (req, res) => {
         const taskObjectId = mongoose.Types.ObjectId(taskId);
         const spaceObjectId = mongoose.Types.ObjectId(spaceId);
 
-        const task = await Task.findById(taskObjectId)
+        const task = await Task.findById(taskId)
+            .populate('comment.createdBy', 'firstName lastName profileImage')
+            .populate('approvedBy', 'firstName lastName profileImage')
+            .populate('attachments.uploadedBy', 'firstName lastName profileImage')
             .populate('assignedUsers', 'profileImage firstName lastName googleEmail')
             .populate({
                 path: 'activityLogs.createdBy',
@@ -93,11 +96,7 @@ exports.detailPageRender = async (req, res) => {
             })
             .populate({
                 path: 'comment.createdBy',
-                select: 'profileImage firstName lastName',
-            })
-            .populate({
-                path: 'comment.attachments.uploadedBy',
-                select: 'firstName lastName',
+                select: 'firstName lastName profileImage',
             })
             .lean();
 
@@ -136,9 +135,10 @@ exports.detailPageRender = async (req, res) => {
             day: 'numeric',
         });
 
+        // Format subtasks' due dates
         const formattedSubtasks = subtasks.map(subtask => ({
             ...subtask,
-            subTask_dueDate: subtask.subTask_dueDate
+            subTask_dueDate: subtask.subTask_dueDate && !isNaN(new Date(subtask.subTask_dueDate).getTime())
                 ? formatDateToThai(subtask.subTask_dueDate) 
                 : 'N/A',
         }));
@@ -164,11 +164,17 @@ exports.detailPageRender = async (req, res) => {
 
         const activityLogsWithFormattedDates = task.activityLogs.map(log => {
             if (log.details && log.details.fieldChanged === 'dueDate') {
-                log.details.oldValue = formatDateToThai(log.details.oldValue);
-                log.details.newValue = formatDateToThai(log.details.newValue);
+                log.details.oldValue = log.details.oldValue 
+                    ? formatDateToThai(log.details.oldValue) 
+                    : 'ไม่มีวันครบกำหนด'; // Fallback for invalid old value
+        
+                log.details.newValue = log.details.newValue 
+                    ? formatDateToThai(log.details.newValue) 
+                    : 'ไม่มีวันครบกำหนด'; // Fallback for invalid new value
             }
             return log;
         });
+        
 
         const taskTags = (task.taskTags || []).map(tag => ({
             tagName: tag._id?.tagName || tag.tagName,
