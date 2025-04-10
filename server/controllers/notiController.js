@@ -4,6 +4,7 @@ const Notification = require('../models/Noti');
 const Task = require('../models/Task');
 const SubTask = require('../models/SubTask');
 const SystemAnnouncement = require('../models/SystemAnnouncements');
+const io = require('../../app').io;
 
 const moment = require('moment');
 const lineClient = require('../config/lineClient');
@@ -210,5 +211,28 @@ exports.rejectInvitation = async (req, res) => {
     } catch (error) {
         console.error('Error rejecting invitation:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+exports.markAsRead = async (req, res) => {
+    const { notificationId } = req.params;
+
+    try {
+        const notification = await Notification.findById(notificationId);
+        if (!notification) {
+            return res.status(404).json({ success: false, message: "Notification not found" });
+        }
+
+        notification.status = 'read';
+        await notification.save();
+
+        // Emit updated unread count to the client
+        const unreadCount = await Notification.countDocuments({ user: req.user._id, status: 'unread' });
+        io.to(req.user._id.toString()).emit('updateUnreadCount', unreadCount);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Error marking notification as read:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };

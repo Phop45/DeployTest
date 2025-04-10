@@ -23,10 +23,6 @@ router.post('/tasks/remove-user', isLoggedIn, taskDetailController.removeUserFro
 
 router.post('/update/:taskId', isLoggedIn, taskDetailController.updateTask);
 router.post('/tasks/:id/clearLogs', isLoggedIn, taskDetailController.clearLogs);
-
-
-// ❌
-
-router.post('/uploadDocument/:id', uploadFiles.array('documents', 5),isLoggedIn, taskDetailController.uploadDocument);
+router.put('/tasks/:taskId/update-status',isLoggedIn, taskDetailController.updatePendingStatus);
 
 module.exports = router;

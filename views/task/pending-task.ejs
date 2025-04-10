@@ -1,107 +1,340 @@
-<head>
-    <link rel="stylesheet" href="/css/taskCss/task-list.css">
-    <style>
-    </style>
-</head>
+<link rel="stylesheet" href="/css/taskCss/task-list.css">
 
 <div class="content">
-    <%- include('../task/task_component/task-navbar.ejs') %>
+  <%- include('../task/task_component/task-navbar.ejs') %>
 
     <div class="add-member-container">
-        <h2>ตรวจงาน</h2>
-    
-        <div class="card">
-          <div class="card-body">
-              <div class="table-responsive">
-                  <table class="table" id="myTable">
-                      <thead class="table-head" id="table-head">
-                          <tr>
-                            <th> ชื่องาน </th>
-                            <th> รายละเอียดงาน </th>
-                            <th> วันครบกำหนด </th>
-                            <th> ผู้รับผิดชอบ </th>
-                          </tr>
-                      </thead>
+      <h2><i class="fa-solid fa-clock-rotate-left"></i> งานที่รอตรวจทั้งหมด</h2>
 
-                      <tbody id="table-body">
-                        <% if (tasks.length > 0) { %>
-                          <% tasks.forEach(task => { %>
-                            <tr class="task-row" onclick="goToPendingDetail('<%= task._id %>', '<%= spaces._id %>')">
-                              <td><%= task.taskName %></td>
-                              <td><% if (task.detail) { %>
-                                    <%= task.detail %>
-                                  <% } else { %>
-                                      <p style="opacity: 0.4; margin-bottom: 0;">
-                                          ไม่พบรายละเอียดงาน</p>
-                                  <% } %></td>
-                              <td><%= task.dueDate ? task.dueDate.toLocaleDateString('th-TH', { month: 'long', day: 'numeric' }) : 'N/A' %></td>
-                                  <td>
-                                    <div id="memberAll">
-                                    <% task.assignedUsers.forEach(user => { %>
-                                        <div class="user-info">
-                                          <img src="<%= user.profileImage %>" alt="User Image" class="user-avatar" 
-                                          onerror="this.onerror=null; this.src='/public/img/profileImage/userDefalt.jpg';"/>
-                                        </div>
-                                        <% }); %>
-                                    </div>
-                                    
-                                  </td>
-                            </tr>
-                          <% }) %>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table" id="myTable">
+              <thead class="table-head" id="table-head">
+                <tr>
+                  <th> ชื่องาน </th>
+                  <th> รายละเอียดงาน </th>
+                  <th> วันครบกำหนด </th>
+                  <th> ผู้รับผิดชอบ </th>
+                  <th> ไฟล์แนบ </th>
+                  <th> </th>
+                </tr>
+              </thead>
+
+              <tbody id="table-body">
+                <% if (tasks.length> 0) { %>
+                  <% tasks.forEach(task=> { %>
+                    <tr class="task-row" onclick="goToPendingDetail('<%= task._id %>', '<%= spaces._id %>')" data-task-id="<%= task._id %>">
+                      <td>
+                        <%= task.taskName %>
+                      </td>
+                      <td>
+                        <% if (task.taskDetail) { %>
+                          <%= task.taskDetail %>
+                            <% } else { %>
+                              <p style="opacity: 0.4; margin-bottom: 0;">
+                                ไม่พบรายละเอียดงาน</p>
+                              <% } %>
+                      </td>
+                      <td>
+                        <%= task.dueDate ? task.dueDate.toLocaleDateString('th-TH', { month: 'long' , day: 'numeric' })
+                          : 'ไม่มีวันครบกำหนด' %>
+                      </td>
+                      <td>
+                        <div id="memberAll">
+                          <% if (task.assignedUsers && task.assignedUsers.length > 0) { %>
+                            <% task.assignedUsers.slice(0, 3).forEach(user => { %>
+                              <div class="user-info">
+                                <!-- Profile Image -->
+                                <img 
+                                  src="<%= user.profileImage %>" 
+                                  alt="User Image" 
+                                  class="user-avatar"
+                                  onerror="this.onerror=null; this.src='/public/img/profileImage/userDefalt.jpg';"
+                                />
+                                <!-- Tooltip -->
+                                <div class="tooltip">
+                                  <%= user.firstName %> <%= user.lastName %>
+                                </div>
+                              </div>
+                            <% }); %>
+                            <% if (task.assignedUsers.length > 3) { %>
+                              <div class="user-info over-count">
+                                +<%= task.assignedUsers.length - 3 %>
+                              </div>
+                            <% } %>
+                          <% } else { %>
+                            <div class="no-users">ไม่มีผู้รับผิดชอบ</div>
+                          <% } %>
+                        </div>
+                      </td>                                           
+                      <td class="fileSection" onclick="event.stopPropagation()">
+                        <% if (task.attachments && task.attachments.length === 1) { %>
+                          <!-- Display single file -->
+                          <div class="fileAll">
+                            <div class="fileShow">
+                              <div class="fileNameWrap">
+                                <a href="<%= task.attachments[0].path %>" download="<%= task.attachments[0].originalName %>" class="download-link">
+                                  <i class="fa-solid fa-download"></i>
+                                </a>
+                                <a href="<%= task.attachments[0].path %>" target="_blank" class="attachment-link" title="Preview">
+                                  <span class="fileName"><%= task.attachments[0].originalName %></span>
+                                </a>
+                              </div>
+                              <span class="fileSize">(<%= (task.attachments[0].fileSize / 1024 / 1024).toFixed(2) %> MB)</span>
+                            </div>
+                          </div>
+                        <% } else if (task.attachments && task.attachments.length > 1) { %>
+                          <!-- Display dropdown for multiple files -->
+                          <div class="fileAllDropdown">
+                            <div class="fileShowDropdown">
+                              <div class="fileNameWrap">
+                                <i class="fa-regular fa-file"></i>
+                                <%= task.attachments.length %> ไฟล์แนบ
+                              </div>
+                              <i class="fa-solid fa-chevron-down"></i>
+                            </div>
+                            <div class="moreFile">
+                              <% task.attachments.forEach((attachment) => { %>
+                                <% const ext = attachment.originalName.split('.').pop().toLowerCase(); %>
+                                <div class="attachItem">
+                                  <div class="fileNameWrap">
+                                    <!-- Download Link -->
+                                    <a href="<%= attachment.path %>" download="<%= attachment.originalName %>" class="download-link" title="ดาวน์โหลด">
+                                      <i class="fa-solid fa-download"></i>
+                                    </a>
+                                    <!-- File Name with Clickable Preview -->
+                                    <a href="#" class="fileName" onclick="previewFile('<%= attachment.path %>', '<%= attachment.originalName %>', '<%= ext %>')">
+                                      <%= attachment.originalName %>
+                                    </a>
+                                  </div>
+                                  <span class="fileSize">(<%= (attachment.fileSize / 1024 / 1024).toFixed(2) %> MB)</span>
+                                </div>
+                              <% }); %>
+                            </div>
+                          </div>
                         <% } else { %>
-                          <tr>
-                            <td colspan="4">ไม่มีงานที่อยู่ระหว่างรอตรวจ</td> 
-                          </tr>
+                          <!-- Display '-' if no attachments -->
+                          <span>-</span>
                         <% } %>
-                      </tbody>
-
-                  </table>
-              </div>
+                      </td>
+                      <td class="action">
+                        <div class="actionWrap">
+                          <div class="actionButton">
+                            <button id="accept">
+                              <i class="fa-regular fa-circle-check"></i>
+                              อนุมัติ
+                            </button>
+                            <button id="reject">
+                              <i class="fa-regular fa-circle-xmark"></i>
+                              แก้ไข
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <% }) %>
+                      <% } else { %>
+                        <tr>
+                          <td colspan="4">ไม่มีงานที่อยู่ระหว่างรอตรวจ</td>
+                        </tr>
+                        <% } %>
+              </tbody>
+            </table>
           </div>
         </div>
-        <!-- <div class="card">
-            <table>
-                <thead>
-                    <tr>
-                        <th> ชื่องาน </th>
-                        <th> รายละเอียดงาน </th>
-                        <th> วันครบกำหนด </th>
-                        <th> ผู้รับผิดชอบ </th>
-                    </tr>
-                </thead>
-                <tbody id="taskList">
-                    <% if (tasks.length > 0) { %>
-                      <% tasks.forEach(task => { %>
-                        <tr class="task-row" onclick="goToPendingDetail('<%= task._id %>', '<%= spaces._id %>')">
-                          <td><%= task.taskName %></td>
-                          <td><% if (task.detail) { %>
-                                <%= task.detail %>
-                              <% } else { %>
-                                  <p style="opacity: 0.4; margin-bottom: 0;">
-                                      ไม่พบรายละเอียดงาน</p>
-                              <% } %></td>
-                          <td><%= task.dueDate ? task.dueDate.toLocaleDateString('th-TH', { month: 'long', day: 'numeric' }) : 'N/A' %></td>
-                          <td>
-                              <div class="user-info">
-                                <img src="<%= user.profileImage %>" alt="User Image" class="user-avatar" />
-                                <span><%= user.username %></span>
-                              </div>
-                          </td>
-                        </tr>
-                      <% }) %>
-                    <% } else { %>
-                      <tr>
-                        <td colspan="4">ไม่มีงานที่อยู่ระหว่างรอตรวจ</td> <!-- No pending tasks -->
-                      </tr>
-                    <% } %>
-                  </tbody>
-            </table>
-        </div> -->
+      </div>
     </div>
 </div>
+
+<body class="loading">
+  <!-- The overlay div with white background -->
+  <div class="overlay"></div>
+
+  <!-- The spinner element -->
+  <div class="loader"></div>
+
+  <!-- Your page content goes here -->
+  <div id="content">
+      <!-- All other content for your page -->
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
 <script>
+  // preview File
+  document.addEventListener('DOMContentLoaded', () => {
+      // Dropdown toggle logic
+      const fileDropdowns = document.querySelectorAll('.fileShowDropdown');
+
+      fileDropdowns.forEach(dropdown => {
+          dropdown.addEventListener('click', () => {
+              const parent = dropdown.closest('.fileAllDropdown');
+              parent.classList.toggle('active');
+          });
+      });
+
+      // File preview function
+      function previewFile(filePath, fileName, ext) {
+          if (['jpg', 'jpeg', 'png'].includes(ext)) {
+              // Show Image Preview in a Modal Centered in the Window
+              const previewWindow = window.open('', '_blank', 'width=800,height=600');
+              previewWindow.document.write(`
+                  <html>
+                      <head>
+                          <title>Preview - ${fileName}</title>
+                          <style>
+                              body {
+                                  margin: 0;
+                                  display: flex;
+                                  justify-content: center;
+                                  align-items: center;
+                                  height: 100vh;
+                                  background-color: rgba(0, 0, 0, 0.8);
+                                  color: white;
+                                  overflow: hidden;
+                              }
+                              img {
+                                  max-width: 90%;
+                                  max-height: 90%;
+                                  object-fit: contain;
+                              }
+                          </style>
+                      </head>
+                      <body>
+                          <img src="${filePath}" alt="${fileName}" />
+                      </body>
+                  </html>
+              `);
+          } else if (ext === 'pdf') {
+              // Open PDF in a new tab
+              window.open(filePath, '_blank');
+          } else if (['doc', 'docx'].includes(ext)) {
+              // Open Word Document in Google Docs Viewer
+              const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent('https://deploytest-8mln.onrender.com/uploads/' + fileName)}`;
+              window.open(googleViewerUrl, '_blank');
+          } else {
+              // For other file types, use a generic link or a message
+              alert("This file type does not have a preview available.");
+          }
+      }
+
+      // You can optionally expose the previewFile function globally if needed
+      window.previewFile = previewFile;
+  });
+
+
+  // Optional loader logic
+function showLoader() {
+  document.body.classList.add('loading');
+}
+
+function hideLoader() {
+  document.body.classList.remove('loading');
+  document.body.classList.add('loaded');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize loader functionality
+  showLoader();
+
+  window.addEventListener('load', () => {
+      hideLoader();
+  });
+
+  setTimeout(() => hideLoader(), 3000);
+
+  // Approval action logic
+  const actionButtons = document.querySelectorAll(".actionButton");
+
+  let isProcessing = false;
+
+  async function handleApproval(taskId, actionType) {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      try {
+          const confirmMsg = actionType === 'approve'
+              ? "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติงานนี้?"
+              : "คุณแน่ใจหรือไม่ว่าต้องการให้แก้งานนี้?";
+
+          const confirmed = window.confirm(confirmMsg);
+          if (!confirmed) {
+              isProcessing = false;
+              return;
+          }
+
+          // Show the overlay and spinner while waiting for the approval process
+          showLoader();
+
+          const response = await fetch(`/task/${taskId}/approval`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: actionType })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+              console.error('🔴 Server response error:', data);
+              throw new Error(data.message || 'เกิดข้อผิดพลาดในการอนุมัติ');
+          }
+
+          alert(data.message);
+          window.location.reload(); // Reload the page after the approval action
+
+      } catch (err) {
+          console.error('🔴 Approval Error:', err);
+          alert(err.message || 'เกิดข้อผิดพลาด');
+      } finally {
+          isProcessing = false;
+          hideLoader(); // Hide the overlay and spinner once done
+      }
+  }
+
+  actionButtons.forEach((actionButton) => {
+      const taskId = actionButton.closest(".task-row")?.dataset.taskId;
+
+      if (!taskId) {
+          console.error("🔴 Task ID not found for action button.");
+          return;
+      }
+
+      const acceptBtn = actionButton.querySelector("#accept");
+      const rejectBtn = actionButton.querySelector("#reject");
+
+      acceptBtn?.addEventListener("click", (event) => {
+          event.stopPropagation();
+          handleApproval(taskId, 'approve');
+      });
+
+      rejectBtn?.addEventListener("click", (event) => {
+          event.stopPropagation();
+          handleApproval(taskId, 'reject');
+      });
+  });
+});
+
+
+
   function goToPendingDetail(taskId, spaceId) {
     const url = `/task/${taskId}/pendingDetail?spaceId=${spaceId}`;
-    window.location.href = url;  // Redirect to the pending detail page
+    window.location.href = url;  
   }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".fileShowDropdown").forEach(dropdown => {
+        dropdown.addEventListener("click", function () {
+            const moreFileSection = this.closest(".fileAllDropdown").nextElementSibling;
+            const chevronIcon = this.querySelector(".fa-chevron-down");
+
+            if (moreFileSection && moreFileSection.classList.contains("moreFile")) {
+                moreFileSection.classList.toggle("show");
+                chevronIcon.classList.toggle("rotate");
+            }
+        });
+    });
+});
+
 </script>

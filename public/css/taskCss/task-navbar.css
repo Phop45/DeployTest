@@ -101,3 +101,15 @@
     font-weight: 400;
     border-bottom: 2px solid #dee2e6;
 }
+
+.task-count{
+    background-color: red;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+}

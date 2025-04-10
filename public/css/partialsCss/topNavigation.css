@@ -181,7 +181,7 @@
                 }
                 .allNoti{
                     position: absolute;
-                    z-index: 100;
+                    z-index: 9999;
                     background-color: white;
                     color: #172B4D;
                     border: 1px solid var(--line);

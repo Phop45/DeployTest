@@ -55,6 +55,7 @@ const formatDateToThai = (dueDate) => {
     const formattedDate = `${day} ${thaiMonths[month]} ${year}`;
     return formattedDate;
 };
+
 function getRandomPastelColor() {
     const hue = Math.floor(Math.random() * 360);
     const saturation = 70 + Math.random() * 10; // Saturation between 70-80
@@ -64,15 +65,19 @@ function getRandomPastelColor() {
 
 exports.detailPageRender = async (req, res) => {
     try {
-        const taskId = mongoose.Types.ObjectId(req.params.id); 
-        const spaceId = ObjectId(req.query.spaceId);
+        const { id: taskId } = req.params; 
+        const { spaceId } = req.query; 
         const loggedInUserId = req.user._id.toString();
 
         if (!mongoose.Types.ObjectId.isValid(taskId) || !mongoose.Types.ObjectId.isValid(spaceId)) {
             return res.status(400).send("Invalid task or space ID.");
         }
         
-        const task = await Task.findById(taskId)
+        // Convert to ObjectId
+        const taskObjectId = mongoose.Types.ObjectId(taskId);
+        const spaceObjectId = mongoose.Types.ObjectId(spaceId);
+
+        const task = await Task.findById(taskObjectId)
             .populate('assignedUsers', 'profileImage firstName lastName googleEmail')
             .populate({
                 path: 'activityLogs.createdBy',
@@ -83,35 +88,45 @@ exports.detailPageRender = async (req, res) => {
                 select: 'profileImage firstName lastName',
             })
             .populate({
-                path: 'taskTags._id', 
+                path: 'taskTags._id',
                 select: 'tagName color',
+            })
+            .populate({
+                path: 'comment.createdBy',
+                select: 'profileImage firstName lastName',
+            })
+            .populate({
+                path: 'comment.attachments.uploadedBy',
+                select: 'firstName lastName',
             })
             .lean();
 
-        const space = await Spaces.findById(spaceId)
+
+        const space = await Spaces.findById(spaceObjectId)
             .populate('collaborators.user', 'profileImage firstName lastName googleEmail')
             .lean();
 
-        const subtasks = await SubTask.find({ task: taskId })
+        const subtasks = await SubTask.find({ task: taskObjectId })
             .populate('assignee', 'profileImage firstName lastName googleEmail')
             .sort({ createdAt: -1 })
             .lean();
-        const inProgressSubtasks = await SubTask.find({ task: taskId, subTask_status: 'กำลังทำ' })
+        const inProgressSubtasks = await SubTask.find({ task: taskObjectId, subTask_status: 'กำลังทำ' })
             .sort({ createdAt: -1 })
             .lean();
 
         const spaceUsers = (space.collaborators || [])
-        .map(collab => ({
-            ...collab.user,
-            username: collab.user._id.toString() === loggedInUserId
-                ? 'ฉัน'
-                : `${collab.user.firstName} ${collab.user.lastName}`,
+            .filter(collab => collab.user)
+            .map(collab => ({
+                ...collab.user,
+                username: collab.user._id.toString() === loggedInUserId
+                    ? 'ฉัน'
+                    : `${collab.user.firstName} ${collab.user.lastName}`,
             }))
-        .sort((a, b) => {
-            if (a._id.toString() === loggedInUserId) return -1;
-            if (b._id.toString() === loggedInUserId) return 1;
-            return 0;
-        });
+            .sort((a, b) => {
+                if (a._id.toString() === loggedInUserId) return -1;
+                if (b._id.toString() === loggedInUserId) return 1;
+                return 0;
+            });
 
         const { taskNames, dueDate, dueTime, taskStatus, taskDetail, taskPriority } =
             await extractTaskParameters([task]);
@@ -131,13 +146,11 @@ exports.detailPageRender = async (req, res) => {
         const assignedUsers = (task.assignedUsers || []).map(user => ({
             ...user,
             username: `${user.firstName} ${user.lastName}`,
-            profileImage: user.profileImage.startsWith('/api')
-                ? user.profileImage
-                : user.profileImage || '/public/img/profileImage/userDefault.jpg',
+            profileImage: user.profileImage || '/public/img/profileImage/userDefault.jpg',
         }));
 
         const statusMapping = {
-            toDo: 'ยังไม่ได้ทำ',
+            pending: 'รอตรวจ',
             inProgress: 'กำลังทำ',
             fix: 'แก้ไข',
             finished: 'เสร็จสิ้น',
@@ -168,6 +181,7 @@ exports.detailPageRender = async (req, res) => {
         res.render("task/task-ItemDetail", {
             user: req.user,
             currentUserId: req.user._id.toString(),
+            taskId: task._id.toString(),
             task,
             attachments: task.attachments || [],
             subtasks: formattedSubtasks,
@@ -190,6 +204,7 @@ exports.detailPageRender = async (req, res) => {
             statusMapping,
             priorityMapping,
             activityLogs: activityLogsWithFormattedDates, 
+            formatDateToThai,
             userName: req.user.username,
             userImage: req.user.profileImage,
             layout: '../views/layouts/Detail',
@@ -849,5 +864,29 @@ exports.clearLogs = async (req, res) => {
     } catch (error) {
         console.error('Error clearing activity logs:', error);
         res.status(500).send('An error occurred while clearing activity logs.');
+    }
+};
+
+exports.updatePendingStatus = async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { status } = req.body;
+
+        if (!['inProgress', 'pending', 'fix', 'finished'].includes(status)) {
+            return res.status(400).send({ message: 'Invalid status' });
+        }
+
+        const task = await Task.findById(taskId);
+        if (!task) {
+            return res.status(404).send({ message: 'Task not found' });
+        }
+
+        task.taskStatus = status;
+        await task.save();
+
+        res.status(200).send({ message: 'Task status updated successfully', task });
+    } catch (error) {
+        console.error('Error updating task status:', error);
+        res.status(500).send({ message: 'Internal Server Error' });
     }
 };

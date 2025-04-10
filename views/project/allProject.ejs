@@ -1,111 +1,288 @@
-<%- include('../partials/topNavigation.ejs', { spaces }) %>
+<%- include('../partials/topNavigation.ejs', { spaces, unreadCount }) %>
 <%- include('../partials/sideNavigation.ejs', { spaces }) %>
 
 <div class="content">
   <div class="spaceall">
     <div class="heard-space">
-      <div class="textheard-space">โปรเจกต์ทั้งหมด</div>
-      <a href="/createProject" class="add-btn btn" id="spaceCreate">+ เพิ่มโปรเจกต์ใหม่</a>
+      <div class="headWrap">
+        <div class="textheard-space">โปรเจกต์ทั้งหมด</div>
+      <span class="subText">จัดการและจัดระเบียบโปรเจกต์ทั้งหมดของคุณในที่เดียว</span>
+      </div>
+      <div class="headWrpaRight">
+        <a href="/project/recover " class="recoverBtn" id="recoverBtn" data-tooltip="กู้คืนโปรเจกต์ที่ถูกลบ">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+        <a href="/createProject" class="add-btn btn" id="spaceCreate"><i class='bx bx-plus-circle'></i> 
+          เพิ่มโปรเจกต์ใหม่
+        </a>
+      </div>
+      
+    </div>
+
+    <div class="sortData">
+      <div class="selectProjectType">
+        <div class="seleteWrap">
+          <div class="seleteItem" id="allProject" onclick="filterProjects('all')">
+            <div class="seleteText">โปรเจกต์ทั้งหมด</div>
+          </div>
+          <div class="seleteItem" id="myProject" onclick="filterProjects('owner,reporter')">
+            <div class="seleteText">โปรเจกต์ที่ฉันเป็นหัวหน้า</div>
+          </div>
+          <div class="seleteItem" id="memberProject" onclick="filterProjects('member')">
+            <div class="seleteText">โปรเจกต์ที่ฉันเป็นสมาชิก</div>
+          </div>
+          <div class="seleteItem" id="guestProject" onclick="filterProjects('guest')">
+            <div class="seleteText">โปรเจกต์ที่ฉันสามารถดูได้</div>
+          </div>
+          <div class="highlight"></div> <!-- Highlight indicator -->
+        </div>
+      </div>
+
+      <div class="dateSort" data-tooltip="การเรียงลำดับโปรเจกต์ตามวันที่สร้าง">
+        <i class="fa-regular fa-clock"></i>
+        <span id="latestSort" onclick="sortProjects('latest')" style="cursor: pointer;">ล่าสุด <i class="fa-solid fa-arrow-right"></i> เก่าที่สุด</span>
+        <span id="oldestSort" onclick="sortProjects('oldest')" style="cursor: pointer; display: none;">เก่าสุด <i class="fa-solid fa-arrow-right"></i> ใหม่สุด</span>
+      </div>
     </div>
 
     <div class="task-space">
       <% if (spaces.length === 0) { %>
         <div class="no-spaces">
-          <p>คุณยังไม่มีโปรเจกต์</p>
-          <a href="/createProject" class="add-btn btn">เพิ่มโปรเจกต์ใหม่</a>
+          <a href="/createProject" class="add-btn-noSpace">
+            <i class="fa-solid fa-circle-plus"></i>
+            เพิ่มโปรเจกต์ใหม่
+          </a>
         </div>
       <% } else { %>
+
         <div class="taskcardall">
-          <% for (var i = spaces.length - 1; i >= 0; i--) { %>
-            <div class="taskcard">
+          <% for (var i = 0; i < spaces.length; i++) { %>
+            <div class="taskcard" 
+                data-role="<%= spaces[i].collaborators.find(collab => collab.user._id.toString() === user._id.toString()).role %>" 
+                data-created-at="<%= spaces[i].createdAt || '' %>">
               <a href="/space/item/<%= spaces[i]._id %>/dashboard?period=7day" id="card">
                 <div class="theme">
-                  <!-- Use the projectCover field to display the project cover image -->
-                  <img src="<%= spaces[i].projectCover %>" alt="taskbackground">
+                  <img src="<%= spaces[i].projectCover %>"  alt="taskbackground">
                 </div>
-      
+              </a>
+
                 <div class="detailInfo">
-                  <div class="taskcardall-text">
-                    <span class="spaceNameCard">
-                      <%= spaces[i].projectName %>
-                    </span>
-      
-                    <form id="editsubnameform" action="/updateSpaceName/<%= spaces[i]._id %>" method="POST"
-                      class="space-name-edit-form-<%= spaces[i]._id %>" style="display: none;">
-                      <input type="text" name="SpaceName" class="card-title" value="<%= spaces[i].projectName %>"
-                        onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.form.submit(); }">
-                    </form>
-                  </div>
-                </a>
-      
-                <div class="card-last">
-                  <div class="card-last-left">
-                    <div id="sec">
-                      <div class="taskCount" data-tooltip="คุณมี <%= spaces[i].taskCount %> งานในโปรเจกต์นี้">
-                        <i class="fa-solid fa-list-check"></i>
-                        <span>
-                          <%= spaces[i].taskCount || 0 %>
-                        </span>
+                  <div class="headerSection">
+                    <div class="taskcardall-text">
+                      <span class="spaceNameCard" id="spaceNameCard-<%= spaces[i]._id %>">
+                        <%= spaces[i].projectName %>
+                      </span>
+        
+                      <form id="editsubnameform-<%= spaces[i]._id %>" action="/updateSpaceName/<%= spaces[i]._id %>" method="POST"
+                        class="space-name-edit-form-<%= spaces[i]._id %>" style="display: none;">
+                        <input type="text" name="SpaceName" class="card-title-input" value="<%= spaces[i].projectName %>"
+                          id="card-title-input-<%= spaces[i]._id %>">
+                        <span class="alretText"></span>
+                      </form>
+                    </div>
+
+                    <% const userRoleInProject = spaces[i].collaborators.find(collab => collab.user._id.toString() === user._id.toString())?.role; %>
+
+                    <% if (userRoleInProject && userRoleInProject !== 'guest' && userRoleInProject !== 'member') { %>
+                      <div class="taskedit" onclick="event.stopPropagation();">
+                        <i class="bx bx-dots-horizontal-rounded" id="dropdown-toggle-<%= spaces[i]._id %>" onclick="event.stopPropagation();"></i>
+                        <ul class="dropdown-taskedit" id="dropdown-taskedit-<%= spaces[i]._id %>" aria-labelledby="navbarDropdown" style="display: none;">
+                          <li>
+                            <a class="dropdown-taskedit-item" href="#" id="editSpaceName-<%= spaces[i]._id %>">
+                              <i class="fa-solid fa-pen"></i> เปลี่ยนชื่อ
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-taskedit-item" href="#" data-space-id="<%= spaces[i]._id %>">
+                              <i class="fa-solid fa-circle-half-stroke"></i> เปลี่ยนภาพพื้นหลังของโปรเจกต์
+                            </a>
+                            <form id="upload-form-<%= spaces[i]._id %>" action="/updateSpacePicture/<%= spaces[i]._id %>" method="POST" enctype="multipart/form-data" style="display: none;">
+                              <input type="file" name="projectCover" accept="image/*" id="file-input-<%= spaces[i]._id %>">
+                            </form>
+                          </li>
+                          <div class="line"></div>
+                          <li>
+                            <form id="delete-space-form-<%= spaces[i]._id %>" action="/space/delete/<%= spaces[i]._id %>" method="POST" style="display: none;">
+                              <input type="hidden" name="_method" value="DELETE">
+                            </form>
+                            <a href="#" class="dropdown-taskedit-item" onclick="deleteSpace('<%= spaces[i]._id %>')">
+                              <i class="fa-solid fa-trash"></i> ลบ
+                            </a>
+                          </li>
+                        </ul>
                       </div>
-      
-                      <div class="taskmember">
-                        <% if (spaces[i].collaborators && spaces[i].collaborators.length > 0) { %>
-                          <% spaces[i].collaborators.forEach(collab => { %>
-                            <% if (collab.user) { %>
-                              <img 
-                                src="<%= collab.user.profileImage %>" 
-                                alt="<%= collab.user.username %>" 
-                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                                style="width: 30px; height: 30px; border-radius: 50%;">
-                              <div class="fallback-profile-allProject" style="display: none;">
-                                <span><%= collab.user.firstName ? collab.user.firstName[0] : '' %></span>
+                    <% } %>
+                      
+                  </div>
+                  <div class="detailSection">
+                    <%= spaces[i].projectDetail || 'ไม่มีรายละเอียดเพิ่มเติม' %>
+                  </div>
+            
+
+                  <div class="card-last">
+                    <div class="card-last-left">
+                      <div id="sec">
+                        <div class="secLeft">
+                          <div class="roleDisplay <%= spaces[i].collaborators.find(collab => collab.user._id.toString() === user._id.toString()).role %>">
+                            <%= spaces[i].collaborators.find(collab => collab.user._id.toString() === user._id.toString()).role === 'owner' ? 'หัวหน้า' :
+                                spaces[i].collaborators.find(collab => collab.user._id.toString() === user._id.toString()).role === 'reporter' ? 'ผู้ช่วย' :
+                                spaces[i].collaborators.find(collab => collab.user._id.toString() === user._id.toString()).role === 'member' ? 'สมาชิก' :
+                                'ผู้เยี่ยมชม' %>
+                          </div>
+                          <div class="taskCount" data-tooltip="คุณมี <%= spaces[i].assignedUserstaskCount[user._id] || 0 %> งานในโปรเจกต์นี้">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>
+                              <%= spaces[i].taskCount || 0 %> งานทั้งหมด
+                            </span>
+                          </div>
+                        </div>
+        
+                        <div class="taskmember">
+                          <% if (spaces[i].collaborators && spaces[i].collaborators.length > 0) { %>
+                            <% spaces[i].collaborators.slice(0, 3).forEach(collab => { %> 
+                              <% if (collab.user) { %>
+                                <img 
+                                  src="<%= collab.user.profileImage %>" 
+                                  alt="<%= collab.user.username %>" 
+                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="fallback-profile-allProject" style="display: none;">
+                                  <span><%= collab.user.firstName ? collab.user.firstName[0] : '' %></span>
+                                </div>
+                              <% } %>
+                            <% }); %>
+                        
+                            <% if (spaces[i].collaborators.length > 3) { %>
+                              <div class="extra-members">
+                                +<%= spaces[i].collaborators.length - 3 %>
                               </div>
                             <% } %>
-                          <% }); %>
-                        <% } else { %>
-                          <p>No collaborators</p>
-                        <% } %>
+                          <% } else { %>
+                            <p>ไม่มีสมาชิก</p>
+                          <% } %>
+                        </div>
                       </div>
-                    </div>
-      
-                    <div class="taskedit">
-                      <i class="bx bx-dots-horizontal-rounded" id="dropdown-toggle-<%= spaces[i]._id %>"></i>
-                      <ul class="dropdown-taskedit" id="dropdown-taskedit-<%= spaces[i]._id %>"
-                        aria-labelledby="navbarDropdown" style="display: none;">
-                        <li><a class="dropdown-taskedit-item" href="#"><i class="fa-solid fa-pen"></i>
-                            เปลี่ยนชื่อ</a></li>
-                        <li>
-                          <form id="upload-form" action="/updateSpacePicture/<%= spaces[i]._id %>" method="POST"
-                            enctype="multipart/form-data">
-                            <input type="file" name="SpacePicture" accept="image/*" style="display: none;"
-                              id="file-input-<%= spaces[i]._id %>" onchange="submitForm('<%= spaces[i]._id %>')">
-                          </form>
-                          <a class="dropdown-taskedit-item" href="#"
-                            onclick="document.getElementById('file-input-<%= spaces[i]._id %>').click();">
-                            <i class="fa-solid fa-circle-half-stroke"></i> เปลี่ยนภาพพื้นหลังของงาน
-                          </a>
-                        </li>
-                        <div class="line"></div>
-                        <li>
-                          <form id="delete-space-form-<%= spaces[i]._id %>" action="/space/delete/<%= spaces[i]._id %>"
-                            method="POST" style="display: none;">
-                            <input type="hidden" name="_method" value="DELETE">
-                          </form>
-                          <a href="#" class="dropdown-taskedit-item" onclick="deleteSpace('<%= spaces[i]._id %>')">
-                            <i class="fa-solid fa-trash"></i> ลบ
-                          </a>
-                        </li>
-                      </ul>
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           <% } %>
         </div>
       <% } %>
+    </div>
   </div>
 </div>
 
 <script src="/script/project/allProject.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Add event listener for dropdown items (trigger file selection)
+    document.querySelectorAll('.dropdown-taskedit-item').forEach((element) => {
+        element.addEventListener('click', (event) => {
+            event.preventDefault(); 
+            const spaceId = element.getAttribute('data-space-id');
+
+            // Find the corresponding file input
+            const fileInput = document.getElementById(`file-input-${spaceId}`);
+            if (fileInput) {
+                fileInput.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            } else {
+                console.error(`File input not found for spaceId: ${spaceId}`);
+            }
+        });
+    });
+
+    // Handle file upload once a file is selected
+    document.querySelectorAll('input[type="file"]').forEach((fileInput) => {
+        fileInput.addEventListener('change', (event) => {
+            const spaceId = fileInput.id.split('-')[2];
+
+            // Call uploadFile function to submit the form
+            uploadFile(spaceId);
+        });
+    });
+
+    // Handle file upload once a file is selected
+    document.querySelectorAll('input[type="file"]').forEach((fileInput) => {
+        fileInput.addEventListener('change', (event) => {
+            const spaceId = fileInput.id.split('-')[2]; 
+
+            // Call uploadFile function to submit the form
+            uploadFile(spaceId);
+        });
+    });
+    
+
+    // Submit the form to update the project cover
+    function uploadFile(spaceId) {
+      const form = document.getElementById(`upload-form-${spaceId}`);
+      const fileInput = document.getElementById(`file-input-${spaceId}`);
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+          // Show warning alert if no file was selected
+          console.warn(`No file selected for spaceId: ${spaceId}`);
+          window.alert(`กรุณาเลือกไฟล์สำหรับ Space ID: ${spaceId}`);
+          return;
+      }
+
+      if (form) {
+          console.log(`Submitting form for spaceId: ${spaceId}`);
+          form.submit(); // Automatically submit the form
+      } else {
+          console.error(`Form not found for spaceId: ${spaceId}`);
+          window.alert(`ไม่พบฟอร์มสำหรับ Space ID: ${spaceId}`);
+      }
+  }
+});
+
+
+  function filterProjects(role) {
+    // Filter the task cards
+    const taskCards = document.querySelectorAll('.taskcard');
+    taskCards.forEach(card => {
+      const cardRole = card.getAttribute('data-role');
+      if (role === 'all' || role.split(',').includes(cardRole)) {
+        card.style.display = 'block'; // Ensure the card is visible
+        setTimeout(() => card.classList.add('show'), 10); // Add animation
+      } else {
+        card.classList.remove('show'); // Remove animation
+        setTimeout(() => {
+          card.style.display = 'none'; // Hide the card after the animation ends
+        }, 300); // Match the CSS transition duration
+      }
+    });
+
+    // Highlight the selected filter
+    const filterItems = document.querySelectorAll('.seleteItem');
+    filterItems.forEach(item => {
+      item.classList.remove('active'); // Remove active class from all items
+    });
+
+    let selectedId;
+    if (role === 'all') {
+      selectedId = 'allProject';
+    } else if (role === 'owner,reporter') {
+      selectedId = 'myProject';
+    } else if (role === 'member') {
+      selectedId = 'memberProject';
+    } else if (role === 'guest') {
+      selectedId = 'guestProject';
+    }
+
+    const selectedItem = document.getElementById(selectedId);
+    if (selectedItem) {
+      selectedItem.classList.add('active'); // Add active class to the selected item
+
+      // Move the highlight indicator
+      const highlight = document.querySelector('.highlight');
+      const itemRect = selectedItem.getBoundingClientRect();
+      const wrapRect = document.querySelector('.seleteWrap').getBoundingClientRect();
+      highlight.style.width = `${itemRect.width}px`;
+      highlight.style.left = `${itemRect.left - wrapRect.left}px`;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    filterProjects('all'); // Set default filter to 'all'
+  });
+</script>
 <%- include('../project/project-componant/delete-alter.ejs') %>

@@ -17,16 +17,10 @@
             <li class="nav-items top-item-nav <%= currentPage === 'board' ? 'active' : '' %>">
                 <a class="nav-link"
                     href="/space/item/<%= spaces._id %>/task_board">
-                    <i class="fa-regular fa-clipboard"></i> บอร์ดงาน
+                    <i class="fa-regular fa-clipboard"></i> กระดานงาน
                 </a>
             </li>
     
-            <!-- <li class="nav-items top-item-nav <%= currentPage === 'granttChart' ? 'active' : '' %>">
-                <a class="nav-link"
-                    href="/space/item/<%= spaces._id %>/granttChart">
-                    <i class="fa-solid fa-chart-gantt"></i> ชาร์ท
-                </a>
-            </li> -->
     
             <li class="nav-items top-item-nav <%= currentPage === 'task_calenda' ? 'active' : '' %>">
                 <a class="nav-link" href="#">
@@ -47,10 +41,24 @@
                 </a>
             </li>
     
+            <li class="nav-items top-item-nav <%= currentPage === 'pending-task' ? 'active' : '' %>">
+                <% if (spaces.collaborators.some(collab => collab.user._id.toString() === user._id.toString() && ['owner', 'reporter'].includes(collab.role))) { %>
+                    <a class="nav-link" href="/space/item/<%= spaces._id %>/pedding">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                        งานที่รอตรวจ
+                        <% if (pendingTaskCount > 0) { %>
+                            <span class="task-count"><%= pendingTaskCount %></span> <!-- Display count of pending tasks -->
+                        <% } %>
+                    </a>
+                <% } %>
+            </li>
+
             <li class="nav-items top-item-nav <%= currentPage === 'task_setting' ? 'active' : '' %>">
-                <a class="nav-link" href="#">
-                    <i class="fa-solid fa-gear"></i> ตั้งค่า
-                </a>
+                <% if (spaces.collaborators.some(collab => collab.user._id.toString() === user._id.toString() && ['owner'].includes(collab.role))) { %>
+                    <a class="nav-link" href="#">
+                        <i class="fa-solid fa-gear"></i> ตั้งค่าโปรเจกต์
+                    </a>
+                <% } %>
             </li>
     
         </ul>

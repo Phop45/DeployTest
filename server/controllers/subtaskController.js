@@ -77,7 +77,6 @@ exports.toggleSubTaskStatus = async (req, res) => {
             return res.status(404).json({ message: 'Subtask not found' });
         }
 
-        const isOwner = String(subtask.creator) === String(userId);
         const isAssignee = subtask.assignee && String(subtask.assignee._id) === String(userId);
 
         if (!isAssignee) {
@@ -85,12 +84,19 @@ exports.toggleSubTaskStatus = async (req, res) => {
         }
 
         // Toggle the status
-        subtask.subTask_status = subtask.subTask_status === 'กำลังทำ' ? 'เสร็จสิ้น' : 'กำลังทำ';
+        const newStatus = subtask.subTask_status === 'inProgress' ? 'finished' : 'inProgress';
+        subtask.subTask_status = newStatus;
+
+        // Add an activity log
+        subtask.activityLogs.push(
+            `Status changed to '${newStatus}' by ${req.user.username || 'user'} on ${new Date().toISOString()}`
+        );
+
         await subtask.save();
 
         res.status(200).json({
             message: 'Status updated successfully',
-            status: subtask.subTask_status,
+            subtask,
         });
     } catch (error) {
         console.error('Error toggling status:', error);
