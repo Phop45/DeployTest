@@ -144,6 +144,13 @@ exports.createProject = async (req, res) => {
         try {
             const { projectName, projectDetail, members, dueDate } = req.body;
 
+            // Ensure the current user's details are fetched
+            const userDetails = await User.findById(req.user.id).select('firstName lastName').lean();
+            if (!userDetails) {
+                req.flash('error', 'User details not found.');
+                return res.redirect('/createProject');
+            }
+            
             const userId = mongoose.Types.ObjectId(req.user.id);
             const existingProject = await Spaces.findOne({
                 projectName: projectName.trim(),
@@ -192,6 +199,8 @@ exports.createProject = async (req, res) => {
             // Add members to the collaborators list and create notifications
             if (members) {
                 const memberList = JSON.parse(members);
+                const userGroup = [];
+                
                 for (const member of memberList) {
                     const isMember = newSpace.collaborators.some(
                         (collab) => collab.user.toString() === member.id
@@ -201,30 +210,39 @@ exports.createProject = async (req, res) => {
                             user: member.id,
                             role: "member",
                         });
-    
-                        // Create notification for each added member
-                        const notificationMessage = `${req.user.username} ได้เพิ่มคุณเข้าโปรเจกต์ ${projectName} แล้ว`;
-                        const notification = new Notification({
+            
+                        // Add member to userGroup for the notification
+                        userGroup.push({
                             user: member.id,
-                            space: newSpace._id,
-                            leader: req.user.id,
-                            type: 'memberAdded',
-                            message: notificationMessage,
+                            status: "unread",
                         });
-    
-                        await notification.save();
-    
-                        // Send email notification
+            
+                        // Send email notification if applicable
                         const userToNotify = await User.findById(member.id);
                         if (userToNotify) {
                             const spaceDetailLink = `https://deploytest-8mln.onrender.com/space/item/${newSpace._id}/dashboard?period=7day`;
                             const emailMessage = `คุณได้รับเชิญเข้าร่วมโปรเจกต์ "${projectName}" ในบทบาท "สมาชิก"`;
-    
+            
                             await sendSpaceMemberAddedEmail(userToNotify, newSpace, spaceDetailLink, emailMessage);
                         }
                     }
                 }
+            
+                // Create notification for the members
+                const notificationMessage = `${userDetails.firstName}${userDetails.lastName} ได้เพิ่มคุณเข้าโปรเจกต์ ${projectName} แล้ว`;
+                const notification = new Notification({
+                    userGroup,
+                    triggeredBy: req.user.id, // Who caused the notification
+                    message: notificationMessage,
+                    type: 'memberAdded',
+                    relatedEntityType: 'space',
+                    relatedEntityId: newSpace._id,
+                    space: newSpace._id,
+                });
+            
+                await notification.save();
             }
+            
             await newSpace.save();
 
             // Add default statuses

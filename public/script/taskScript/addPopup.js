@@ -2,9 +2,9 @@
 document.getElementById('submitTaskBtn').addEventListener('click', async function (event) {
     event.preventDefault(); // Prevent default form submission
 
-    const taskNameInput = document.getElementById('taskName');
-    const taskNameValue = taskNameInput.value.trim();
-    const nameAlert = document.getElementById('nameAlert');
+    // const taskNameInput = document.getElementById('taskName');
+    // const taskNameValue = taskNameInput.value.trim();
+    // const nameAlert = document.getElementById('nameAlert');
 
     const taskDetailInput = document.getElementById('taskDetail');
     const taskDetailValue = taskDetailInput.value.trim();
@@ -15,30 +15,30 @@ document.getElementById('submitTaskBtn').addEventListener('click', async functio
     const maxLength = 100;
     const validCharsRegex = /^[a-zA-Z0-9\s\-_.ก-ฮ]+$/;
 
-    if (!taskNameValue) {
-        nameAlert.innerText = 'กรุณากรอกชื่อของงาน!';
-        nameAlert.style.color = 'red';
-        return;
-    }
-    if (taskNameValue.length < minLength) {
-        nameAlert.innerText = `ชื่องานต้องมีความยาวอย่างน้อย ${minLength} ตัวอักษร!`;
-        nameAlert.style.color = 'red';
-        return;
-    }
-    if (taskNameValue.length > maxLength) {
-        nameAlert.innerText = `ชื่องานต้องไม่เกิน ${maxLength} ตัวอักษร!`;
-        nameAlert.style.color = 'red';
-        return;
-    }
-    if (!validCharsRegex.test(taskNameValue)) {
-        nameAlert.innerText = 'ชื่องานมีอักขระที่ไม่ถูกต้อง!';
-        nameAlert.style.color = 'red';
-        return;
-    }
+    // if (!taskNameValue) {
+    //     nameAlert.innerText = 'กรุณากรอกชื่อของงาน!';
+    //     nameAlert.style.color = 'red';
+    //     return;
+    // }
+    // if (taskNameValue.length < minLength) {
+    //     nameAlert.innerText = `ชื่องานต้องมีความยาวอย่างน้อย ${minLength} ตัวอักษร!`;
+    //     nameAlert.style.color = 'red';
+    //     return;
+    // }
+    // if (taskNameValue.length > maxLength) {
+    //     nameAlert.innerText = `ชื่องานต้องไม่เกิน ${maxLength} ตัวอักษร!`;
+    //     nameAlert.style.color = 'red';
+    //     return;
+    // }
+    // if (!validCharsRegex.test(taskNameValue)) {
+    //     nameAlert.innerText = 'ชื่องานมีอักขระที่ไม่ถูกต้อง!';
+    //     nameAlert.style.color = 'red';
+    //     return;
+    // }
 
     // Clear alert on successful validation
-    nameAlert.innerText = '';
-    nameAlert.style.color = '';
+    // nameAlert.innerText = '';
+    // nameAlert.style.color = '';
 
     // Validation for taskDetail (optional)
     const maxDetailLength = 500; // Optional max length for task detail
@@ -93,50 +93,51 @@ async function prepareFormData() {
 }
 
 // validate taskName
-document.addEventListener("DOMContentLoaded", () => {
-    const taskNameInput = document.getElementById("taskName");
-    const nameAlert = document.getElementById("nameAlert");
+// document.addEventListener("DOMContentLoaded", () => {
+//     const taskNameInput = document.getElementById("taskName");
+//     const nameAlert = document.getElementById("nameAlert");
 
-    const validateTaskName = () => {
-        const value = taskNameInput.value.trim(); // Remove leading/trailing spaces
-        const minLength = 3;
-        const maxLength = 100;
-        const validCharsRegex = /^[a-zA-Z0-9\s\-_.ก-ฮ]+$/; // Allow alphanumeric, spaces, dashes, underscores, and Thai characters
+//     const validateTaskName = () => {
+//         const value = taskNameInput.value.trim(); // Remove leading/trailing spaces
+//         const minLength = 3;
+//         const maxLength = 100;
+//         const validCharsRegex = /^[a-zA-Z0-9\s\-_.ก-ฮๆๅาไใโแ่้๊๋็์ำฯุูึ]+$/; // Include Thai marks and vowels
     
-        if (value.length < minLength) {
-            nameAlert.innerText = `ชื่องานต้องมีความยาวอย่างน้อย ${minLength} ตัวอักษร!`;
-            nameAlert.style.color = "red";
-            return false;
-        }
+//         if (value.length < minLength) {
+//             nameAlert.innerText = `ชื่องานต้องมีความยาวอย่างน้อย ${minLength} ตัวอักษร!`;
+//             nameAlert.style.color = "red";
+//             return false;
+//         }
 
-        if (value.length > maxLength) {
-            nameAlert.innerText = `ชื่องานไม่สามารถเกิน ${maxLength} ตัวอักษร!`;
-            nameAlert.style.color = "red";
-            return false;
-        }
+//         if (value.length > maxLength) {
+//             nameAlert.innerText = `ชื่องานไม่สามารถเกิน ${maxLength} ตัวอักษร!`;
+//             nameAlert.style.color = "red";
+//             return false;
+//         }
 
-        if (!validCharsRegex.test(value)) {
-            nameAlert.innerText = "ชื่องานมีอักขระที่ไม่ถูกต้อง!";
-            nameAlert.style.color = "red";
-            return false;
-        }
+//         if (!validCharsRegex.test(value)) {
+//             nameAlert.innerText = "ชื่องานมีอักขระที่ไม่ถูกต้อง!";
+//             nameAlert.style.color = "red";
+//             return false;
+//         }
 
-        nameAlert.innerText = "ชื่องานที่ถูกต้อง";
-        nameAlert.style.color = "green";
-        return true;
-    };
+//         nameAlert.innerText = "ชื่องานที่ถูกต้อง";
+//         nameAlert.style.color = "green";
+//         return true;
+//     };
 
-    // Validate on input
-    taskNameInput.addEventListener("input", validateTaskName);
+//     // Validate on input
+//     taskNameInput.addEventListener("input", validateTaskName);
 
-    // Prevent form submission if invalid
-    const form = document.querySelector("form");
-    form.addEventListener("submit", (e) => {
-        if (!validateTaskName()) {
-            e.preventDefault();
-        }
-    });
-});
+//     // Prevent form submission if invalid
+//     const form = document.querySelector("form");
+//     form.addEventListener("submit", (e) => {
+//         if (!validateTaskName()) {
+//             e.preventDefault();
+//         }
+//     });
+// });
+
 
 // detail
 document.addEventListener('DOMContentLoaded', function () {

@@ -222,6 +222,174 @@ exports.detailPageRender = async (req, res) => {
     }
 };
 
+exports.detailPageNoId = async (req, res) => {
+    try {
+        const { id: taskId } = req.params; 
+        const loggedInUserId = req.user._id.toString();
+
+        // Validate the task ID
+        if (!mongoose.Types.ObjectId.isValid(taskId)) {
+            return res.status(400).send("Invalid task ID.");
+        }
+
+        // Convert to ObjectId
+        const taskObjectId = mongoose.Types.ObjectId(taskId);
+
+        // Fetch task details
+        const task = await Task.findById(taskObjectId)
+            .populate('comment.createdBy', 'firstName lastName profileImage')
+            .populate('approvedBy', 'firstName lastName profileImage')
+            .populate('attachments.uploadedBy', 'firstName lastName profileImage')
+            .populate('assignedUsers', 'profileImage firstName lastName googleEmail')
+            .populate({
+                path: 'activityLogs.createdBy',
+                select: 'profileImage firstName lastName',
+            })
+            .populate({
+                path: 'activityLogs.userId',
+                select: 'profileImage firstName lastName',
+            })
+            .populate({
+                path: 'taskTags._id',
+                select: 'tagName color',
+            })
+            .lean();
+
+        if (!task) {
+            return res.status(404).send("Task not found.");
+        }
+
+        // Fetch subtasks
+        const subtasks = await SubTask.find({ task: taskObjectId })
+            .populate('assignee', 'profileImage firstName lastName googleEmail')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const inProgressSubtasks = await SubTask.find({ task: taskObjectId, subTask_status: 'กำลังทำ' })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Process collaborators if the task is associated with a space
+        let spaceUsers = [];
+        let space = null;
+        if (task.spaceId) {
+            space = await Spaces.findById(task.spaceId)
+                .populate('collaborators.user', 'profileImage firstName lastName googleEmail')
+                .lean();
+
+            if (space && space.collaborators) {
+                spaceUsers = space.collaborators
+                    .filter(collab => collab.user)
+                    .map(collab => ({
+                        ...collab.user,
+                        username: collab.user._id.toString() === loggedInUserId
+                            ? 'ฉัน'
+                            : `${collab.user.firstName} ${collab.user.lastName}`,
+                    }))
+                    .sort((a, b) => {
+                        if (a._id.toString() === loggedInUserId) return -1;
+                        if (b._id.toString() === loggedInUserId) return 1;
+                        return 0;
+                    });
+            }
+        }
+
+        // Process and format task data
+        const { taskNames, dueDate, dueTime, taskStatus, taskDetail, taskPriority } =
+            await extractTaskParameters([task]);
+
+        const thaiCreatedAt = task.createdAt.toLocaleDateString('th-TH', {
+            month: 'long',
+            day: 'numeric',
+        });
+
+        const formattedSubtasks = subtasks.map(subtask => ({
+            ...subtask,
+            subTask_dueDate: subtask.subTask_dueDate && !isNaN(new Date(subtask.subTask_dueDate).getTime())
+                ? formatDateToThai(subtask.subTask_dueDate) 
+                : 'N/A',
+        }));
+
+        const assignedUsers = (task.assignedUsers || []).map(user => ({
+            ...user,
+            username: `${user.firstName} ${user.lastName}`,
+            profileImage: user.profileImage || '/public/img/profileImage/userDefault.jpg',
+        }));
+
+        const statusMapping = {
+            pending: 'รอตรวจ',
+            inProgress: 'กำลังทำ',
+            fix: 'แก้ไข',
+            finished: 'เสร็จสิ้น',
+        };
+
+        const priorityMapping = {
+            urgent: { color: '#DE350B', icon: 'fa-angles-up', text: 'ด่วน', textColor: '#DE350B' },
+            normal: { color: '#FFAB00', icon: 'fa-grip-lines', text: 'ปกติ', textColor: '#FFAB00' },
+            low: { color: '#4C9AFF', icon: 'fa-angle-down', text: 'ต่ำ', textColor: '#4C9AFF' },
+        };
+
+        const activityLogsWithFormattedDates = task.activityLogs.map(log => {
+            if (log.details && log.details.fieldChanged === 'dueDate') {
+                log.details.oldValue = log.details.oldValue 
+                    ? formatDateToThai(log.details.oldValue) 
+                    : 'ไม่มีวันครบกำหนด';
+        
+                log.details.newValue = log.details.newValue 
+                    ? formatDateToThai(log.details.newValue) 
+                    : 'ไม่มีวันครบกำหนด';
+            }
+            return log;
+        });
+
+        const taskTags = (task.taskTags || []).map(tag => ({
+            tagName: tag._id?.tagName || tag.tagName,
+            color: tag._id?.color || tag.color,
+        }));
+
+        const allTags = await Tag.find({ user: req.user._id }).lean(); 
+        const taskTagsIds = task.taskTags.map(tag => tag._id.toString());
+        const availableTags = allTags.filter(tag => !taskTagsIds.includes(tag._id.toString()));
+
+        // Render the page
+        res.render("task/task-ItemDetail", {
+            user: req.user,
+            currentUserId: req.user._id.toString(),
+            taskId: task._id.toString(),
+            task,
+            attachments: task.attachments || [],
+            subtasks: formattedSubtasks,
+            inProgressSubtasks,
+            tasks: [task],
+            taskNames,
+            dueDate,
+            dueTime: dueTime[0],
+            taskDetail,
+            taskStatus,
+            createdAt: thaiCreatedAt,
+            taskPriority,
+            taskTags,
+            allTags,
+            availableTags,
+            spaces: space, 
+            assignedUsers,
+            spaceUsers,
+            statusMapping,
+            priorityMapping,
+            activityLogs: activityLogsWithFormattedDates, 
+            formatDateToThai,
+            userName: req.user.username,
+            userImage: req.user.profileImage,
+            layout: '../views/layouts/Detail',
+            mainTaskDueDate: new Date(dueDate),
+        });
+    } catch (error) {
+        console.error('Error fetching task details:', error);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+
 // Update assignUser
 exports.assignUserToTask = async (req, res) => {
     try {

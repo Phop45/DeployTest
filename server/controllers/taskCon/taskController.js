@@ -82,13 +82,11 @@ exports.createTask = async (req, res) => {
       return res.status(404).send("Space not found.");
     }
 
-    // Validate `user`
     const userId = req.user && req.user.id; // Assuming `req.user` is populated with the authenticated user
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).send("Invalid user ID.");
     }
 
-    // Validate and assign `taskStatus`
     let status;
     if (statusId && mongoose.Types.ObjectId.isValid(statusId)) {
       status = await Status.findOne({ _id: statusId, space: spaceId });
@@ -102,25 +100,20 @@ exports.createTask = async (req, res) => {
       }
     }
 
-    // Validate `assignedUsers`
     const validAssignedUsers = [];
     if (assignedUsers) {
       const userIds = assignedUsers.split(',');
       for (const userId of userIds) {
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-          continue;
-        }
+        if (!mongoose.Types.ObjectId.isValid(userId)) continue;
         validAssignedUsers.push(mongoose.Types.ObjectId(userId));
       }
     }
 
-    // Prepare tags
-    const tags = taskTag? JSON.parse(taskTag).map(tag => ({
+    const tags = taskTag ? JSON.parse(taskTag).map(tag => ({
         _id: tag._id ? mongoose.Types.ObjectId(tag._id) : undefined,
         tagName: tag.tagName,
         color: tag.color,
-      }))
-    : [];
+      })) : [];
 
     const userTags = [];
     for (const tag of tags) {
@@ -132,40 +125,14 @@ exports.createTask = async (req, res) => {
       }
       userTags.push({
         _id: existingTag._id,
-        tagName: existingTag.name, // Use existingTag.name
+        tagName: existingTag.name,
         color: existingTag.color,
       });
     }
 
-    // Parse and validate dates
-    let parsedStartDate = null;
-    if (startDate) {
-      const tempDate = new Date(startDate);
-      if (!isNaN(tempDate.getTime())) {
-        parsedStartDate = tempDate;
-      } else {
-        console.warn("⚠️ startDate ไม่สามารถแปลงเป็นวันที่ได้:", startDate);
-      }
-    }
+    const parsedStartDate = startDate ? new Date(startDate) : null;
+    const parsedDueDate = dueDate ? new Date(dueDate) : null;
 
-    // แปลงวันที่
-    let parsedDueDate = null;
-    if (dueDate) {
-      const tempDate = new Date(dueDate);
-      if (!isNaN(tempDate.getTime())) {
-        parsedDueDate = tempDate;
-      } else {
-        console.warn("⚠️ dueDate ไม่สามารถแปลงเป็นวันที่ได้:", dueDate);
-      }
-    }
-
-    // Handle file attachments
-    // const attachments = req.files ? req.files.map(file => ({
-    //   path: file.path,
-    //   originalName: file.originalname,
-    // })) : [];
-
-    // Create a new task
     const newTask = new Task({
       taskName,
       dueDate: parsedDueDate,
@@ -178,22 +145,27 @@ exports.createTask = async (req, res) => {
       project: mongoose.Types.ObjectId(spaceId),
       user: mongoose.Types.ObjectId(userId),
       assignedUsers: validAssignedUsers,
-      // attachments,
     });
 
     await newTask.save();
 
-    // Create notifications for assigned users
-    const notifications = validAssignedUsers.map(userId => ({
-      user: userId,
-      task: newTask._id,
-      space: mongoose.Types.ObjectId(spaceId),
+    // Create notification
+    const notification = new Notification({
+      userGroup: validAssignedUsers.map(userId => ({
+        user: userId,
+        status: 'unread',
+      })),
+      triggeredBy: mongoose.Types.ObjectId(userId),
+      message: `คุณได้รับมอบหมายงานชื่อ: ${newTask.taskName}`,
       type: 'taskAssignment',
-      message: `You have been assigned a task: ${newTask.taskName}`,
-      status: 'unread',
+      relatedEntityType: 'task',
+      relatedEntityId: newTask._id,
+      space: mongoose.Types.ObjectId(spaceId),
       dueDate: parsedDueDate,
-    }));
-    await Notification.insertMany(notifications);
+      isActionable: false,
+    });
+
+    await notification.save();
 
     res.redirect(`/space/item/${spaceId}/task_board`);
   } catch (error) {
@@ -201,6 +173,7 @@ exports.createTask = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
 
 /// Add Task
 exports.addTask = async (req, res) => {

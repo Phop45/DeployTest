@@ -1,6 +1,7 @@
 <head>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="/public/css/partialsCss/topNavigation.css">
+    
 </head>
 
 <body>
@@ -68,33 +69,73 @@
                         <% if (notifications && notifications.length > 0) { %>
                             <% notifications.forEach(notification => { %>
                                 <div class="notiItem <%= notification.userGroup.some(group => group.user.toString() === user._id.toString() && group.status === 'unread') ? 'notRead' : '' %>" id="<%= notification._id %>">
+                                    <div class="readSec">
+                                        <button id="isRead" class="markAsRead" data-id="<%= notification._id %>"></button>
+                                    </div>
                                     <div class="notiConteneWarp">
-                                        <div class="imgProfile">
-                                            <img src="<%= notification.triggeredBy.profileImage || '/default-profile.png' %>" alt="User Profile" class="profileImage">
-                                        </div>
                                         <div class="notiContent">
                                             <span class="firstLine">
-                                                <span><%= notification.message %></span>
-                                                
-                                                <% if (notification.type === 'roleChange') { %>
-                                                    <a href="/space/item/<%= notification.space %>/member" class="taskLink" style="color: blue; text-decoration: underline;">คลิกเพื่อดูรายละเอียดเพิ่มเติม</a>
-                                                <% } else if (notification.type === 'taskApproved') { %>
-                                                    <a href="/task/<%= notification.relatedEntityId %>/detail?spaceId=<%= notification.space %>" class="taskLink" style="color: blue; text-decoration: underline;">คลิกเพื่อดูรายละเอียดเพิ่มเติม</a>
-                                                <% } else if (notification.type === 'space-invitation') { %>
-                                                    <a href="/space/item/<%= notification.space %>/dashboard?period=7day" class="taskLink" style="color: blue; text-decoration: underline;">คลิกเพื่อดูรายละเอียดเพิ่มเติม</a>
-                                                <% } else if (notification.type === 'space-member-removal') { %>
-                                                    <span></span>
-                                                <% } else { %>
-                                                    <span></span>
+                                                <span class="message"><%= notification.message %></span>
+                                                <% if (notification.type) { %>
+                                                    <% 
+                                                        let linkUrl = '';
+                                                        let linkText = 'คลิกเพื่อดูรายละเอียดเพิ่มเติม';
+                                                        let additionalText = '';
+
+                                                        switch (notification.type) {
+                                                            case 'roleChange':
+                                                                linkUrl = `/space/item/${notification.space}/member`;
+                                                                additionalText = 'เปลี่ยนบทบาท';
+                                                                break;
+                                                            case 'taskApproved':
+                                                                linkUrl = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+                                                                additionalText = 'อนุมัติงาน';
+                                                                break;
+                                                            case 'sendTaskApproval':
+                                                                linkUrl = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+                                                                additionalText = 'ส่งตรวจ';
+                                                                break;
+                                                            case 'taskRejected':
+                                                                linkUrl = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+                                                                additionalText = 'แก้ไขงาน';
+                                                                break;
+                                                            case 'taskAssignment':
+                                                                linkUrl = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+                                                                additionalText = 'ได้รับมอบหมายงาน';
+                                                                break;
+                                                            case 'space-invitation':
+                                                                linkUrl = `/space/item/${notification.space}/dashboard?period=7day`;
+                                                                additionalText = 'เป็นสมาชิกโปรเจกต์';
+                                                                break;
+                                                            case 'memberAdded':
+                                                                linkUrl = `/space/item/${notification.space}/dashboard?period=7day`;
+                                                                additionalText = 'เป็นสมาชิกโปรเจกต์';
+                                                                break;
+                                                            case 'space-member-removal':
+                                                                // No additional actions or text for this type.
+                                                                additionalText = '';
+                                                                break;
+                                                            default:
+                                                                additionalText = '';
+                                                        }
+                                                    %>
+                                                    <% if (linkUrl) { %>
+                                                        <a href="<%= linkUrl %>" class="taskLink"> <%= linkText %> </a>
+                                                    <% } %>
+                                                    <% if (additionalText) { %>
+                                                        <span class="notification-type <%= notification.type %>"><%= additionalText %></span>
+                                                    <% } %>
                                                 <% } %>
                                             </span>
                                             <span class="secondLine">
-                                                แจ้งเตือนเมื่อ: <%= new Date(notification.createdAt).toLocaleString() %>
-                                            </span>
+                                                <% 
+                                                    const notificationDate = new Date(notification.createdAt);
+                                                    const thaiDate = new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(notificationDate);
+                                                    const thaiTime = new Intl.DateTimeFormat('th-TH', { timeStyle: 'short' }).format(notificationDate);
+                                                %>
+                                                แจ้งเตือนเมื่อ: <span class="date"><%= thaiDate %></span>, เวลา: <span class="time"><%= thaiTime %></span>
+                                            </span>                                            
                                         </div>
-                                    </div>
-                                    <div class="readSec">
-                                        <button id="isRead" class="markAsRead" data-id="<%= notification._id %>"></button>
                                     </div>
                                 </div>
                             <% }) %>

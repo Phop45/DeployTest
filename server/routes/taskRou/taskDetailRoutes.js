@@ -7,6 +7,8 @@ const { uploadFiles, uploadCovers }  = require('../../middleware/upload');
 
 router.get('/task/:id/detail', isLoggedIn, taskDetailController.detailPageRender);
 
+router.get('/task/:id/detail', isLoggedIn, taskDetailController.detailPageNoId);
+
 // ✅
 router.post('/updateName', isLoggedIn, taskDetailController.updateTaskName);
 router.post('/updateTaskStatus', isLoggedIn, taskDetailController.updateTaskStatus);

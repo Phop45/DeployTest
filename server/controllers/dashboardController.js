@@ -24,6 +24,7 @@ dayjs.extend(timezone);
 dayjs.locale('th');
 moment.locale('th');
 
+// dashboardRender controller
 exports.dashboardRender = async (req, res) => {
     try {
         const user = req.user;
@@ -106,13 +107,6 @@ exports.dashboardRender = async (req, res) => {
                 projectAllTaskCount: statusCounts.totalTasks
             };
         });
-
-        // Fetch tasks for the user
-        // const tasks = await Task.find({
-        //     $or: [{ user: user._id }, { assignedUsers: user._id }],
-        // })
-        //     .populate('assignedUsers', 'username profileImage firstName')
-        //     .select('taskName taskDetail taskStatus taskPriority dueDate createdAt project assignedUsers');
 
         const tasks = await Task.find({
             $or: [{ user: user._id }, { assignedUsers: user._id }],
@@ -211,6 +205,7 @@ exports.dashboardRender = async (req, res) => {
 
         res.render('layouts/userDashboard', {
             user,
+            tasks: tasks,
             spaces: spacesWithStats,
             validSpaceId: spaceIdFromTask,
             tasks: JSON.stringify(tasks),

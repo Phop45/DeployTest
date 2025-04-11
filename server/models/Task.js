@@ -31,7 +31,6 @@ const commentSchema = new Schema({
     deleted: { type: Boolean, default: false }
 });
 
-
 const activityLogSchema = new Schema({
     text: { type: String },
     type: { type: String, enum: ['action'], default: 'action' },

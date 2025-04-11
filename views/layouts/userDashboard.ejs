@@ -103,7 +103,7 @@
                         </div> 
                         
                         <div class="countSec">
-                            <div class="countTextWrap clickable-task-section" id="completedTask" data-task-type="completed">
+                            <div class="countTextWrap clickable-task-section" id="completedTask" data-task-type="completed" data-space-id="<%= validSpaceId %>" >
                                 <div class="countText">
                                     <span id="count">
                                         <%= completedCount %>
@@ -115,7 +115,7 @@
                                     ที่เสร็จสิ้น
                                 </span>
                             </div>
-                            <div class="countTextWrap clickable-task-section" id="incompletedTask" data-task-type="incompleted">
+                            <div class="countTextWrap clickable-task-section" id="incompletedTask" data-task-type="incompleted" data-space-id="<%= validSpaceId %>" >
                                 <div class="countText">
                                     <span id="count">
                                         <%= incompletedCount %>
@@ -431,15 +431,13 @@
                         
                         // Ensure that each task has a unique task ID
                         row.setAttribute('data-task-id', task._id);
-                        row.setAttribute('data-space-id', spaceId);
+                        row.setAttribute('data-space-id', task.project ? task.project._id : 'validSpaceId');
         
                         row.onclick = function () {
-                            const taskId = this.getAttribute('data-task-id');
-                            const spaceId = this.getAttribute('data-space-id');
+                            const taskId = this.dataset.taskId;
+                            const spaceId = this.dataset.spaceId;
                             if (taskId && spaceId) {
                                 window.location.href = `/task/${taskId}/detail?spaceId=${spaceId}`;
-                            } else {
-                                alert('Invalid task or space ID');
                             }
                         };
         
@@ -485,6 +483,7 @@
                         }
         
                         row.innerHTML = `
+                            <td id="projectNameModal">${task.project ? task.project.projectName : 'ไม่มีโปรเจกต์'}</td>
                             <td id="taskNameModal">${task.taskName}</td>
                             <td id="detailModal">${task.taskDetail ? task.taskDetail : '<div class="nullValue">ไม่มีคำอธิบายเพิ่มเติม</div>'}</td>
                             <td id="statusModal">${statusDiv}</td>
@@ -492,7 +491,6 @@
                             <td id="dueDateModal">
                                 ${task.dueDate ? formatThaiDate(new Date(task.dueDate)) : '<div class="nullValue">ไม่มีวันครบกำหนด</div>'}
                             </td>
-                            <td id="createAtModal">${formatThaiDate(new Date(task.createdAt))}</td>
                             <td id="profileModal">
                                 ${task.assignedUsers && task.assignedUsers.length > 0 
                                     ? task.assignedUsers
@@ -532,6 +530,7 @@
             }
         });
         
+        // view all
         document.addEventListener("DOMContentLoaded", function () {
             // Get the modal and the button that opens it
             const viewBtn = document.getElementById("viewBtn");
@@ -596,11 +595,15 @@
                     const row = document.createElement("tr");
                     row.classList.add("taskItem");
             
+                    // Add click event to redirect
+                    row.onclick = function () {
+                        window.location.href = `/task/${task._id}/detail?spaceId=${task.spaceId}`;
+                    };
+            
                     // Project Name (New Column)
                     const projectName = document.createElement("td");
                     projectName.id = "projectNameModal";
-                    projectName.innerHTML = task.projectName; // Display project name
-            
+                    projectName.innerHTML = task.project.projectName; // Display project name
                     // Task Name
                     const taskName = document.createElement("td");
                     taskName.id = "taskNameModal";
@@ -657,7 +660,8 @@
                     // Append the row to the table body
                     tableBody.appendChild(row);
                 });
-            }            
+            }
+                     
         
             // Show modal when clicking the button
             viewBtn.onclick = function () {
@@ -677,8 +681,6 @@
                 }
             };
         });
-        
-        
     </script>
 </body>
 </html>
