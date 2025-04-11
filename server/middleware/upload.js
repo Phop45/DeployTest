@@ -13,13 +13,6 @@ if (!fs.existsSync(fileUploadDir)) {
     fs.mkdirSync(fileUploadDir, { recursive: true });
 }
 
-// Utility: Sanitize File Names
-const sanitizeFileName = (originalName) => {
-    // Replace problematic characters but retain Unicode
-    return originalName.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
-};
-
-
 // ✅ Define Multer Instance
 const uploadCovers = multer({
     storage: multer.memoryStorage(), // Store files in memory so Sharp can process them
@@ -103,8 +96,7 @@ const uploadFiles = multer({
             cb(null, fileUploadDir); 
         },
         filename: (req, file, cb) => {
-            const sanitizedFileName = sanitizeFileName(file.originalname);
-            cb(null, sanitizedFileName);
+            cb(null, file.originalname);
         }
     }),
     limits: { fileSize: 5 * 1024 * 1024 },  // 5MB

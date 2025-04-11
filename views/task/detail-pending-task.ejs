@@ -213,15 +213,22 @@
                                         <div class="fileWrap">
                                             <div class="file-time" data-uploaded="<%= attachment.uploadedAt %>">
                                                 <span class="time-text">
-                                                    อัปโหลดโดย: 
-                                                    <img src="<%= attachment.uploadedByProfileImage %>" alt="Uploader's Profile Image" class="uploader-profile-img" />
-                                                    <%= attachment.uploadedByName %> | <%= attachment.uploadedAtFormatted %>
+                                                    <span>อัปโหลดโดย:</span>
+                                                    <span>
+                                                        <img src="<%= attachment.uploadedByProfileImage %>" alt="Uploader's Profile Image" class="uploader-profile-img" />
+                                                        <span id="innerTimeText">
+                                                            <span>
+                                                                <%= attachment.uploadedByName %>
+                                                            </span>
+                                                                <%= attachment.uploadedAtFormatted %>
+                                                        </span>
+                                                    </span>
                                                 </span>
                                             </div>
                                             <!-- Add the download button -->
                                             <div class="file-item" data-file-id="<%= attachment._id %>">
                                                 <a href="/uploads/<%= attachment.originalName %>" download="<%= attachment.originalName %>" class="download-icon-link">
-                                                    <i class="fa-solid fa-download"></i> Download
+                                                    <i class="fa-solid fa-download" id="downloadIcon"></i> ดาวน์โหลด
                                                 </a>
                                                 <div class="deleteFile" data-id="<%= attachment._id %>">
                                                     <i class="fa-solid fa-trash-can"></i>

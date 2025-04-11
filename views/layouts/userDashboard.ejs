@@ -134,10 +134,10 @@
                         <div class="headerText">
                             <div class="titleCardText">
                                 <i class='bx bx-error-circle titleIcon' style="font-size: 24px;"></i>
-                                งานที่ต้องการความใส่ใจ
+                                งานที่รอตรวจทั้งหมด
                             </div>
                             <div class="subText">
-                                งานที่รอการดำเนินการ
+                                งานทั้งหมดที่รอคุณไปอนุมัติ
                             </div>
                         </div>
                         <div class="taskList">
@@ -231,9 +231,10 @@
                                     <div class="projectProgressBarContainer">
                                         <div class="progressBarWrap">
                                             <div class="projectProgressBar" id="projectTaskProgress">
-                                                <div class="projectProgressBar toDo"
-                                                    style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.toDo / space.projectAllTaskCount) * 100 : 0 %>%;"
-                                                    title="To Do (<%= space.statusCounts.toDo %>)"></div>
+                                                <!-- Replace 'toDo' with 'pending' -->
+                                                <div class="projectProgressBar pending"
+                                                    style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.pending / space.projectAllTaskCount) * 100 : 0 %>%;"
+                                                    title="Pending (<%= space.statusCounts.pending %>)"></div>
                                                 <div class="projectProgressBar inProgress"
                                                     style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.inProgress / space.projectAllTaskCount) * 100 : 0 %>%;"
                                                     title="In Progress (<%= space.statusCounts.inProgress %>)"></div>
@@ -245,9 +246,10 @@
                                                     title="Completed (<%= space.statusCounts.finished %>)"></div>
                                             </div>
                                         </div>
-                                        
+                                    
                                         <div class="projectProgressLegend">
-                                            <span class="projectLegendItem toDo">● ยังไม่ทำ (<%= space.statusCounts.toDo || 0 %>)</span>
+                                            <!-- Replace 'ยังไม่ทำ' (toDo) with 'รอดำเนินการ' (pending) -->
+                                            <span class="projectLegendItem pending">● รอตรวจ (<%= space.statusCounts.pending || 0 %>)</span>
                                             <span class="projectLegendItem inProgress">● กำลังทำ (<%= space.statusCounts.inProgress || 0 %>)</span>
                                             <span class="projectLegendItem needFix">● แก้ไข (<%= space.statusCounts.fix || 0 %>)</span>
                                             <span class="projectLegendItem completed">● เสร็จสิ้น (<%= space.statusCounts.finished || 0 %>)</span>

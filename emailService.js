@@ -39,16 +39,6 @@ exports.sendTaskStatusEmails = async (assignedUsers, taskName, action, taskDetai
                         <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
                             <h2 style="text-align: center; color: ${headerColor};">${headerText}</h2>
                             <p style="font-size: 16px;">${message}</p>
-                            <p style="font-size: 16px;">คลิกปุ่มด้านล่างเพื่อดูรายละเอียดงาน:</p>
-                            <div style="text-align: center;">
-                                <a href="${taskDetailLink}" 
-                                    style="display: inline-block; background-color: ${headerColor}; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-size: 16px; font-weight: bold; margin-top: 20px;">
-                                    ดูรายละเอียดงาน
-                                </a>
-                            </div>
-                            <p style="font-size: 14px; color: #777; text-align: center; margin-top: 30px;">
-                                หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้
-                            </p>
                         </div>
                     </body>
                 </html>
@@ -58,11 +48,6 @@ exports.sendTaskStatusEmails = async (assignedUsers, taskName, action, taskDetai
                 ${headerText}
                 ========================
                 ${message}
-
-                คลิกลิงก์ด้านล่างเพื่อดูรายละเอียดงาน:
-                ${taskDetailLink}
-
-                หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้
             `;
 
                 await exports.sendEmail(assignedUser.googleEmail, `การอัพเดตสถานะของงานชื่อ: "${taskName}"`, emailHtml, emailText);
@@ -180,13 +165,6 @@ exports.sendTaskApprovalEmail = async (usersToNotify, task, taskDetailLink, mess
                                 <li><strong>ความสำคัญ:</strong> ${getPriorityInThai(task.taskPriority)}</li>
                                 <li><strong>มอบหมายให้:</strong> ${assignedUsersList || 'ไม่มีผู้มอบหมาย'}</li>
                             </ul>
-                            <div style="text-align: center;">
-                                <p style="font-size: 16px;">คลิกปุ่มด้านล่างเพื่อดูรายละเอียดงาน:</p>
-                                <a href="${taskDetailLink}" style="color: #fff;">ดูรายละเอียดงาน</a>
-                            </div>
-                            <p style="font-size: 14px; color: #777; text-align: center; margin-top: 30px;">
-                                หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้
-                            </p>
                         </div>
                     </div>
                 </body>
@@ -207,8 +185,6 @@ exports.sendTaskApprovalEmail = async (usersToNotify, task, taskDetailLink, mess
                 - ความสำคัญ: ${getPriorityInThai(task.taskPriority)}
                 - มอบหมายให้: ${assignedUsersList || 'ไม่มีผู้มอบหมาย'}
 
-                คลิกที่ลิงก์เพื่อดูรายละเอียดงาน:
-                ${taskDetailLink}
                 `;
 
                 // Send email
@@ -300,13 +276,6 @@ exports.sendSpaceMemberAddedEmail = async (user, space, taskDetailLink, message)
                                     <li><strong>คำอธิบาย:</strong> ${space.description || 'ไม่มีคำอธิบาย'}</li>
                                     <li><strong>วันที่สร้าง:</strong> ${formatDateInThai(space.createdAt)}</li>
                                 </ul>
-                                <div style="text-align: center;">
-                                    <p style="font-size: 16px;">คลิกลิงก์ด้านล่างเพื่อดูรายละเอียดโปรเจกต์:</p>
-                                    <a href="${taskDetailLink}" style="color: #fff;">ดูรายละเอียดโปรเจกต์</a>
-                                </div>
-                                <p style="font-size: 14px; color: #777; text-align: center; margin-top: 30px;">
-                                    หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้
-                                </p>
                             </div>
                         </div>
                     </body>
@@ -320,11 +289,6 @@ exports.sendSpaceMemberAddedEmail = async (user, space, taskDetailLink, message)
                 - ชื่อโปรเจกต์: ${space.projectName}
                 - คำอธิบาย: ${space.description || 'ไม่มีคำอธิบาย'}
                 - วันที่สร้าง: ${formatDateInThai(space.createdAt)}
-
-                คลิกลิงก์ด้านล่างเพื่อดูรายละเอียดโปรเจกต์:
-                ${taskDetailLink}
-
-                หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้
                 `;
 
             await exports.sendEmail(user.googleEmail, `คุณถูกเพิ่มเข้าไปในโปรเจกต์: ${space.projectName}`, emailHtml, emailText);

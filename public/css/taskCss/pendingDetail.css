@@ -1535,8 +1535,8 @@ td img {
 
 .fileWrap {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: column !important;
+    gap: 5px !important;
     width: 100%;
 }
 
@@ -2758,4 +2758,24 @@ body.loaded .loader {
 .download-link:hover {
     color: #4cae4c;
     text-decoration: underline;
+}
+
+
+#downloadIcon{
+    font-size: 18px !important;
+}
+.time-text{
+    display: flex;
+    flex-direction: column;
+}
+#innerTimeText{
+    display: flex;
+    flex-direction: column;
+}
+.download-link{
+    display: flex;
+    flex-direction: column;
+}
+.file-content{
+    height: 150px;
 }

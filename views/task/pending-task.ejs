@@ -1,5 +1,13 @@
 <link rel="stylesheet" href="/css/taskCss/task-list.css">
-
+<style>
+  #pendingTaskName{
+    overflow: hidden;
+  }
+  #pendingTaskDetail{
+    overflow: hidden;
+    width: 100px;
+  }
+</style>
 <div class="content">
   <%- include('../task/task_component/task-navbar.ejs') %>
 
@@ -25,10 +33,10 @@
                 <% if (tasks.length> 0) { %>
                   <% tasks.forEach(task=> { %>
                     <tr class="task-row" onclick="goToPendingDetail('<%= task._id %>', '<%= spaces._id %>')" data-task-id="<%= task._id %>">
-                      <td>
+                      <td id="pendingTaskName">
                         <%= task.taskName %>
                       </td>
-                      <td>
+                      <td id="pendingTaskDetail">
                         <% if (task.taskDetail) { %>
                           <%= task.taskDetail %>
                             <% } else { %>
