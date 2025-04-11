@@ -1,29 +1,54 @@
 const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail', // Replace with your custom domain or email service
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+const oAuth2Client = new google.auth.OAuth2(
+    process.env.CLIENT_ID,
+    process.env.CLIENT_SECRET,
+    'https://developers.google.com/oauthplayground'
+);
+
+oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
+
+let transporter;
+
+async function getTransporter() {
+    if (!transporter) {
+        const accessToken = await oAuth2Client.getAccessToken().catch((err) => {
+            console.error("Failed to retrieve access token:", err);
+            throw new Error("Failed to authenticate email service.");
+        });
+        transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                type: 'OAuth2',
+                user: process.env.EMAIL_USER,
+                clientId: process.env.CLIENT_ID,
+                clientSecret: process.env.CLIENT_SECRET,
+                refreshToken: process.env.REFRESH_TOKEN,
+                accessToken: accessToken.token,
+            },
+        });
     }
-});
+    return transporter;
+}
 
-exports.sendEmail = async (to, subject, html, text) => {
+exports.sendEmail = async ({ to, subject, html, text, from }) => {
     try {
+        const transporter = await getTransporter();
+        const senderEmail = from || process.env.EMAIL_USER;
         await transporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: senderEmail,
             to,
             subject,
-            text, // Plain text version
-            html  // HTML version
+            text,
+            html,
         });
-        console.log(`Email sent successfully to ${to}`);
-        return true;
+        console.info(`Email sent successfully to ${to}`);
     } catch (error) {
-        console.error(`Error sending email to ${to}:`, error);
-        return false;
+        console.error("Error sending email:", error);
     }
 };
+
 
 exports.sendTaskStatusEmails = async (assignedUsers, taskName, action, taskDetailLink, message) => {
     for (const assignedUser of assignedUsers) {
