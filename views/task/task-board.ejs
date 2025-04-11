@@ -11,9 +11,85 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="filterTaskInput" placeholder="ค้นหางาน..." onkeyup="filterTasks()">
             </div>
-            <a href="#" class="link" id="new-task-btn">
-                <i class='bx bx-task'></i> + เพิ่มงานใหม่
-            </a>
+            <div class="rightTop">
+                <div class="filterToggle">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span id="filterText">กรองข้อมูล</span>
+                </div>
+                <div class="filterDropdown">
+                    <div class="DropdownWrap">
+                        <div class="filterItemWrap" id="topFilter">
+                            <span>กรองข้อมูล</span>
+                            <div class="clearFilter" id="clearFilter">
+                                <a href="/space/item/<%= spaces._id %>/task_board">ล้างการกรอง</a>
+                            </div>
+                        </div>
+
+                        <div class="filterItemWrap assignToMe" id="filterItemWrapSelect">
+                            <div class="filterItem" id="assignToMe" onclick="window.location.href='?filter=assignToMe'">
+                                <i class="fa-regular fa-circle-user filterItemIcon"></i> 
+                                มอบหมายให้ฉัน
+                            </div>
+                            <i class="fa-solid fa-check check-icon" style="display: none;"></i>
+                        </div>
+                        <div class="filterItemWrap dueDateWeek" id="filterItemWrapSelect">
+                            <div class="filterItem" id="dueDateWeek" onclick="window.location.href='?filter=dueThisWeek'">
+                                <i class="fa-regular fa-calendar-check filterItemIcon"></i>
+                                ครบกำหนดอาทิตย์นี้
+                            </div>
+                            <i class="fa-solid fa-check check-icon" style="display: none;"></i>
+                        </div>
+                        <div class="filterItemWrap">
+                            <span id="assignText">ผู้รับมอบหมาย</span>
+                            <div class="AssigneeItem" id="allAssignee">
+                                <% spaceCollaborators.forEach(collaborator => { %>
+                                    <div class="assignee-profile" onclick="filterByAssignee('<%= collaborator.user._id %>')" data-assignee-id="<%= collaborator.user._id %>">
+                                        <img src="<%= collaborator.user.profileImage %>" alt="<%= collaborator.user.firstName %>" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                             class="assigneeImage">
+                                        <div class="fallback-profile-filter" style="display: none;">
+                                            <span><%= collaborator.user.firstName[0] %></span>
+                                        </div>
+                                        <div class="customTooltip"><%= collaborator.user.firstName %></div>
+                                    </div>
+                                <% }); %>
+                                <div class="tooltip-container">
+                                    <div class="unAssign AssigneeItemUn" id="unAssign" onclick="window.location.href='?filter=unAssign'"
+                                    style="width: 35px; height: 35px;">
+                                        <i class="fa-regular fa-user"></i>
+                                    </div>
+                                    <div class="customTooltip">
+                                        ไม่มีผู้รับมอบหมาย
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="filterItemWrap">
+                            <span id="priText">ความสำคัญ</span>
+                            <div class="allPriItem" id="allPriItem">
+                                <div class="priItemOprion" data-label="urgent" onclick="filterByPriority('urgent')">
+                                    <i class="fa-solid fa-angles-up" style="color: #ff3b30;"></i>
+                                    <div class="priTooltip">ด่วน</div>
+                                </div>
+                                <div class="priItemOprion" data-label="normal" onclick="filterByPriority('normal')">
+                                    <i class="fa-solid fa-grip-lines" style="color: #ffcc00;"></i>
+                                    <div class="priTooltip">ปกติ</div>
+                                </div>
+                                <div class="priItemOprion" data-label="low" onclick="filterByPriority('low')">
+                                    <i class="fa-solid fa-angle-down" style="color: #2562f6;"></i>
+                                    <div class="priTooltip">ต่ำ</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <a href="#" class="link" id="new-task-btn">
+                    <i class="fa-solid fa-plus"></i> เพิ่มงานใหม่
+                </a>
+            </div>
+            
         </div>
 
         <div class="boardWrap">
@@ -26,7 +102,7 @@
                     finished: 'งานที่เสร็จสิ้น'
                 }; %>
                 <% statusCategories.forEach(statusCategory => { %>
-                    <div class="column" data-status="<%= statusCategory %>">
+                    <div class="column" data-status="<%= statusCategory %>" data-role="<%= currentUserRole %>">
                         <div class="status" id="statusHeader" style="
                             <% if (statusCategory === 'pending') { %>
                                 color: #fff; background-color: #44546f;
@@ -45,17 +121,24 @@
                         </div>
     
                         <div class="itemStatus">
-                            <ul id="tasks-<%= statusCategory %>">
+                            <ul id="tasks-<%= statusCategory %>" class="droppable" data-status="<%= statusCategory %>">
                                 <% (tasksByStatus[statusCategory] || []).forEach(task => { %>
                                     <li class="task task-item" 
                                         data-id="<%= task._id %>" 
+                                        data-status="<%= statusCategory %>"
                                         data-space-id="<%= spaces._id %>" 
-                                        draggable="true" 
+                                        data-role="<%= currentUserRole %>"
+                                        data-subtasks="<%= task.subTaskId %>"
+                                        draggable="<%= statusCategory !== 'finished' %>" 
+                                        ondragstart="<%= statusCategory !== 'finished' ? 'handleDragStart(event)' : '' %>"
+                                        ondragover="<%= statusCategory !== 'finished' ? 'handleDragOver(event)' : '' %>"
+                                        ondrop="<%= statusCategory !== 'finished' ? 'handleDrop(event)' : '' %>"
                                         style="
                                             text-decoration: none; 
                                             color: inherit;
-                                            <%= statusCategory === 'finished' ? 'opacity: 0.5;' : '' %>"
+                                            <%= statusCategory === 'finished' ? 'opacity: 0.5; cursor: not-allowed;' : '' %>"
                                         onclick="window.location.href='/task/<%= task._id %>/detail?spaceId=<%= spaces._id %>'">
+
                                             <div class="firstSec">
                                                 <div class="taskname"><%= task.taskName %></div>
 
@@ -76,12 +159,10 @@
                                                 </div>
                                             </div>
 
-
                                             <div class="assigned-users">
                                                 <% if (task.assigneeProgress && task.assigneeProgress.length > 0) { %>
                                                     <h1 class="progressText"> 
-                                                        <i class="fa-solid fa-spinner"></i>
-                                                        ความคืบหน้าของงาน
+                                                        ความคืบหน้าของงานย่อย
                                                     </h1>
                                                 <% } %>
                                                 <% (task.assigneeProgress || []).forEach(progress => { %>
@@ -101,25 +182,52 @@
                                                 <% }) %>
                                             </div>
                                         </a>
+
+                                        <div class="boardLine"></div>
+
                                         <div class="thSection">
                                             <div class="thCon">
-                                                <% if (!(task.assigneeProgress && task.assigneeProgress.length > 0)) { %>
-                                                    <div class="assignedPro">
-                                                        <% task.assignedUsers.forEach(user => { %>
-                                                            <div class="userProfile">
-                                                                <img src="<%= user.profileImage || '/public/img/profileImage/userDefalt.jpg' %>"
-                                                                    alt="<%= user.firstName || 'Unknown' %>" style="width: 30px; height: 30px; border-radius: 50%;"
-                                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                                
-                                                                    <div class="fallback-profile-board" style="display: none;">
-                                                                        <span>
-                                                                          <%= user.firstName[0] %>
-                                                                        </span>
-                                                                    </div>
+                                                <div class="assignedPro">
+                                                    <%  const progressUserIds=(task.assigneeProgress || []).map(progress=> progress.assignee?._id?.toString()).filter(id => id);
+                                                        const untrackedUsers = (task.assignedUsers || []).filter(user => user._id && !progressUserIds.includes(user._id.toString())); %>
+                                                        
+                                                        <% if (task.assignedUsers && task.assignedUsers.length > 0) { %>
+                                                            <% if (untrackedUsers.length > 0) { %>
+                                                                <div class="assignedPro">
+                                                                    <% untrackedUsers.forEach(user => { %>
+                                                                        <div class="userProfile">
+                                                                            <div class="tooltip-container">
+                                                                                <img src="<%= user.profileImage || '/public/img/profileImage/userDefalt.jpg' %>"
+                                                                                    alt="<%= user.firstName || 'Unknown' %>" style="width: 30px; height: 30px; border-radius: 50%;"
+                                                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                                
+                                                                                <!-- Fallback for missing profile image -->
+                                                                                <div class="fallback-profile-board" style="display: none;">
+                                                                                    <span>
+                                                                                        <%= user.firstName ? user.firstName[0].toUpperCase() : '?' %>
+                                                                                    </span>
+                                                                                </div>
+                                                
+                                                                                <!-- Custom Tooltip -->
+                                                                                <div class="assTooltip">
+                                                                                    <%= user.firstName || 'Unknown' %>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    <% }) %>
+                                                                </div>
+                                                            <% } %>
+                                                        <% } else { %>
+                                                            <div class="tooltip-container">
+                                                                <div class="unAssign">
+                                                                    <i class="fa-regular fa-user"></i>
+                                                                </div>
+                                                                <div class="assTooltip">
+                                                                    ไม่มีผู้รับมอบหมาย
+                                                                </div>
                                                             </div>
-                                                        <% }) %>
-                                                    </div>
-                                                <% } %>
+                                                        <% } %>
+                                                </div>
                                             </div>
                                             <div class="rightOpt">
                                                 <div class="task-due-date">
@@ -135,7 +243,7 @@
                                                 <% if (statusCategory !== 'finished') { %>
                                                     <div class="delSec">
                                                         <i class="fa-solid fa-trash-can deleteTask" id="deleteTask"
-                                                            onclick="confirmDeleteTask('<%= task._id %>', '<%= spaces._id %>')"></i>
+                                                            onclick="event.stopPropagation(); confirmDeleteTask('<%= task._id %>', '<%= spaces._id %>')"></i>
                                                     </div>
                                                 <% } %>
                                             </div>
@@ -146,23 +254,43 @@
                         </div>
         
                         <!-- Add Task Form under the status -->
-                        <div class="addUnder">
-                            <div class="triggerAdd" onclick="showInputForm(this)">
-                                + เพิ่มงานใหม่
+                        <% if (statusCategory == 'inProgress') { %>
+                            <div class="addUnder">
+                                <div class="triggerAdd" onclick="showInputForm(this)">
+                                    + เพิ่มงานใหม่
+                                </div>
+                                <form action="/addTask_board" method="POST" class="add-task-form" style="display: none; width: 100%;" onsubmit="return submitForm(event)">
+                                    <input type="hidden" name="project" value="<%= spaces._id %>">
+                                    <input type="hidden" name="columnStatus" value="<%= statusCategory %>"> 
+                                    <input type="text" name="taskName" placeholder="ใส่ชื่องาน" required id="underInput">
+                                    <button type="submit" style="display: none;">เพิ่มงาน</button>
+                                </form>
                             </div>
-                            <form action="/addTask_board" method="POST" class="add-task-form" style="display: none; width: 100%;" onsubmit="return submitForm(event)">
-                                <input type="hidden" name="project" value="<%= spaces._id %>">
-                                <input type="hidden" name="columnStatus" value="<%= statusCategory %>"> 
-                                <input type="text" name="taskName" placeholder="ใส่ชื่องาน" required id="underInput">
-                                <button type="submit" style="display: none;">เพิ่มงาน</button>
-                            </form>
-                        </div>
+                        <% } %>
                     </div>
                 <% }) %>
             </div>
         </div>
     </div>
 
+    <div class="alertPopup">
+        <div class="alertWrap">
+            <div class="alertCon">
+                <div class="alertHeader">
+                    <h1>แจ้งเตือน!</h1>
+                </div>
+                <div class="alertBody">
+                    <p id="alertMessage"></p>
+                </div>
+                <div class="alertFooter">
+                    <button class="alertBtn" id="cancelBtn">ยกเลิก</button>
+                    <button class="alertBtn" id="confirmBtn">ยืนยัน</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
     <%- include('../task/task_component/board_addPopup.ejs') %>
     <script src="/script/taskScript/task-board.js"></script>
 </body>

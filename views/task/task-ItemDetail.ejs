@@ -1,7 +1,7 @@
 <div class="content">
     <div class="topOption">
         <div class="breadcomes">
-            <a href="/space">พื้นที่</a>
+            <a href="/project">โปรเจกต์ทั้งหมด</a>
             <span>/</span>
             <a href="/space/item/<%= spaceId %>">แดชบอร์ด</a>
             <span>/</span>
@@ -45,8 +45,23 @@
                         </button>
                     </div>
                 </form>
+                <% if (task.taskStatus === 'inProgress') { %>
+                    <!-- Send button for active work -->
+                    <div class="sendTask">
+                        <button type="button" id="sendTask" onclick="checkWork('<%= taskId %>')">
+                            <span>ส่งงาน</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                <% } else if (task.taskStatus === 'fix') { %>
+                    <div class="sendTask">
+                        <button type="button" id="sendTask" onclick="checkWork('<%= taskId %>')">
+                            <span>ส่งแก้ไข</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                <% } %>
             </div>
-
             <!-- Task Name -->
 
             <!-- Task Detail -->
@@ -72,15 +87,10 @@
                         </div>
                         <div class="detail-data statusWrap" id="detail-data-status">
                             <div class="status-div" data-task-id="<%= task._id %>" data-status="<%= taskStatus %>">
+                                <span class="status-icon"></span>
                                 <span class="status-text">
                                     <%= taskStatus %>
                                 </span>
-                            </div>
-                            <div class="dropdown-content" id="status-dropdown-content" style="display: none;">
-                                <a href="#" class="status-option" data-status="toDo">ยังไม่ได้ทำ</a>
-                                <a href="#" class="status-option" data-status="inProgress">กำลังทำ</a>
-                                <a href="#" class="status-option" data-status="fix">แก้ไข</a>
-                                <a href="#" class="status-option" data-status="finished">เสร็จสิ้น</a>
                             </div>
                         </div>
                     </div>
@@ -355,16 +365,15 @@
                         <tbody id="subtaskTableBodyNew">
                             <% subtasks.forEach((subtask)=> { %>
                                 <tr class="task-row" data-subtask-id="<%= subtask._id %>"
-                                    style="opacity: <%= subtask.subTask_status === 'เสร็จสิ้น' ? '0.5' : '1' %>;"
-                                    onclick="showSubtaskFullView('<%= subtask._id %>')">
+                                    style="opacity: <%= subtask.subTask_status === 'finished' ? '0.5' : '1' %>;">
                                     <td class="inputCheck">
-                                        <input type="checkbox" class="checkbox" <%=subtask.subTask_status==='เสร็จสิ้น'
-                                            ? 'checked' : '' %>
-                                        <%= subtask.assignee && String(subtask.assignee._id)===String(user._id) ? ''
-                                            : 'disabled' %>
-                                            onclick="event.stopPropagation()"
-                                            />
-                                    </td>
+                                        <% if (subtask.assignee && String(subtask.assignee._id) === String(user._id)) { %>
+                                            <input type="checkbox" class="checkbox" 
+                                                <%= subtask.subTask_status === 'finished' ? 'checked' : '' %>
+                                                <%= subtask.subTask_status === 'finished' ? '' : '' %> 
+                                                onclick="event.stopPropagation(); toggleSubtaskStatus('<%= subtask._id %>');" />
+                                        <% } %>
+                                    </td>                                    
                                     <td>
                                         <%= subtask.subtask_Name %>
                                     </td>
@@ -372,8 +381,8 @@
                                         <%= subtask.subTask_dueDate %>
                                     </td>
                                     <td>
-                                        <div class="statusWrape">
-                                            <%= subtask.subTask_status %>
+                                        <div class="statusWrape" style="background-color: <%= subtask.subTask_status === 'inProgress' ? '#6EACDA' : '#4caf50' %>;">
+                                            <%= subtask.subTask_status === 'inProgress' ? 'กำลังทำ' : 'เสร็จสิ้น' %>
                                         </div>
                                     </td>
                                     <td>
@@ -441,13 +450,13 @@
 
             <div class="attachments-section">
                 <h3><i class="fa-solid fa-paperclip" style="padding-right: 10px;"></i> แนบไฟล์</h3>
-                <form action="/uploadDocument/<%= task._id %>?spaceId=<%= spaceId %>" method="POST"
+                <form action="/uploadDocument/<%= task._id %>/<%= spaceId %>" method="POST"
                     enctype="multipart/form-data" id="uploadInput">
                     <div class="attachment">
                         <div id="attach">
                             <label class="attachmentLabel" for="fileUpload">เลือกไฟล์</label>
-                            <input type="file" id="fileUpload" name="documents" multiple
-                                accept=".jpg, .jpeg, .png, .docx, .doc, .pdf" />
+                            <input type="file" id="fileUpload" name="taskAttachments" multiple
+                                accept=".jpg, .jpeg, .png, .pdf, .docx, .zip, .xls, .pptx, .raw" />
                             <span id="fileName">ไม่ได้เลือกไฟล์ใด</span>
                         </div>
                         <button type="submit" class="btn btn-primary">อัพโหลด</button>
@@ -456,6 +465,7 @@
                         jpg, jpeg, png, docx, doc, pdf (ไม่เกิน 5 MB).
                     </p>
                 </form>
+
                 <div class="fileItemSec">
                     <% if (attachments.length> 0) { %>
                         <ul id="fileItemlist">
@@ -463,7 +473,7 @@
                                 <li id="fileItem">
                                     <% const ext=attachment.originalName.split('.').pop().toLowerCase(); %>
                                         <div class="file-content">
-                                            <a href="/docUploads/<%= attachment.fileName %>"
+                                            <a href="/uploads/<%= attachment.originalName %>"
                                                 download="<%= attachment.originalName %>" class="download-link">
                                                 <% if (ext==='pdf' ) { %>
                                                     <i class="fa-solid fa-file-pdf" style="color: #d9534f;"></i>
@@ -488,8 +498,11 @@
                                                 <span class="time-text"></span>
                                             </div>
                                             <!-- Delete button with data-id for file reference -->
-                                            <div class="deleteFile" data-id="<%= attachment._id %>">
-                                                <i class="fa-solid fa-trash-can"></i>
+                                            <div class="file-item" data-file-id="<%= attachment._id %>">
+                                                <!-- file info -->
+                                                <div class="deleteFile" data-id="<%= attachment._id %>">
+                                                  <i class="fa-solid fa-trash-can"></i>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -579,7 +592,7 @@
             </div>
         </div>
 
-        <div class="activity">
+        <div class="mainActivity">
             <div class="textTopic">
                 <h1>กิจกรรมที่เกิดขึ้น</h1>
                 <button id="clearLogsButton" data-task-id="<%= task._id %>">เครียร์แจ้งเตือน</button>
@@ -587,12 +600,87 @@
 
             <div class="messageAct">
                 <div class="activityUpdate" id="activityUpdate">
-                    <% task.activityLogs .filter(log=> !log.deleted)
-                        .forEach(log => {
+                    <% task.comment.filter(comment => !comment.deleted).forEach(comment => { %>
+                        <div class="comment-container">
+                            <div class="comment-header">
+                                <img
+                                    src="<%= comment.createdBy?.profileImage || '/public/img/profileImage/userDefault.jpg' %>"
+                                    class="comment-user-img"
+                                    alt="user"
+                                />
+                                <div class="comment-user-info">
+                                    <strong><%= comment.createdBy?.firstName %> <%= comment.createdBy?.lastName %></strong>
+                                    <small class="comment-date"><%= formatDateToThai(comment.createdAt) %></small>
+                                </div>
+                                <button
+                                    class="delete-comment-btn"
+                                    data-comment-id="<%= comment._id %>"
+                                    title="Delete Comment"
+                                >
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="comment-body">
+                                <p class="comment-text">
+                                    <span style="color: red;">ได้คอมเมนต์: </span><%= comment.text %></p>
+                                <% if (comment.attachments && comment.attachments.length > 0) { %>
+                                <div class="comment-attachments">
+                                    <% comment.attachments.forEach(attachment => { %>
+                                        <div class="attachment-item">
+                                            <% const ext = attachment.originalName.split('.').pop().toLowerCase(); %>
+                                            <% if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) { %>
+                                            <!-- Image File -->
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                target="_blank"
+                                                class="attachment-link"
+                                                title="<%= attachment.originalName %>"
+                                            >
+                                                <img
+                                                    src="/<%= attachment.path %>"
+                                                    alt="<%= attachment.originalName %>"
+                                                    class="attachment-preview-large"
+                                                />
+                                            </a>
+                                            <% } else { %>
+                                            <!-- Non-Image File -->
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                download="<%= attachment.originalName %>"
+                                                class="attachment-link"
+                                                title="<%= attachment.originalName %>"
+                                            >
+                                                <i class="fa-solid fa-file" style="font-size: 48px;"></i>
+                                                <span class="attachment-name"><%= attachment.originalName %></span>
+                                            </a>
+                                            <% } %>
+                                            <a
+                                                href="/<%= attachment.path %>"
+                                                download="<%= attachment.originalName %>"
+                                                class="download-link"
+                                                title="Download <%= attachment.originalName %>"
+                                            >
+                                                <i class="fa-solid fa-download"></i>
+                                            </a>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% }) %>
+                    
+                    <% task.activityLogs.filter(log => !log.deleted).forEach(log => {
                         const details = log.details || {};
                         const oldValue = details.oldValue || 'ไม่ทราบ';
-                        const newValue = details.newValue || 'ไม่ทราบ'; %>
-
+                        const newValue = details.newValue || 'ไม่ทราบ';
+                    
+                        // Skip rendering if the fieldChanged is 'dueDate'
+                        if (details.fieldChanged === 'dueDate') {
+                            return; // Skip this log
+                        }
+                    %>
+                        
                         <div class="log-entry">
                             <div class="log-entry-detail">
                                 <!-- Display user profile image -->
@@ -640,6 +728,15 @@
                                                     </div>
                                                 </div>
 
+                                                <% } else if (details.fieldChanged==='sendTask' ) { %>
+                                                    <div class="statusLog">
+                                                        <p id="logText_sendTask">
+                                                            <span id="whoChange">
+                                                                <%= details.whoChange %>
+                                                            </span>
+                                                        </p>
+                                                    </div>
+
                                                 <% } else if (details.fieldChanged==='priority' ) { %>
                                                     <div class="prorityLog">
                                                         <p id="logText">
@@ -667,7 +764,7 @@
                                                         </div>
                                                     </div>
 
-                                                    <% } else if (details.fieldChanged==='dueDate' ) { %>
+                                                    <% } else if (details.fieldChanged === 'dueDate') { %>
                                                         <div class="dueDateLog">
                                                             <p id="logText">
                                                                 <span id="whoChange">
@@ -676,14 +773,15 @@
                                                             </p>
                                                             <div class="logDetail">
                                                                 <span class="previous-dueDate">
-                                                                    <%= oldValue %>
+                                                                    <%= details.oldValue || 'ไม่มีวันครบกำหนด' %>
                                                                 </span>
                                                                 <i class="fa-solid fa-arrow-right toArrow"></i>
                                                                 <span class="new-dueDate">
-                                                                    <%= newValue %>
+                                                                    <%= details.newValue || 'ไม่มีวันครบกำหนด' %>
                                                                 </span>
                                                             </div>
                                                         </div>
+
                                                         <% } else if (details.fieldChanged==='dueTime' ) { %>
                                                             <div class="dueTimeLog">
                                                                 <p id="logText">
@@ -798,241 +896,8 @@
                             </div>
                             <% }) %>
                         </div>
+                        
                 </div>
             </div>
-        </div>
+    </div>
 </div>
-
-<script>
-    // description section
-    document.addEventListener('DOMContentLoaded', function () {
-        const updateTaskDescription = async (textarea) => {
-            const newDescription = textarea.value.trim();
-            const taskId = textarea.getAttribute('data-task-id');
-    
-            try {
-                const response = await fetch('/updateTaskDescription', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ taskId, taskDetail: newDescription }),
-                });
-    
-                const data = await response.json();
-                if (data.success) {
-                    console.log('Task description updated successfully');
-                } else {
-                    console.error('Error updating description:', data.message);
-                }
-            } catch (error) {
-                console.error('Request error:', error);
-            }
-        };
-    
-        // Attach blur event to both textareas
-        const descriptionMainView = document.getElementById('taskDescription');
-        const descriptionFullView = document.getElementById('taskDescriptionFullView');
-    
-        if (descriptionMainView) {
-            let initialMainDescription = descriptionMainView.value;
-            descriptionMainView.addEventListener('blur', () => {
-                if (descriptionMainView.value !== initialMainDescription) {
-                    updateTaskDescription(descriptionMainView);
-                    initialMainDescription = descriptionMainView.value;
-                }
-            });
-        }
-    
-        if (descriptionFullView) {
-            let initialFullDescription = descriptionFullView.value;
-            descriptionFullView.addEventListener('blur', () => {
-                if (descriptionFullView.value !== initialFullDescription) {
-                    updateTaskDescription(descriptionFullView);
-                    initialFullDescription = descriptionFullView.value;
-                }
-            });
-        }
-    });
-    
-    // subtask section
-    document.getElementById('addSubtaskNew').addEventListener('click', () => {
-        const assigneeSelect = document.getElementById('assigneeSelect');
-        const subtaskForm = document.getElementById('subtaskFormMainNew');
-    
-        if (!assigneeSelect.value) {
-            alert('Please select an assignee.');
-        } else if (subtaskForm.checkValidity()) {
-            console.log("Submitting with assignee:", assigneeSelect.value);
-            subtaskForm.submit();
-        }
-    });
-    document.addEventListener('DOMContentLoaded', () => {
-        const customDropdown = document.getElementById('customDropdown');
-        const dropdownSelected = document.getElementById('dropdownSelected_assign');
-        const dropdownOptions = document.getElementById('dropdownOptions');
-        const assigneeSelect = document.getElementById('assigneeSelect'); // Hidden input
-    
-        // Toggle dropdown visibility
-        dropdownSelected.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent the event from bubbling up
-            const isVisible = dropdownOptions.style.display === 'block';
-            dropdownOptions.style.display = isVisible ? 'none' : 'block';
-        });
-    
-        // Handle option selection
-        dropdownOptions.querySelectorAll('.dropdown-option-assign').forEach(option => {
-            option.addEventListener('click', function () {
-                const userId = this.getAttribute('data-value');
-                const userName = this.querySelector('span').textContent;
-                const userAvatar = this.querySelector('img').src;
-    
-                // Update the selected value
-                dropdownSelected.innerHTML = `
-                    <img src="${userAvatar}" alt="${userName} Profile" class="user-avatar" />
-                `;
-    
-                // Set the value in the hidden input for form submission
-                assigneeSelect.value = userId;
-    
-                // Close the dropdown
-                dropdownOptions.style.display = 'none';
-            });
-        });
-    
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (event) => {
-            if (!customDropdown.contains(event.target)) {
-                dropdownOptions.style.display = 'none';
-            }
-        });
-    });
-
-    function updateCheckTaskButtonVisibility() {
-        const checkboxes = document.querySelectorAll('#subtaskTableBodyNew .checkbox');
-        const allChecked = checkboxes.length > 0 && [...checkboxes].every((checkbox) => checkbox.checked);
-        const hasSubtasks = checkboxes.length > 0;
-        const detailSection = document.querySelector('.detail');
-    
-        const checkTaskButton = document.querySelector('.checkTask');
-    
-        if (allChecked || !hasSubtasks) {
-            checkTaskButton.style.display = 'block'; 
-            detailSection.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            checkTaskButton.style.display = 'none'; // Hide the button
-        }
-    }
-    
-    // Attach listeners to all checkboxes
-    function addCheckboxListeners() {
-        const checkboxes = document.querySelectorAll('#subtaskTableBodyNew .checkbox');
-        checkboxes.forEach((checkbox) => {
-            checkbox.addEventListener('change', updateCheckTaskButtonVisibility);
-        });
-    }
-    
-    // Initialize everything on DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', () => {
-        addCheckboxListeners();
-        updateCheckTaskButtonVisibility(); // Initial check
-    });
-
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const deleteButtons = document.querySelectorAll('.deleteFile');
-      
-        // Helper function to calculate relative time in Thai
-        function timeAgo(date) {
-          const now = new Date();
-          const uploadedDate = new Date(date);
-          const seconds = Math.floor((now - uploadedDate) / 1000);
-      
-          const intervals = {
-            year: 31536000,
-            month: 2592000,
-            week: 604800,
-            day: 86400,
-            hour: 3600,
-            minute: 60,
-            second: 1,
-          };
-      
-          for (const [unit, value] of Object.entries(intervals)) {
-            const interval = Math.floor(seconds / value);
-            if (interval >= 1) {
-              const rtf = new Intl.RelativeTimeFormat('th', { numeric: 'auto' });
-              return rtf.format(-interval, unit); // Negative for 'ago'
-            }
-          }
-          return 'เมื่อครู่นี้'; // Just now in Thai
-        }
-      
-        // Update the relative time for each file
-        document.querySelectorAll('.file-time').forEach(timeElement => {
-          const uploadedAt = timeElement.getAttribute('data-uploaded');
-          timeElement.querySelector('.time-text').textContent = timeAgo(uploadedAt);
-        });
-      
-        // Handle delete button clicks with confirmation in Thai
-        deleteButtons.forEach(button => {
-          button.addEventListener('click', async (event) => {
-            event.stopPropagation();
-            const fileId = button.getAttribute('data-id');
-      
-            const confirmDelete = confirm('คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้?');
-            if (!confirmDelete) return;
-      
-            try {
-              const response = await fetch(`/deleteFile/${fileId}`, { method: 'DELETE' });
-      
-              if (response.ok) {
-                button.closest('#fileItem').remove();
-                alert('ลบไฟล์สำเร็จ');
-              } else {
-                alert('ลบไฟล์ไม่สำเร็จ');
-              }
-            } catch (error) {
-              console.error('Error:', error);
-              alert('เกิดข้อผิดพลาดระหว่างการลบไฟล์');
-            }
-          });
-        });
-      });
-
-    // Function to assign icons based on file type
-    function setFileIcons() {
-        const fileItems = document.querySelectorAll('#fileItemlist li');
-    
-        fileItems.forEach(item => {
-        const iconElement = item.querySelector('.file-icon'); // Target the icon element
-        const fileName = item.querySelector('span').innerText.toLowerCase(); // Get the file name
-    
-        if (fileName.endsWith('.pdf')) {
-            iconElement.className = 'fa-solid fa-file-pdf'; // Set PDF icon
-            iconElement.style.color = '#e74c3c'; // Red color for PDFs
-        } else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
-            iconElement.className = 'fa-solid fa-file-word'; // Set Word icon
-            iconElement.style.color = '#2e86de'; // Blue color for Word docs
-        } else if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png')) {
-            iconElement.className = 'fa-solid fa-file-image'; // Set Image icon
-            iconElement.style.color = '#27ae60'; // Green color for images
-        } else {
-            iconElement.className = 'fa-solid fa-file'; // Default file icon
-            iconElement.style.color = '#7f8c8d'; // Grey color for unknown types
-        }
-        });
-    }
-    
-    // Call the function when the page loads
-    document.addEventListener('DOMContentLoaded', setFileIcons);
-    const fileUpload = document.getElementById('fileUpload');
-    const fileName = document.getElementById('fileName');
-
-    fileUpload.addEventListener('change', (event) => {
-    const files = event.target.files;
-    if (files.length > 0) {
-        fileName.textContent = Array.from(files).map(file => file.name).join(', ');
-    } else {
-        fileName.textContent = 'ไม่ได้เลือกไฟล์ใด';
-    }
-    });
-</script>

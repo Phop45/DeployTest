@@ -23,56 +23,130 @@ function deleteSpace(spaceId) {
     }
 }
 
+// update name
 document.addEventListener('DOMContentLoaded', function () {
-    // เลือก dropdowns ทั้งหมด
     const dropdownToggles = document.querySelectorAll('[id^="dropdown-toggle-"]');
 
     dropdownToggles.forEach(toggle => {
-        const spaceId = toggle.id.split('-')[2]; // แยก _id ออกมา
+        const spaceId = toggle.id.split('-')[2];
         const dropdownMenu = document.getElementById(`dropdown-taskedit-${spaceId}`);
+        const editItem = document.getElementById(`editSpaceName-${spaceId}`);
+        const inputField = document.getElementById(`card-title-input-${spaceId}`);
+        const alertText = document.querySelector(`#editsubnameform-${spaceId} .alretText`);
+        const editForm = document.getElementById(`editsubnameform-${spaceId}`);
 
+        // Toggle dropdown visibility
         toggle.addEventListener('click', function (event) {
             event.stopPropagation();
 
-            // ปิด dropdown อื่นๆ ก่อน
             document.querySelectorAll('.dropdown-taskedit').forEach(menu => {
                 if (menu !== dropdownMenu) {
                     menu.style.display = 'none';
                 }
             });
 
-            // สลับการแสดง dropdown ปัจจุบัน
-            dropdownMenu.style.display = dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '' ? 'block' : 'none';
+            dropdownMenu.style.display =
+                dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '' ? 'block' : 'none';
         });
 
-        // เมื่อคลิก "เปลี่ยนชื่อ"
-        const editItem = dropdownMenu.querySelector('.dropdown-taskedit-item');
+        // Handle edit item click
         editItem.addEventListener('click', function (event) {
             event.preventDefault();
-            // ซ่อน <a> แสดงชื่อพื้นที่
-            document.querySelector(`.space-name-display-${spaceId}`).style.display = 'none';
-            // แสดงฟอร์มแก้ไข
-            document.querySelector(`.space-name-edit-form-${spaceId}`).style.display = 'block';
+            const spaceNameCard = document.getElementById(`spaceNameCard-${spaceId}`);
+            if (spaceNameCard) spaceNameCard.style.display = 'none'; // Hide the project name
+            if (editForm) {
+                editForm.style.display = 'block'; // Show the edit form
+                if (inputField) inputField.focus(); // Focus on the input field
+            }
         });
 
+        // Validate input in real-time
+        inputField.addEventListener('input', function () {
+            const spaceName = inputField.value.trim();
+            validateSpaceName(spaceName);
+        });
+
+        // Prevent form submission on Enter if validation fails
+        editForm.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const spaceName = inputField.value.trim();
+                if (validateSpaceName(spaceName)) {
+                    editForm.submit(); // Submit form only if validation passes
+                }
+            }
+        });
+
+        // Prevent form submission on submit button click if validation fails
+        editForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const spaceName = inputField.value.trim();
+
+            if (!validateSpaceName(spaceName)) return; // Prevent form submission if validation fails
+
+            // Proceed with sending the request if validation passes
+            try {
+                const response = await fetch(`/updateSpaceName/${spaceId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ SpaceName: spaceName }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    location.reload(); // Refresh the page to show the updated name
+                } else {
+                    alertText.textContent = 'Failed to update space name.';
+                    alertText.style.color = 'red';
+                }
+            } catch (error) {
+                console.error('Error updating space name:', error);
+                alertText.textContent = 'An error occurred. Please try again.';
+                alertText.style.color = 'red';
+            }
+        });
+
+        // Hide dropdown on outside click
         document.addEventListener('click', function (event) {
             if (!dropdownMenu.contains(event.target) && event.target !== toggle) {
                 dropdownMenu.style.display = 'none';
             }
         });
+
+        // Validation function
+        function validateSpaceName(spaceName) {
+            const alphanumericWithSpacesRegex = /^[a-zA-Z0-9ก-๙\s]+$/;
+
+            if (!spaceName) {
+                alertText.textContent = 'โปรดป้อนชื่อโปรเจกต์ที่ไม่ว่างเปล่า';
+                alertText.style.color = 'red';
+                return false;
+            }
+
+            if (!alphanumericWithSpacesRegex.test(spaceName)) {
+                alertText.textContent = 'ชื่อโปรเจกต์ต้องเป็นตัวอักษร ตัวเลข และช่องว่างเท่านั้น';
+                alertText.style.color = 'red';
+                return false;
+            }
+
+            alertText.textContent = ''; // Clear any previous error messages
+            return true;
+        }
     });
 });
 
 // ฟังก์ชันส่งฟอร์มเมื่อเปลี่ยนรูปภาพ
 function submitForm(spaceId) {
-    const form = document.getElementById('upload-form');
-    const input = document.getElementById('file-input-' + spaceId);
+    const form = document.getElementById(`upload-form-${spaceId}`);
+    const input = document.getElementById(`file-input-${spaceId}`);
 
     if (input.files.length > 0) {
         form.submit();
     }
 }
-
 
 // Prevent clicks on taskedit from triggering the parent link
 document.addEventListener("DOMContentLoaded", () => {
@@ -85,3 +159,45 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+
+function sortProjects(order) {
+    const taskCardsContainer = document.querySelector('.taskcardall');
+    const taskCards = Array.from(taskCardsContainer.children);
+
+    taskCards.forEach(card => {
+        console.log(card.getAttribute('data-created-at'));
+    });
+
+    // Sort the task cards based on the `data-created-at` attribute
+    taskCards.sort((a, b) => {
+        const createdAtA = new Date(a.getAttribute('data-created-at'));
+        const createdAtB = new Date(b.getAttribute('data-created-at'));
+
+        // Handle sorting based on the order
+        if (order === 'latest') {
+            return createdAtA - createdAtB; // Sort latest to oldest
+        } else if (order === 'oldest') {
+            return createdAtB - createdAtA; // Sort oldest to latest
+        }
+    });
+
+    taskCards.forEach(card => {
+        console.log(card.getAttribute('data-created-at'));
+    });
+
+    // Clear the container and re-add the sorted task cards
+    taskCardsContainer.innerHTML = ''; // Clear the container
+    taskCards.forEach(card => taskCardsContainer.appendChild(card)); // Append sorted cards
+
+    // Toggle visibility of sort options
+    const latestSort = document.getElementById('latestSort');
+    const oldestSort = document.getElementById('oldestSort');
+
+    if (order === 'latest') {
+        latestSort.style.display = 'none';
+        oldestSort.style.display = 'inline';
+    } else if (order === 'oldest') {
+        latestSort.style.display = 'inline';
+        oldestSort.style.display = 'none';
+    }
+}

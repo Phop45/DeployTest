@@ -65,17 +65,17 @@
                         <div class="headerText">
                             <div class="titleCardText">
                                 <i class="fa-regular fa-circle-check titleIcon"></i>
-                                ความคืบหน้าของงาน
+                                ความคืบหน้างานทั้งหมดของคุณ
                             </div>
                             <div class="subText">
-                                ภาพรวมของงานของคุณ
+                                แสดงภาพรวมของงานของคุณ
                             </div>
                         </div>
                         <div class="progressBarContainer">
                             <div class="progressBar" id="allTaskProgress">
                                 <div class="progressBar toDo"
-                                    style="width: <%= allTaskCount > 0 ? (statusCounts.toDo / allTaskCount) * 100 : 0 %>%;"
-                                    title="To Do (<%= statusCounts.toDo %>)"></div>
+                                    style="width: <%= allTaskCount > 0 ? (statusCounts.pending / allTaskCount) * 100 : 0 %>%;"
+                                    title="To Do (<%= statusCounts.pending %>)"></div>
                                 <div class="progressBar inProgress"
                                     style="width: <%= allTaskCount > 0 ? (statusCounts.inProgress / allTaskCount) * 100 : 0 %>%;"
                                     title="In Progress (<%= statusCounts.inProgress %>)"></div>
@@ -87,8 +87,8 @@
                                     title="Completed (<%= statusCounts.finished %>)"></div>
                             </div>
                             <div class="progressLegend">
-                                <% if (statusCounts.toDo > 0) { %>
-                                    <span class="legendItem toDo">● ยังไม่ทำ (<%= statusCounts.toDo %>)</span>
+                                <% if (statusCounts.pending > 0) { %>
+                                    <span class="legendItem toDo">● รอตรวจ (<%= statusCounts.pending %>)</span>
                                 <% } %>
                                 <% if (statusCounts.inProgress > 0) { %>
                                     <span class="legendItem inProgress">● กำลังทำ (<%= statusCounts.inProgress %>)</span>
@@ -103,7 +103,7 @@
                         </div> 
                         
                         <div class="countSec">
-                            <div class="countTextWrap">
+                            <div class="countTextWrap clickable-task-section" id="completedTask" data-task-type="completed" data-space-id="<%= validSpaceId %>" >
                                 <div class="countText">
                                     <span id="count">
                                         <%= completedCount %>
@@ -115,7 +115,7 @@
                                     ที่เสร็จสิ้น
                                 </span>
                             </div>
-                            <div class="countTextWrap">
+                            <div class="countTextWrap clickable-task-section" id="incompletedTask" data-task-type="incompleted" data-space-id="<%= validSpaceId %>" >
                                 <div class="countText">
                                     <span id="count">
                                         <%= incompletedCount %>
@@ -134,18 +134,18 @@
                         <div class="headerText">
                             <div class="titleCardText">
                                 <i class='bx bx-error-circle titleIcon' style="font-size: 24px;"></i>
-                                งานที่ต้องการความใส่ใจ
+                                งานที่รอตรวจทั้งหมด
                             </div>
                             <div class="subText">
-                                งานเร่งด่วนหรือต้องแก้ไข
+                                งานทั้งหมดที่รอคุณไปอนุมัติ
                             </div>
                         </div>
                         <div class="taskList">
-                            <% attentionTasks.forEach(task => { %>
+                            <% pendingTasks.forEach(task => { %>
                                 <div class="taskItem">
                                     <span class="attendIcon">
                                         <i class='bx bx-error-circle' 
-                                            style="color: <%= task.taskPriority === 'urgent' && task.taskStatus === 'fix' ? '#ef4444' : '#f59e0b' %>;"></i>
+                                            style="color: <%= task.taskPriority === 'urgent' && task.taskStatus === 'pending' ? '#ef4444' : '#f59e0b' %>;"></i>
                                     </span>
                                     <div class="taskDetail">
                                         <span id="attendName"><%= task.taskName %></span>
@@ -156,13 +156,30 @@
                                                     ด่วน
                                                 </div>
                                             <% } %>
-                                            <% if (task.taskStatus === 'fix') { %>
+                                            <% if (task.taskStatus === 'pending') { %>
                                                 <div id="attenStatus">
-                                                    <i class="fa-solid fa-pen"></i>
-                                                    แก้ไข
+                                                    <i class="fa-solid fa-hourglass-half"></i>
+                                                    รอตรวจ
                                                 </div>
                                             <% } %>
                                         </span>
+                                        <!-- Display Due Date or "No Due Date" -->
+                                        <% if (task.dueDate) { 
+                                            const dueDate = dayjs(task.dueDate); 
+                                            const today = dayjs();
+                                            const daysRemaining = dueDate.diff(today, 'day');
+                                            const isDueSoon = daysRemaining <= 3; %>
+                                            
+                                            <div id="attenDueDate" style="color: <%= isDueSoon ? 'red' : 'inherit' %>;">
+                                                <i class="fa-solid fa-calendar-day"></i>
+                                                <%= dueDate.format('D MMMM YYYY') %>
+                                            </div>
+                                        <% } else { %>
+                                            <div id="attenDueDate">
+                                                <i class="fa-solid fa-calendar-day"></i>
+                                                ไม่มีวันครบกำหนด
+                                            </div>
+                                        <% } %>
                                     </div>
                                 </div>
                             <% }); %>
@@ -170,24 +187,18 @@
                         <div class="viewTask">
                             <button id="viewBtn">ดูงานทั้งหมด <i class="fa-solid fa-arrow-up"></i></button>
                         </div>
-                    </div>
+                    </div>                                       
                 </div>
 
                 <div class="leftBottom">
                     <div class="title">
                        <div class="selectProjectDisplay">
-                            <div class="selectItem" id="allProject">
+                            <div class="selectItem" id="allProject" style="font-size: 22px;">
                                 โปรเจกต์ทั้งหมด
-                            </div>
-                            <div class="selectItem" id="leaderProject">
-                                โปรเจกต์ที่คุณเป็นเจ้าของ
-                            </div>
-                            <div class="selectItem" id="memberProject">
-                                โปรเจกต์ที่คุณเป็นสมาชิก
                             </div>
                        </div>
                        <div class="createBtn">
-                            <a href="/createProject" id="createBtn"> <i class="fa-solid fa-plus"></i> สร้างโปรเจกต์ใหม่</a>
+                            <a href="/project" id="createBtn"> <i class="fa-solid fa-location-arrow"></i> ดูโปรเจกต์ทั้งหมด</a>
                        </div>
                     </div>
                     
@@ -220,9 +231,10 @@
                                     <div class="projectProgressBarContainer">
                                         <div class="progressBarWrap">
                                             <div class="projectProgressBar" id="projectTaskProgress">
-                                                <div class="projectProgressBar toDo"
-                                                    style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.toDo / space.projectAllTaskCount) * 100 : 0 %>%;"
-                                                    title="To Do (<%= space.statusCounts.toDo %>)"></div>
+                                                <!-- Replace 'toDo' with 'pending' -->
+                                                <div class="projectProgressBar pending"
+                                                    style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.pending / space.projectAllTaskCount) * 100 : 0 %>%;"
+                                                    title="Pending (<%= space.statusCounts.pending %>)"></div>
                                                 <div class="projectProgressBar inProgress"
                                                     style="width: <%= space.projectAllTaskCount > 0 ? (space.statusCounts.inProgress / space.projectAllTaskCount) * 100 : 0 %>%;"
                                                     title="In Progress (<%= space.statusCounts.inProgress %>)"></div>
@@ -234,9 +246,10 @@
                                                     title="Completed (<%= space.statusCounts.finished %>)"></div>
                                             </div>
                                         </div>
-                                        
+                                    
                                         <div class="projectProgressLegend">
-                                            <span class="projectLegendItem toDo">● ยังไม่ทำ (<%= space.statusCounts.toDo || 0 %>)</span>
+                                            <!-- Replace 'ยังไม่ทำ' (toDo) with 'รอดำเนินการ' (pending) -->
+                                            <span class="projectLegendItem pending">● รอตรวจ (<%= space.statusCounts.pending || 0 %>)</span>
                                             <span class="projectLegendItem inProgress">● กำลังทำ (<%= space.statusCounts.inProgress || 0 %>)</span>
                                             <span class="projectLegendItem needFix">● แก้ไข (<%= space.statusCounts.fix || 0 %>)</span>
                                             <span class="projectLegendItem completed">● เสร็จสิ้น (<%= space.statusCounts.finished || 0 %>)</span>
@@ -254,6 +267,14 @@
                                 </div>
                             </div>
                         <% }); %>
+                        <div class="projectItemContainer">
+                            <a href="/createProject" id="mainCreateBtn"> 
+                                <span>
+                                    <i class="fa-solid fa-plus"></i> 
+                                </span>
+                                สร้างโปรเจกต์ใหม่
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -275,8 +296,391 @@
                 </div>
             </div>
         </div>
+
+        <div class="tasksModal modal" id="tasksModal">
+            <div class="modal-content">
+                <div class="topModal">
+                    <div class="nameSearch">
+                        <h2 id="modalTitle"></h2>
+                        <div class="searchContainer" style="display: none;">
+                            <i class='bx bx-search searchIcon'></i>
+                            <input type="search" placeholder="ค้นหางาน..." id="searchInput" name="modalSearchInput">
+                        </div>
+                    </div>
+                    <span class="close">&times;</span>
+                </div>
+                <table id="tasksTable">
+                    <thead>
+                        <tr>
+                            <th>โปรเจกต์</th>
+                            <th>ชื่องาน</th>
+                            <th>
+                                <div class="tableHead">
+                                    <i class='bx bxs-detail'></i>
+                                    รายละเอียด
+                                </div>
+                            </th>
+                            <th>
+                                <div class="tableHead">
+                                    <i class="fa-solid fa-circle-arrow-right"></i>
+                                    สถานะ
+                                </div>
+                            </th>
+                            <th>
+                                <div class="tableHead">
+                                    <i class="fa-solid fa-flag"></i>
+                                    ความสำคัญ
+                                </div>
+                            </th>
+                            <th>
+                                <div class="tableHead">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                    วันครบกำหนด
+                                </div>
+                            </th>
+                            <th>
+                                <div class="tableHead">
+                                    <i class="fa-solid fa-user-tag"></i> ผู้รับผิดชอบ
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <tbody id="tasksTableBody">
+                        </tbody>
+                    </div>
+                </table>
+            </div>
+        </div>
     </div>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
     <script src="/script/mainDashboard/dashboardScript.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tasksData = <%- JSON.stringify(tasksData) %>;
+            const clickableSections = document.querySelectorAll('.clickable-task-section');
+        
+            // Get the modal elements
+            const tasksModal = document.getElementById('tasksModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const tasksTableBody = document.getElementById("tasksTable")?.getElementsByTagName("tbody")[0];
+            const closeModal = document.querySelector('.close');
+        
+            // Close modal when clicking the X button
+            closeModal.addEventListener('click', function() {
+                tasksModal.style.display = 'none';
+            });
+        
+            // Close modal when clicking outside of it
+            window.addEventListener('click', function(event) {
+                if (event.target === tasksModal) {
+                    tasksModal.style.display = 'none';
+                }
+            });
+        
+            // Add click event listeners to each clickable section
+            clickableSections.forEach(section => {
+                section.addEventListener('click', function() {
+                    const spaceId = this.getAttribute('data-space-id'); // Get the selected space ID
+                    const taskType = this.getAttribute('data-task-type');
+        
+                    // Fetch tasks only for the selected space (filter by project)
+                    const tasksData = JSON.parse(document.querySelector('script[data-tasks]').getAttribute('data-tasks'));
+                    
+                    // Fix: Added missing tasksData definition here (reused global tasksData)
+                    let filteredTasks = [];
+                    let title = '';
+        
+                    if (taskType === 'completed') {
+                        filteredTasks = tasksData.filter(task => task.taskStatus === 'finished');
+                        title = 'งานที่เสร็จสิ้น';
+                    } else if (taskType === 'incompleted') {
+                        filteredTasks = tasksData.filter(task => 
+                            ['inProgress', 'pending', 'fix'].includes(task.taskStatus)
+                        );
+                        title = 'งานทั้งหมดที่เหลืออยู่ (งานที่กำลังทำ, รอตรวจ และแก้ไข)';
+                    }
+        
+                    // Update modal title
+                    modalTitle.textContent = title;
+        
+                    // Clear existing table rows
+                    tasksTableBody.innerHTML = '';
+        
+                    function checkDueDateWarning(element, dueDate) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0); // Normalize today's time to midnight
+                        const diffInTime = new Date(dueDate) - today;
+                        const diffInDays = Math.floor(diffInTime / (1000 * 60 * 60 * 24));
+        
+                        if (diffInDays < 0) {
+                            element.style.color = '#FF5733'; // Red for overdue tasks
+                        } else if (diffInDays === 0) {
+                            element.style.color = '#FF5733'; // Red for due today
+                        } else if (diffInDays > 0 && diffInDays <= 3) {
+                            element.style.color = '#FFA500'; // Orange for tasks due in 3 days or less
+                        } else {
+                            element.style.color = 'black'; // Black for tasks with due dates far away
+                        }
+                    }
+        
+                    // Add filtered tasks to the table
+                    filteredTasks.forEach(task => {
+                        const row = document.createElement('tr');
+                        
+                        // Ensure that each task has a unique task ID
+                        row.setAttribute('data-task-id', task._id);
+                        row.setAttribute('data-space-id', task.project ? task.project._id : 'validSpaceId');
+        
+                        row.onclick = function () {
+                            const taskId = this.dataset.taskId;
+                            const spaceId = this.dataset.spaceId;
+                            if (taskId && spaceId) {
+                                window.location.href = `/task/${taskId}/detail?spaceId=${spaceId}`;
+                            }
+                        };
+        
+                        row.classList.add('taskItem');
+        
+                        let statusDiv;
+                        switch(task.taskStatus) {
+                            case 'finished':
+                                statusDiv = `<div class="status finished"> เสร็จสิ้น</div>`;
+                                break;
+                            case 'inProgress':
+                                statusDiv = `<div class="status inProgress">กำลังทำ</div>`;
+                                break;
+                            case 'pending':
+                                statusDiv = `<div class="status pending">รอตรวจ</div>`;
+                                break;
+                            case 'fix':
+                                statusDiv = `<div class="status fix">แก้ไข</div>`;
+                                break;
+                            default:
+                                statusDiv = `<div class="status">${task.taskStatus}</div>`;
+                        }
+        
+                        let priorityDiv;
+                        switch(task.taskPriority) {
+                            case 'urgent':
+                                priorityDiv = `<div class="priority urgent"><i class="fa-solid fa-angles-up"></i> ด่วน</div>`;
+                                break;
+                            case 'normal':
+                                priorityDiv = `<div class="priority normal"><i class="fa-solid fa-grip-lines"></i> ปกติ</div>`;
+                                break;
+                            case 'low':
+                                priorityDiv = `<div class="priority low"><i class="fa-solid fa-angle-down"></i> ต่ำ</div>`;
+                                break;
+                            default:
+                                priorityDiv = `<div class="priority">${task.taskPriority}</div>`;
+                        }
+        
+                        function formatThaiDate(date) {
+                            if (!date) return '';
+                            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                            return date.toLocaleDateString('th-TH', options);
+                        }
+        
+                        row.innerHTML = `
+                            <td id="projectNameModal">${task.project ? task.project.projectName : 'ไม่มีโปรเจกต์'}</td>
+                            <td id="taskNameModal">${task.taskName}</td>
+                            <td id="detailModal">${task.taskDetail ? task.taskDetail : '<div class="nullValue">ไม่มีคำอธิบายเพิ่มเติม</div>'}</td>
+                            <td id="statusModal">${statusDiv}</td>
+                            <td id="priorityModal">${priorityDiv}</td>
+                            <td id="dueDateModal">
+                                ${task.dueDate ? formatThaiDate(new Date(task.dueDate)) : '<div class="nullValue">ไม่มีวันครบกำหนด</div>'}
+                            </td>
+                            <td id="profileModal">
+                                ${task.assignedUsers && task.assignedUsers.length > 0 
+                                    ? task.assignedUsers
+                                        .map(user => `
+                                            <div class="profile-wrapper">
+                                                <img src="${user.profileImage || '/public/img/profileImage/userDefalt.jpg'}" class="proImg" title="${user.username}"
+                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="fallback-profile-modal" style="display: none;">
+                                                    <span>${user.firstName ? user.firstName[0] : ''}</span>
+                                                </div>
+                                            </div>
+                                        `)
+                                        .join('')
+                                    : '<div class=nullValue>ไม่มีผู้รับมอบหมาย</div>'
+                                }
+                            </td>
+                        `;
+                        const dueDateElement = row.querySelector('#dueDateModal');
+                        if (task.dueDate) {
+                            checkDueDateWarning(dueDateElement, task.dueDate);
+                        }
+        
+                        tasksTableBody.appendChild(row);
+                    });
+        
+                    // Show the modal
+                    tasksModal.style.display = 'block';
+                });
+            });
+        
+            // Add a script element to store the tasks data (if not already present)
+            if (!document.querySelector('script[data-tasks]')) {
+                const tasksScript = document.createElement('script');
+                tasksScript.setAttribute('type', 'application/json');
+                tasksScript.setAttribute('data-tasks', JSON.stringify(<%- JSON.stringify(tasksData) %>));
+                document.body.appendChild(tasksScript);
+            }
+        });
+        
+        // view all
+        document.addEventListener("DOMContentLoaded", function () {
+            // Get the modal and the button that opens it
+            const viewBtn = document.getElementById("viewBtn");
+            const tasksModal = document.getElementById("tasksModal");
+            const closeModal = document.getElementById("closeModal");
+            const tableBody = document.getElementById("tasksTableBody");
+
+            // Get the task data from the server (assuming it is passed to the page)
+            const pendingTasks = <%- JSON.stringify(pendingTasks) %>; // EJS variable holding the pending tasks
+        
+            // Format status and priority
+            function formatStatus(taskStatus) {
+                let statusDiv;
+                switch(taskStatus) {
+                    case 'finished':
+                        statusDiv = `<div class="status finished">เสร็จสิ้น</div>`;
+                        break;
+                    case 'inProgress':
+                        statusDiv = `<div class="status inProgress">กำลังทำ</div>`;
+                        break;
+                    case 'pending':
+                        statusDiv = `<div class="status pending">รอตรวจ</div>`;
+                        break;
+                    case 'fix':
+                        statusDiv = `<div class="status fix">แก้ไข</div>`;
+                        break;
+                    default:
+                        statusDiv = `<div class="status">${taskStatus}</div>`;
+                }
+                return statusDiv;
+            }
+
+            function formatPriority(taskPriority) {
+                let priorityDiv;
+                switch(taskPriority) {
+                    case 'urgent':
+                        priorityDiv = `<div class="priority urgent"><i class="fa-solid fa-angles-up"></i> ด่วน</div>`;
+                        break;
+                    case 'normal':
+                        priorityDiv = `<div class="priority normal"><i class="fa-solid fa-grip-lines"></i> ปกติ</div>`;
+                        break;
+                    case 'low':
+                        priorityDiv = `<div class="priority low"><i class="fa-solid fa-angle-down"></i> ต่ำ</div>`;
+                        break;
+                    default:
+                        priorityDiv = `<div class="priority">${taskPriority}</div>`;
+                }
+                return priorityDiv;
+            }
+
+            function formatThaiDate(date) {
+                if (!date) return '';
+                const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                return date.toLocaleDateString('th-TH', options);
+            }
+        
+            function populateTasksModal(tasks) {
+                tableBody.innerHTML = ''; // Clear previous content
+            
+                tasks.forEach(task => {
+                    // Create a new row
+                    const row = document.createElement("tr");
+                    row.classList.add("taskItem");
+            
+                    // Add click event to redirect
+                    row.onclick = function () {
+                        window.location.href = `/task/${task._id}/detail?spaceId=${task.spaceId}`;
+                    };
+            
+                    // Project Name (New Column)
+                    const projectName = document.createElement("td");
+                    projectName.id = "projectNameModal";
+                    projectName.innerHTML = task.project.projectName; // Display project name
+                    // Task Name
+                    const taskName = document.createElement("td");
+                    taskName.id = "taskNameModal";
+                    taskName.innerHTML = task.taskName;
+            
+                    // Task Detail
+                    const taskDetail = document.createElement("td");
+                    taskDetail.id = "detailModal";
+                    taskDetail.innerHTML = task.taskDetail ? task.taskDetail : '<div class="nullValue">ไม่มีคำอธิบายเพิ่มเติม</div>';
+            
+                    // Task Status
+                    const statusDiv = formatStatus(task.taskStatus); 
+                    const taskStatus = document.createElement("td");
+                    taskStatus.id = "statusModal";
+                    taskStatus.innerHTML = statusDiv;
+            
+                    // Task Priority
+                    const priorityDiv = formatPriority(task.taskPriority); 
+                    const taskPriority = document.createElement("td");
+                    taskPriority.id = "priorityModal";
+                    taskPriority.innerHTML = priorityDiv;
+            
+                    // Due Date
+                    const taskDueDate = document.createElement("td");
+                    taskDueDate.id = "dueDateModal";
+                    taskDueDate.innerHTML = task.dueDate ? formatThaiDate(new Date(task.dueDate)) : '<div class="nullValue">ไม่มีวันครบกำหนด</div>';
+            
+                    // Assigned Users (Profile)
+                    const assignedUsers = document.createElement("td");
+                    assignedUsers.id = "profileModal";
+                    assignedUsers.innerHTML = task.assignedUsers && task.assignedUsers.length > 0
+                        ? task.assignedUsers
+                            .map(user => `
+                                <div class="profile-wrapper">
+                                    <img src="${user.profileImage || '/public/img/profileImage/userDefalt.jpg'}" class="proImg" title="${user.username}"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="fallback-profile-modal" style="display: none;">
+                                        <span>${user.firstName ? user.firstName[0] : ''}</span>
+                                    </div>
+                                </div>
+                            `)
+                            .join('')
+                        : '<div class="nullValue">ไม่มีผู้รับมอบหมาย</div>';
+            
+                    // Append all cells to the row
+                    row.appendChild(projectName); // Append project name first
+                    row.appendChild(taskName);
+                    row.appendChild(taskDetail);
+                    row.appendChild(taskStatus);
+                    row.appendChild(taskPriority);
+                    row.appendChild(taskDueDate);
+                    row.appendChild(assignedUsers);
+            
+                    // Append the row to the table body
+                    tableBody.appendChild(row);
+                });
+            }
+                     
+        
+            // Show modal when clicking the button
+            viewBtn.onclick = function () {
+                populateTasksModal(pendingTasks); // Use the sorted pendingTasks passed from the backend
+                tasksModal.style.display = "block";
+            };
+        
+            // Close the modal when clicking the close button
+            closeModal.onclick = function () {
+                tasksModal.style.display = "none";
+            };
+        
+            // Close the modal if clicked outside of it
+            window.onclick = function (event) {
+                if (event.target === tasksModal) {
+                    tasksModal.style.display = "none";
+                }
+            };
+        });
+    </script>
 </body>
 </html>

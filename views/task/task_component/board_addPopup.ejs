@@ -12,27 +12,26 @@
               onsubmit="return prepareFormData()">
             <div class="formInput" id="nameInput">
                 <label for="taskName">
-                    <i class="fa-solid fa-font icon"></i>
                     ชื่องาน <span style="color: red;">*</span>
                 </label>
                 <input type="text" id="taskName" name="taskName" placeholder="ใส่ชื่อของงาน">
+                <span id="nameAlert"></span>
             </div>
 
             <div class="formInput" id="detailInput">
                 <label for="taskDetail">
-                    <i class="fa-solid fa-circle-info icon"></i>
                     รายละเอียดของงาน
                 </label>
                 <textarea id="taskDetail" name="taskDetail" rows="4" cols="50"
                     placeholder="กรอกรายละเอียดงานเพิ่มเติม (ทางเลือก)"></textarea>
+                <span id="detailAlert"></span>
             </div>
 
-            <div class="line"></div>
+            <div class="lineForm"></div>
             
             <div class="formInput" id="assInput">
                 <div class="assign">
-                    <label for="assignedUsersDropdown" id="assignLabel">
-                        <i class="fa-solid fa-user-pen icon"></i>
+                    <label id="assignLabel">
                         ผู้รับมอบหมาย
                     </label>
 
@@ -41,13 +40,25 @@
                         <div class="dropdown-options" id="dropdownOptions">
                             <% spaces.collaborators.forEach(collaborator => { %>
                                 <% if (collaborator.user && collaborator.status !== 'pending') { %>
-                                    <div class="dropdown-item" data-user-id="<%= collaborator.user._id %>"
-                                        onclick="selectUser('<%= collaborator.user._id %>', '<%= collaborator.user.username %>', '<%= collaborator.user.profileImage %>')">
-                                        <img src="<%= collaborator.user.profileImage || '/public/img/profileImage/userDefalt.jpg' %>"
-                                            alt="<%= collaborator.user.username %>">
+                                    <div class="dropdown-item" 
+                                        data-user-id="<%= collaborator.user._id %>"
+                                        data-firstname="<%= collaborator.user.firstName %>"
+                                        data-lastname="<%= collaborator.user.lastName %>"
+                                        onclick="selectUser('<%= collaborator.user._id %>', '<%= collaborator.user.firstName %>', '<%= collaborator.user.lastName %>', '<%= collaborator.user.profileImage %>')">
+                                        
+                                        <img src="<%= collaborator.user.profileImage %>" 
+                                            alt="<%= collaborator.user.firstName %>"
+                                            width="30px" 
+                                            height="30px" 
+                                            style="border-radius: 50%;"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="fallback-profile-assign" 
+                                             style="display: none;">
+                                            <span><%= collaborator.user.firstName[0] %></span>
+                                        </div>
                                         <span>
                                             <p id="assUsername">
-                                                <%= collaborator.user.username %>
+                                                <%= collaborator.user.firstName %> <%= collaborator.user.lastName %>
                                             </p>
                                             <p id="assEmail">
                                                 <%= collaborator.user.googleEmail %>
@@ -58,7 +69,9 @@
                             <% }) %>
                         </div>
                     </div>
-                    <p id="autoAssign" data-user-id="<%= user._id %>" data-username="<%= user.username %>"
+                    <p id="autoAssign" data-user-id="<%= user._id %>" 
+                        data-firstName="<%= user.firstName %>"
+                        data-lastName="<%= user.lastName %>"
                         data-user-image="<%= user.profileImage %>">
                         มอบหมายให้ตัวเอง
                     </p>
@@ -67,8 +80,7 @@
             </div>
 
             <div class="formInput" id="priInput">
-                <label for="priorityToggle" id="priLabel">
-                    <i class="fa-solid fa-flag icon"></i>
+                <label id="priLabel">
                     ระดับความสำคัญ
                 </label>
                 <div class="priority-section">
@@ -79,72 +91,73 @@
                         <i class="bx bx-chevron-down"></i>
                     </div>
                     <div class="dropdown-priority" id="priorityDropdown" style="display: none;">
-                        <div class="priority-option" data-priority="urgent" data-icon="fa-solid fa-angles-up"
-                            data-color="#ff0000">
-                            <div class="icon">
-                                <i class="fa-solid fa-angles-up priIcon" style="color: #ff0000;"></i>
+                        <div class="priority-option" data-priority="urgent" data-icon="fa-solid fa-angles-up" data-color="#ff0000">
+                            <div class="priFirst">
+                                <div class="icon">
+                                    <i class="fa-solid fa-angles-up priIcon" style="color: #ff0000;"></i>
+                                </div>
+                                ด่วน
                             </div>
-                            ด่วน
                         </div>
-                        <div class="priority-option" data-priority="normal" data-icon="fa-solid fa-grip-lines"
-                            data-color="#ffcc00">
-                            <div class="icon">
-                                <i class="fa-solid fa-grip-lines priIcon" style="color: #ffcc00;"></i>
+                        <div class="priority-option" data-priority="normal" data-icon="fa-solid fa-grip-lines" data-color="#ffcc00">
+                            <div class="priFirst">
+                                <div class="icon">
+                                    <i class="fa-solid fa-grip-lines priIcon" style="color: #ffcc00;"></i>
+                                </div>
+                                ปกติ
                             </div>
-                            ปกติ
                         </div>
-                        <div class="priority-option" data-priority="low" data-icon="fa-solid fa-angle-down"
-                            data-color="#2562F6">
-                            <div class="icon">
-                                <i class="fa-solid fa-angle-down priIcon" style="color: #2562F6;"></i>
+                        <div class="priority-option" data-priority="low" data-icon="fa-solid fa-angle-down" data-color="#2562F6">
+                            <div class="priFirst">
+                                <div class="icon">
+                                    <i class="fa-solid fa-angle-down priIcon" style="color: #2562F6;"></i>
+                                </div>
+                                ต่ำ
                             </div>
-                            ต่ำ
                         </div>
                     </div>
-
-                    <input type="hidden" id="taskPriority" name="taskPriority" value="normal" />
                 </div>
                 <span id="priNote">ระดับความสำคัญจะบ่งบอกถึงความสำคัญของงานนั้น</span>
+                <input type="hidden" id="taskPriority" name="taskPriority" value="normal" />
             </div>
 
             <div class="formInput" id="tagInput">
-                <label for="tags-section" id="tagLabel">
-                    <i class="fa-solid fa-tags icon"></i>
+                <label for="tag-search" id="tagLabel">
                     แท็กงาน
                 </label>
                 <div class="tags-section">
                     <div id="selectedTagsContainer"></div>
                     <input type="text" name="search" placeholder="ค้นหาหรือสร้างแท็กสำหรับงานนี้" id="tag-search">
-                    <div class="showTagsItem" id="tagsContainer">
-                    </div>
                     <div class="no-match" id="noMatch" style="display: none;">
                         กด Enter เพื่อสร้างแท็กใหม่
                     </div>
                     <input type="hidden" name="taskTag" id="tagArray">
                 </div>
+                <span id="tagAlert"></span>
+                <div class="showTagsItem" id="tagsContainer" style="display: none;"></div>
             </div>
 
-            <div class="line"></div>
+            <div class="lineForm"></div>
 
             <div class="dateOpt">
                 <div class="formInput" id="startdateInput">
-                    <div class="dateLabel" style="margin-bottom: 5px;">
-                        <input type="checkbox" id="enableStartDate">
+                    <div class="dateLabel" style="margin-bottom: 10px;">
+                        <input type="checkbox" id="enableStartDate" style="margin-right: 5px;">
                         <label for="startDate" class="dateLa">
                             วันที่เริ่มงาน</label>
                       </div>
                       <input 
-                              type="text" 
-                              class="form-control" 
-                              name="startDate" 
-                              id="startDate" 
-                              placeholder="เลือกวันที่" 
-                              disabled>
+                            type="text" 
+                            class="form-control" 
+                            name="startDate" 
+                            id="startDate" 
+                            placeholder="เลือกวันที่" 
+                            disabled>
                     <span id="dateNote">สามารถกำหนดวันที่เริ่มต้นเพื่อที่วางแผนไว้สำหรับการทำงานได้</span>
                 </div>
 
                 <div class="formInput" id="dueDateInput">
-                    <div class="dateLabel" style="margin-bottom: 5px;">
+                    <div class="dateLabel" style="margin-bottom: 10px;">
                       <label for="dueDate" class="dateLa">
                         <i class="fa-solid fa-calendar-check icon"></i>
                         วันครบกำหนด</label>
@@ -157,17 +170,6 @@
                             placeholder="เลือกวันที่" >
                 </div>
             </div>
-
-            <div class="formInput" id="attachmentInput" style="width: 100%;">
-                <label for="attachments" id="attachmentsLabel">
-                    <i class="fa-solid fa-cloud-arrow-up upload-icon"></i> แนบไฟล์
-                    <p id="attNote">Drop files to attach or <span class="browse-btn">Browse</span></p>
-                </label>
-                <input type="file" id="attachments" name="attachments" multiple>
-            </div>
-            <div class="preview-container" id="previewContainer"></div>
-
-
             <input type="hidden" name="spaceId" id="spaceId" value="<%= spaces._id %>">
         </form>
     </div>

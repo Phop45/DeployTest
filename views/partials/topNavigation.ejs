@@ -1,6 +1,7 @@
 <head>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="/public/css/partialsCss/topNavigation.css">
+    
 </head>
 
 <body>
@@ -13,7 +14,14 @@
             <div class="search_container">
                 <form class="search_formTop">
                     <i class="fa-solid fa-magnifying-glass" id="search_icon"></i>
-                    <input class="searchInputTop" type="search" placeholder="ค้นหา" aria-label="Search" maxlength="500">
+                    <input 
+                        class="searchInputTop" 
+                        type="search" 
+                        id="searchInputTop" 
+                        name="searchQuery" 
+                        placeholder="ค้นหา" 
+                        aria-label="Search" 
+                        maxlength="500">
                 </form>
 
                 <div class="mainSearchResult" style="display: none;">
@@ -33,12 +41,13 @@
                 </div>
                 <div class="nav_item" data-label="แจ้งเตือน" id="notiSection">
                     <a class="nav_link" aria-current="page" id="noti-dropdown" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="fa-solid fa-bell" id="iconLink"></i>
+                      aria-expanded="false" aria-label="Notifications" name="notifications">
+                      <i class="fa-solid fa-bell" id="iconLink"></i>
                     </a>
                     <div class="notiNew">
-                        <span class="count">0</span>
+                        <span class="count"><%= unreadCount %></span>
                     </div>
+
 
                     <div class="allNoti">
                         <div class="notiTop">
@@ -50,12 +59,89 @@
                                              font-weight: 300;
                                              color: gray;">แสดงเฉพาะที่ยังไม่อ่าน</span>
 
-                                <input type="checkbox" hidden="hidden" id="username">
-                                <label class="switch" for="username"></label>
+                                <input type="checkbox" hidden="hidden" id="showUnread">
+                                <label class="switch" for="showUnread"></label>
                             </span>
                         </div>
 
                         <div class="divindLine"></div>
+
+                        <% if (notifications && notifications.length > 0) { %>
+                            <% notifications.forEach(notification => { %>
+                                <div class="notiItem <%= notification.userGroup.some(group => group.user.toString() === user._id.toString() && group.status === 'unread') ? 'notRead' : '' %>" id="<%= notification._id %>">
+                                    <div class="readSec">
+                                        <button id="isRead" class="markAsRead" data-id="<%= notification._id %>"></button>
+                                    </div>
+                                    <div class="notiConteneWarp">
+                                        <div class="notiContent">
+                                            <span class="firstLine">
+                                                <span class="message"><%= notification.message %></span>
+                                                <% if (notification.type) { %>
+                                                    <% 
+                                                        let linkUrl = '';
+                                                        let linkText = 'คลิกเพื่อดูรายละเอียดเพิ่มเติม';
+                                                        let additionalText = '';
+
+                                                        switch (notification.type) {
+                                                            case 'roleChange':
+                                                                linkUrl = `/space/item/${notification.space}/member`;
+                                                                additionalText = 'เปลี่ยนบทบาท';
+                                                                break;
+                                                            case 'taskApproved':
+                                                                linkUrl = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+                                                                additionalText = 'อนุมัติงาน';
+                                                                break;
+                                                            case 'sendTaskApproval':
+                                                                linkUrl = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+                                                                additionalText = 'ส่งตรวจ';
+                                                                break;
+                                                            case 'taskRejected':
+                                                                linkUrl = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+                                                                additionalText = 'แก้ไขงาน';
+                                                                break;
+                                                            case 'taskAssignment':
+                                                                linkUrl = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+                                                                additionalText = 'ได้รับมอบหมายงาน';
+                                                                break;
+                                                            case 'space-invitation':
+                                                                linkUrl = `/space/item/${notification.space}/dashboard?period=7day`;
+                                                                additionalText = 'เป็นสมาชิกโปรเจกต์';
+                                                                break;
+                                                            case 'memberAdded':
+                                                                linkUrl = `/space/item/${notification.space}/dashboard?period=7day`;
+                                                                additionalText = 'เป็นสมาชิกโปรเจกต์';
+                                                                break;
+                                                            case 'space-member-removal':
+                                                                // No additional actions or text for this type.
+                                                                additionalText = '';
+                                                                break;
+                                                            default:
+                                                                additionalText = '';
+                                                        }
+                                                    %>
+                                                    <% if (linkUrl) { %>
+                                                        <a href="<%= linkUrl %>" class="taskLink"> <%= linkText %> </a>
+                                                    <% } %>
+                                                    <% if (additionalText) { %>
+                                                        <span class="notification-type <%= notification.type %>"><%= additionalText %></span>
+                                                    <% } %>
+                                                <% } %>
+                                            </span>
+                                            <span class="secondLine">
+                                                <% 
+                                                    const notificationDate = new Date(notification.createdAt);
+                                                    const thaiDate = new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(notificationDate);
+                                                    const thaiTime = new Intl.DateTimeFormat('th-TH', { timeStyle: 'short' }).format(notificationDate);
+                                                %>
+                                                แจ้งเตือนเมื่อ: <span class="date"><%= thaiDate %></span>, เวลา: <span class="time"><%= thaiTime %></span>
+                                            </span>                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <p style="text-align: center; color: gray;">ไม่มีการแจ้งเตือน</p>
+                        <% } %>
 
                         <!-- <div class="notiItem notRead" id="invitation">
                             <div class="notiConteneWarp">
@@ -141,7 +227,7 @@
                             alt="<%= user.username %>'s Profile Image" 
                             width="40px" 
                             height="40px" 
-                            style="border-radius: 50%; display: none;"
+                            style="border-radius: 50%;"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="fallback-profile" style="display: none;">
                                 <span><%= user.firstName[0] %></span>
@@ -192,6 +278,161 @@
     </div>
 </body>
 <script>
+    const socket = io({ query: { userId: '<%= user._id %>' } }); // Pass user ID to the server
+
+    // Listen for unread count updates
+    socket.on('updateUnreadCount', (unreadCount) => {
+        const unreadCountElement = document.querySelector('.notiNew .count');
+        unreadCountElement.textContent = unreadCount;
+
+        // Hide the notification badge if unreadCount is 0
+        if (unreadCount === 0) {
+            unreadCountElement.style.display = 'none';
+        } else {
+            unreadCountElement.style.display = 'inline-block';
+        }
+    });
+
+    // Listen for new notifications
+    socket.on('newNotification', (notification) => {
+        const allNotiContainer = document.querySelector('.allNoti .divindLine');
+    
+        const notiItem = document.createElement('div');
+        notiItem.className = `notiItem ${notification.userGroup.some(group => group.user === '<%= user._id %>' && group.status === 'unread') ? 'notRead' : ''}`;
+        notiItem.id = notification._id;
+    
+        const taskDetailLink = `/task/${notification.relatedEntityId}/detail?spaceId=${notification.space}`;
+    
+        notiItem.innerHTML = `
+            <div class="notiConteneWarp">
+                <div class="imgProfile">
+                    <img src="${notification.triggeredBy.profileImage}" alt="User Profile" class="profileImage">
+                </div>
+                <div class="notiContent">
+                    <span class="firstLine">
+                        <span>${notification.message}</span>
+                        <a href="${taskDetailLink}" class="taskLink" style="color: blue; text-decoration: underline;">View Task</a>
+                    </span>
+                    <span class="secondLine">
+                        แจ้งเตือนเมื่อ: ${new Date(notification.createdAt).toLocaleString()}
+                    </span>
+                </div>
+            </div>
+            <div class="readSec">
+                <button id="isRead" class="markAsRead" data-id="${notification._id}"></button>
+            </div>
+        `;
+    
+        allNotiContainer.insertAdjacentElement('afterend', notiItem);
+    });
+
+    // Fetch unread count on page load
+    const fetchUnreadCount = async () => {
+        try {
+            const response = await fetch('/notifications/unread');
+            const data = await response.json();
+
+            if (data.unreadCount !== undefined) {
+                const unreadCountElement = document.querySelector('.notiNew .count');
+                unreadCountElement.textContent = data.unreadCount;
+
+                // Hide the notification badge if unreadCount is 0
+                if (data.unreadCount === 0) {
+                    unreadCountElement.style.display = 'none';
+                } else {
+                    unreadCountElement.style.display = 'inline-block';
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+        }
+    };
+
+    // Fetch unread count every 5 minutes (300,000 milliseconds)
+    setInterval(fetchUnreadCount, 300000); // 5 minutes
+    // Fetch unread count immediately on page load
+    document.addEventListener('DOMContentLoaded', fetchUnreadCount);
+
+    
+    // Toggle notification read/unread status
+    document.querySelectorAll('.markAsRead').forEach(button => {
+        button.addEventListener('click', async function () {
+            const notificationId = this.dataset.id;
+            const notiItem = this.closest('.notiItem');
+
+            try {
+                const response = await fetch(`/notifications/${notificationId}/toggleRead`, { method: 'PUT' });
+                const data = await response.json();
+
+                if (data.success) {
+                    // Toggle the 'notRead' class based on the new status
+                    if (data.status === 'unread') {
+                        notiItem.classList.add('notRead');
+
+                        // Move the notification to the top of the list
+                        const allNotiContainer = document.querySelector('.allNoti .divindLine');
+                        allNotiContainer.insertAdjacentElement('afterend', notiItem);
+                    } else {
+                        notiItem.classList.remove('notRead');
+
+                        // Move the notification to the bottom of the list
+                        const allNotiContainer = document.querySelector('.allNoti');
+                        allNotiContainer.appendChild(notiItem);
+                    }
+                } else {
+                    console.error('Failed to toggle notification status:', data.message);
+                }
+            } catch (error) {
+                console.error('Error toggling notification status:', error);
+            }
+        });
+    });
+
+    // Show/Hide unread notifications
+    document.addEventListener('DOMContentLoaded', () => {
+        const showUnreadCheckbox = document.getElementById('showUnread');
+        const allNotiItems = document.querySelectorAll('.notiItem');
+
+        // Listen for changes to the "showUnread" checkbox
+        showUnreadCheckbox.addEventListener('change', () => {
+            if (showUnreadCheckbox.checked) {
+                // Show only unread notifications
+                allNotiItems.forEach(item => {
+                    if (!item.classList.contains('notRead')) {
+                        item.style.display = 'none';
+                    }
+                });
+            } else {
+                // Show all notifications
+                allNotiItems.forEach(item => {
+                    item.style.display = 'flex';
+                });
+            }
+        });
+    });
+
+    // Fetch unread count on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch('/notifications/unread');
+            const data = await response.json();
+
+            if (data.unreadCount !== undefined) {
+                const unreadCountElement = document.querySelector('.notiNew .count');
+                unreadCountElement.textContent = data.unreadCount;
+
+                // Hide the notification badge if unreadCount is 0
+                if (data.unreadCount === 0) {
+                    unreadCountElement.style.display = 'none';
+                } else {
+                    unreadCountElement.style.display = 'inline-block';
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+        }
+    });
+
     // more setting
     window.addEventListener('DOMContentLoaded', () => {
         const profileDropdown = document.getElementById('profile-dropdown');
@@ -238,143 +479,5 @@
         dropdownMenu.addEventListener('click', (event) => {
             event.stopPropagation();
         });
-    });
-
-    const socket = io(); // ประกาศ socket แค่ครั้งเดียว
-
-    function updateUnreadMessagesUI(data) {
-        const notiContainer = document.querySelector('.notiItem.Messages');
-        const notiCount = document.querySelector('.notiNew .count');
-
-        // ล้างการแจ้งเตือนเก่า
-        notiContainer.innerHTML = '';
-
-        // ตรวจสอบว่า data เป็นอาร์เรย์และมีข้อมูล
-        if (Array.isArray(data)) {
-            // กรองเฉพาะข้อความที่ยังไม่ได้อ่าน
-            const unreadMessages = data.filter(item => item.unreadCount > 0);
-
-            if (unreadMessages.length > 0) {
-                // แสดงการแจ้งเตือน
-                notiContainer.style.display = 'block';
-
-                unreadMessages.forEach(item => {
-                    const notiItem = document.createElement('div');
-                    notiItem.classList.add('notiItem', 'notRead');
-                    notiItem.innerHTML = `
-              <div class="notiConteneWarp">
-                <div class="notiContent">
-                  <span class="firstLine">
-                    คุณมีข้อความที่ยังไม่ได้อ่านในโปรเจกต์
-                    <a href="/space/item/${item.spaceId}/chat" style="font-weight: 400;">${item.projectName}</a>
-                  </span>
-                  <span class="secondLine">
-                    จำนวน: ${item.unreadCount} ข้อความ
-                  </span>
-                </div>
-              </div>
-            `;
-                    notiContainer.prepend(notiItem);
-                });
-
-                // อัปเดตจำนวนการแจ้งเตือน
-                notiCount.textContent = unreadMessages.length;
-            } else {
-                // ซ่อนการแจ้งเตือนถ้าไม่มีข้อความที่ยังไม่ได้อ่าน
-                notiContainer.style.display = 'none';
-                notiCount.textContent = 0;
-            }
-        } else {
-            console.error('Data is not an array:', data);
-        }
-    }
-
-    // ฟังก์ชันอัปเดต UI การแจ้งเตือนสำหรับ Mention
-    function updateMentionsUI(data) {
-        const notiContainer = document.querySelector('.notiItem.Mentions');
-        const notiCount = document.querySelector('.notiNew .count');
-
-        // ล้างการแจ้งเตือนเก่า
-        notiContainer.innerHTML = '';
-
-        // ตรวจสอบว่า data เป็นอาร์เรย์
-        if (Array.isArray(data)) {
-            // แสดงการแจ้งเตือนแต่ละรายการ
-            data.forEach(item => {
-                const notiItem = document.createElement('div');
-                notiItem.classList.add('notiItem', 'notRead');
-                notiItem.innerHTML = `
-                <div class="notiConteneWarp">
-                    <div class="notiContent">
-                        <span class="firstLine">
-                            คุณถูก mention โดย ${item.mentionedBy} ในโปรเจกต์
-                            <a href="${item.link}" style="font-weight: 400;">${item.projectName}</a>
-                        </span>
-                        <span class="secondLine">
-                            ข้อความ: ${item.message}
-                        </span>
-                    </div>
-                </div>
-            `;
-                notiContainer.prepend(notiItem);
-            });
-
-            // แสดง container ถ้ามีการแจ้งเตือน
-            if (data.length > 0) {
-                notiContainer.style.display = 'block';
-            } else {
-                notiContainer.style.display = 'none';
-            }
-
-            // อัปเดตจำนวนการแจ้งเตือน
-            notiCount.textContent = data.length;
-        } else {
-            console.error('Data is not an array:', data);
-        }
-    }
-    // ฟังก์ชันดึงข้อมูลข้อความที่ยังไม่ได้อ่าน
-    async function fetchUnreadMessages() {
-        try {
-            const response = await fetch('/space/item/unread-messages');
-            const data = await response.json();
-            if (data.success && Array.isArray(data.unreadCounts)) {
-                updateUnreadMessagesUI(data.unreadCounts);
-            } else {
-                console.error('Invalid data format:', data);
-            }
-        } catch (error) {
-            console.error('Error fetching unread messages:', error);
-        }
-    }
-
-    // ฟังก์ชันดึงข้อมูล mentions ที่ยังไม่ได้อ่าน
-    async function fetchUnreadMentions() {
-        try {
-            const response = await fetch('/space/item/unread-mentions');
-            const data = await response.json();
-            if (data.success) {
-                updateMentionsUI(data.unreadMentions); // เรียกใช้ฟังก์ชันอัปเดต UI
-            } else {
-                console.error('Invalid data format:', data);
-            }
-        } catch (error) {
-            console.error('Error fetching unread mentions:', error);
-        }
-    }
-    // ใช้ Socket.IO รับอัปเดตแบบเรียลไทม์สำหรับ Unread Messages
-    socket.on('new unread message', () => {
-        fetchUnreadMessages(); // รีเฟรชการแจ้งเตือนอัตโนมัติ
-    });
-
-    // ใช้ Socket.IO รับอัปเดตแบบเรียลไทม์สำหรับ Mention
-    socket.on('new mention', (data) => {
-        console.log('New mention received:', data); // Log ข้อมูลการ mention
-        fetchUnreadMentions();
-    });
-
-    // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้า
-    document.addEventListener('DOMContentLoaded', () => {
-        fetchUnreadMentions();
-        fetchUnreadMessages();
     });
 </script>

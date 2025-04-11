@@ -4,12 +4,7 @@ const User = require("../models/User");
 const crypto = require('crypto');
 const bcrypt = require("bcrypt");
 const { sendEmail } = require("../../emailService");
-// const logUserActivity = require('../utils/activityLogger');
-// const logFeatureUsage = require('../utils/featureLogger');
 const mongoose = require("mongoose");
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
 
 exports.googleCallback = async (accessToken, refreshToken, profile, done) => {
   try {
@@ -107,10 +102,8 @@ exports.login = async (req, res, next) => {
       user.isOnline = true;
 
       await user.save();
-      // await logUserActivity(req.user._id, 'เข้าสู่ระบบ');
-      // await logFeatureUsage('เข้าสู่ระบบ');
 
-      return res.redirect(user.role === 'admin' ? '/adminPage' : '/space');
+      return res.redirect(user.role === 'admin' ? '/adminPage' : '/dashboard');
     });
   })(req, res, next);
 };
