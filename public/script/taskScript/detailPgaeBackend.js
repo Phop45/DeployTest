@@ -539,57 +539,57 @@ document.getElementById('updateTaskForm').addEventListener('submit', async funct
     }
 });
 
-async function checkWork() {
-    const taskId = document.getElementById('taskId').value;
-    const statusDiv = document.querySelector('.status-div');
-    let currentStatus = statusDiv.getAttribute('data-status'); // Get current status
-    let newStatus, confirmationMessage;
+// async function checkWork() {
+//     const taskId = document.getElementById('taskId').value;
+//     const statusDiv = document.querySelector('.status-div');
+//     let currentStatus = statusDiv.getAttribute('data-status'); // Get current status
+//     let newStatus, confirmationMessage;
 
-    if (currentStatus === 'กำลังทำ') {
-        newStatus = 'รอตรวจ'; // Change to 'Pending'
-        confirmationMessage = 'คุณต้องการยืนยันการส่งงานหรือไม่?'; // "You want to confirm the submission?"
-    } else if (currentStatus === 'รอตรวจ') {
-        newStatus = 'กำลังทำ'; // Revert to 'In Progress'
-        confirmationMessage = 'คุณต้องการยกเลิกการส่งงานหรือไม่?'; // "You want to cancel the submission?"
-    } else if (currentStatus === 'แก้ไข') {
-        newStatus = 'รอตรวจ'; // Revert to 'In Progress'
-        confirmationMessage = 'คุณต้องการยืนยันการส่งงานหรือไม่?';
-    } else {
-        console.warn('Unhandled status:', currentStatus);
-        return; // Exit if the status is not handled
-    }
+//     if (currentStatus === 'กำลังทำ') {
+//         newStatus = 'รอตรวจ'; // Change to 'Pending'
+//         confirmationMessage = 'คุณต้องการยืนยันการส่งงานหรือไม่?'; // "You want to confirm the submission?"
+//     } else if (currentStatus === 'รอตรวจ') {
+//         newStatus = 'กำลังทำ'; // Revert to 'In Progress'
+//         confirmationMessage = 'คุณต้องการยกเลิกการส่งงานหรือไม่?'; // "You want to cancel the submission?"
+//     } else if (currentStatus === 'แก้ไข') {
+//         newStatus = 'รอตรวจ'; // Revert to 'In Progress'
+//         confirmationMessage = 'คุณต้องการยืนยันการส่งงานหรือไม่?';
+//     } else {
+//         console.warn('Unhandled status:', currentStatus);
+//         return; // Exit if the status is not handled
+//     }
 
-    // Confirm the action
-    const confirmed = confirm(confirmationMessage);
-    if (!confirmed) return; // Exit if the user cancels the confirmation
+//     // Confirm the action
+//     const confirmed = confirm(confirmationMessage);
+//     if (!confirmed) return; // Exit if the user cancels the confirmation
 
-    try {
-        const response = await fetch('/updateTask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                taskId,
-                taskStatuses: newStatus // Send the new status to the server
-            })
-        });
+//     try {
+//         const response = await fetch('/updateTask', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify({
+//                 taskId,
+//                 taskStatuses: newStatus // Send the new status to the server
+//             })
+//         });
 
-        const data = await response.json();
-        window.location.reload(); 
-        if (response.ok) {
-            // Update the status in the UI
-            document.querySelector('.status-text').textContent = newStatus;
-            statusDiv.setAttribute('data-status', newStatus);
-            console.log(data.message); // Log success message
+//         const data = await response.json();
+//         window.location.reload(); 
+//         if (response.ok) {
+//             // Update the status in the UI
+//             document.querySelector('.status-text').textContent = newStatus;
+//             statusDiv.setAttribute('data-status', newStatus);
+//             console.log(data.message); // Log success message
 
-            // Optionally, update the background color dynamically
-            updateStatusColor(newStatus);
-        } else {
-            console.error(data.message); // Log error message
-        }
-    } catch (error) {
-        console.error('Error updating task status:', error);
-    }
-}
+//             // Optionally, update the background color dynamically
+//             updateStatusColor(newStatus);
+//         } else {
+//             console.error(data.message); // Log error message
+//         }
+//     } catch (error) {
+//         console.error('Error updating task status:', error);
+//     }
+// }
 

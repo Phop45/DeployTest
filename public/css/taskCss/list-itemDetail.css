@@ -285,16 +285,16 @@
 
 .firstSec {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
     width: 100%;
     margin-top: 10px;
 }
 
-#checkTask {
-    padding: 10px 20px;
-    /* Adjust padding as needed */
+#sendTask {
     border: none;
+    padding: 10px 20px;
     background-color: #4CAF50;
     color: white;
     border-radius: 5px;
@@ -313,7 +313,7 @@
     opacity: 0.7;
 }
 
-#checkTask i {
+#sendTask i {
     position: absolute;
     /* Remove it from the flow */
     left: 10px;
@@ -328,7 +328,7 @@
 }
 
 /* Button expands and icon slides in on hover */
-#checkTask:hover {
+#sendTask:hover {
     width: 130px;
     /* Expanded width */
     background-color: #45a049;
@@ -336,7 +336,7 @@
     opacity: 1;
 }
 
-#checkTask:hover i {
+#sendTask:hover i {
     transform: translateX(80%);
     /* Slide to its original position */
     opacity: 1;
@@ -345,17 +345,17 @@
     /* Ensure visibility */
 }
 
-#checkTask span {
+#sendTask span {
     padding-left: 0;
     font-size: 14px;
 }
 
-#checkTask:hover span {
+#sendTask:hover span {
     padding-left: 35px;
     transition: 0.5s cubic-bezier(0.25, 0.8, 0.5, 1), opacity 0.5s ease;
 }
 
-#checkTask span {
+#sendTask span {
     transition: opacity 0.3s ease;
     /* Smooth transition for the text */
 }

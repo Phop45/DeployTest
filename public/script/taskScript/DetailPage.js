@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusDiv = document.querySelector('.status-div');
     const dropdownContent = document.querySelector('.dropdown-content');
     const statusText = document.querySelector('.status-text');
+    const statusIcon = document.querySelector('.status-icon');
 
     // Mapping statuses to Thai
     const statusMapping = {
@@ -162,14 +163,21 @@ document.addEventListener('DOMContentLoaded', () => {
         inProgress: 'กำลังทำ',
         fix: 'แก้ไข',
         finished: 'เสร็จสิ้น',
+        pending: 'รอตรวจ',
     };
 
     // Mapping statuses to colors
     const statusColors = {
         toDo: '#919191',
+        pending: '#919191',
         inProgress: '#6EACDA',
         fix: '#FF4C4C',
         finished: '#4CAF50',
+    };
+
+    // Mapping statuses to icons
+    const statusIcons = {
+        pending: '<i class="fa-solid fa-spinner"></i>', // Add spinner for 'pending'
     };
 
     // Function to apply styles based on status
@@ -177,6 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const color = statusColors[status] || '#FFFFFF';
         statusDiv.style.backgroundColor = color;
         statusDiv.style.color = '#FFFFFF'; // Ensure text contrast
+         // Update icon if applicable
+         statusIcon.innerHTML = statusIcons[status] || ''; 
     };
 
     // Function to update status text to Thai
@@ -189,15 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     applyStatusStyles(initialStatus);
     updateStatusText(initialStatus);
 
-    const toggleDropdown = () => {
-        dropdownContent.style.display = dropdownContent.style.display === 'none' ? 'block' : 'none';
-    };
-
-    // Toggle dropdown visibility
-    statusWrap.addEventListener('click', (event) => {
-        event.stopPropagation(); // Prevent event bubbling
-        toggleDropdown();
-    });
 
     // Apply colors to status options
     document.querySelectorAll('.status-option').forEach(option => {
