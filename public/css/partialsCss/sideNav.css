@@ -364,11 +364,13 @@ header .image-text .header-text {
     color: white;
     font-size: 20px;
     transition: transform 0.4s ease;
+    cursor: pointer;
     /* เพิ่ม transition สำหรับ transform */
 }
 
 .sidebar.close .toggle {
     transform: translateY(-50%) rotate(0deg);
+    cursor: pointer;
     /* ปรับการหมุนเมื่อปิด */
 }
 
@@ -778,7 +780,7 @@ header .image-text .header-text {
     position: absolute;
     height: 93%;
     width: 5%;
-    z-index: 999;
+    z-index: 99;
 }
 
 .nav-tabs .nav-link {

@@ -1,4 +1,6 @@
-:root{
+@import url('https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
     --topnav: #323450;
     --lighttopnav: #474962;
     --select: #7952B3;
@@ -21,16 +23,18 @@
     --notYet: #c3cad5;
 
     --cancle: #E53935;
-    --grey: rgb(235, 237, 242) ;
+    --grey: rgb(235, 237, 242);
 }
+
 .content {
     background-color: white;
-    margin-left: 90px;
+    margin-left: 70px;
     display: flex;
     flex-direction: column;
     height: 92vh;
     overflow: hidden;
 }
+
 .SubName {
     padding: 30px 0 20px 50px;
     font-size: 40px;
@@ -42,44 +46,51 @@
     font-weight: 400;
 }
 
-.tasklist-top{
+.tasklist-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 30px 50px;
 }
-.tasklist-top-left{
+
+.tasklist-top-left {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.tasklist-top-left input{
+
+.tasklist-top-left input {
     width: 300px;
     height: 40px;
     border-radius: 5px;
-    border: 1.5px solid rgba(55, 53, 47, 0.50) ;
+    border: 1.5px solid rgba(55, 53, 47, 0.50);
     padding: 10px;
     margin-right: 20px;
     transition: 0.2s ease;
 }
-.tasklist-top-left input[type="search"]::placeholder{
+
+.tasklist-top-left input[type="search"]::placeholder {
     color: rgba(55, 53, 47, 0.50);
 }
-.tasklist-top-left input[type="search"]:focus{
+
+.tasklist-top-left input[type="search"]:focus {
     outline: none;
     border: 1.5px solid var(--more-light);
 }
-.tasklist-top-left img{
+
+.tasklist-top-left img {
     width: 40px;
     height: 40px;
     border-radius: 50%;
 }
-.tasklist-top-right{
+
+.tasklist-top-right {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.tasklist-top-right #new-task-btn{
+
+.tasklist-top-right #new-task-btn {
     text-decoration: none;
     font-weight: 400;
     font-size: 16px;
@@ -93,104 +104,123 @@
     height: 40px;
     width: 150px;
 }
-.tasklist-top-right #new-task-btn:hover{
+
+.tasklist-top-right #new-task-btn:hover {
     background-color: var(--color1);
     color: white;
     transition: 0.5s;
 }
-.tasklist-top-right .dropdown-toggle{
+
+.tasklist-top-right .dropdown-toggle {
     width: 130px;
     height: 40px;
 }
-.dropdown-menu{
+
+.dropdown-menu {
     margin-top: 20px;
     width: 200px;
 }
-.dropdown-header{
+
+.dropdown-header {
     font-size: 1em;
     font-weight: 600;
     padding-bottom: 15px;
     color: var(--color1);
 }
-.dropdown-item{
+
+.dropdown-item {
     font-size: 0.9em;
     padding: 10px 20px;
     color: var(--text);
     transition: 0.2s ease;
 }
-.dropdown-item i{
+
+.dropdown-item i {
     margin-right: 10px;
 }
 
-.table-head{
+.table-head {
     background-color: var(--btn);
     color: white;
     height: 50px;
     position: sticky;
     top: 0px;
     padding: 0;
-    font-size: 14px;
+    font-size: 16px;
+    z-index: 100;
 }
-.table-head tr th{
+
+.table-head tr th {
     vertical-align: middle;
-    text-align: center;
-    border-left: 1px solid rgba(55, 53, 47, 0.1);
-    border-right: 1px solid rgba(55, 53, 47, 0.1);
-    font-weight: 300;
+    font-weight: 400;
 }
-tbody tr{
+
+tbody tr {
     background-color: white;
     transition: background-color 0.3s ease;
     cursor: pointer;
 }
-tbody tr:hover{
-    background-color: #efefef;
+
+tbody tr:hover {
+    background-color: #f1f5f980;
     z-index: 1;
 }
+
 tr.drag-over {
     background-color: lightgray;
 }
-tbody tr td{
+
+tbody tr td {
     width: 200px;
     height: 60px;
     max-width: 200px;
-    overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    border: 1px solid rgba(55, 53, 47, 0.1);
-    font-size: 14px;
+    border: none;
+    border-bottom: 1px solid rgba(55, 53, 47, 0.1);
+    font-size: 16px;
     font-weight: 300;
     vertical-align: middle;
 }
-tbody td:first-child,
-.table-head th:first-child{
-    width: 100px;
-    text-align: center;
+
+.table-head th:first-child {
+    padding: 20px;
 }
-.table{
+
+tbody td:first-child {
+    width: 12%;
+    padding: 25px 20px;
+}
+
+.table {
     min-width: max-content;
     border-radius: 10px;
     border-collapse: collapse;
     margin-bottom: 0;
 }
 
-.table-responsive{
+.table-responsive {
     max-height: 500px;
+    min-height: 500px;
     overflow-y: auto;
+    overflow-x: visible;
     position: relative;
-    border-radius: 10px 10px 0 0;
+    border-radius: 10px;
 }
+
 .shadow {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 1.5);
     transition: box-shadow 0.3s ease;
 }
 
-.card{
+.card {
     margin: 0 50px;
     margin-bottom: 20px;
     border: none;
+    border-radius: 10px;
 }
-.card-body{
+
+.card-body {
     padding: 0;
     border: 1.5px solid rgba(55, 53, 47, 0.1);
     border-style: outset;
@@ -198,7 +228,7 @@ tbody td:first-child,
     min-height: 500px;
 }
 
-.table-input{
+.table-input {
     background-color: white;
     color: var(--text);
     font-weight: 400;
@@ -214,10 +244,12 @@ tbody td:first-child,
     border: 1.5px solid rgba(55, 53, 47, 0.1);
     overflow: hidden;
 }
-.table-input:hover{
+
+.table-input:hover {
     background-color: rgb(232, 232, 232);
 }
-.table-input input{
+
+.table-input input {
     border: none;
     outline: none;
     width: 100%;
@@ -230,15 +262,17 @@ tbody td:first-child,
     font-weight: 600;
     transition: 0.2s ease;
 }
-.table-input input::placeholder{
+
+.table-input input::placeholder {
     color: var(--text);
     opacity: 0.5;
     font-weight: 400;
     font-size: 1em;
     transition: 0.2s ease;
 }
+
 .table-input span,
-.table-input span.clicked{
+.table-input span.clicked {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -248,12 +282,13 @@ tbody td:first-child,
     transition: 0.3s ease;
 }
 
-.table-input input[type="text"]:focus{
+.table-input input[type="text"]:focus {
     border: 1.5px solid var(--light);
 }
 
 #taskName {
-    transition: opacity 0.3s ease; /* Add transition for opacity */
+    transition: opacity 0.3s ease;
+    /* Add transition for opacity */
     height: 52px;
 }
 
@@ -262,7 +297,8 @@ tbody td:first-child,
     width: 350px;
     height: 60px;
     left: 50%;
-    bottom: -100px; /* Start off-screen */
+    bottom: -100px;
+    /* Start off-screen */
     transform: translateX(-50%);
     border-radius: 10px;
     display: flex;
@@ -273,15 +309,18 @@ tbody td:first-child,
     background-color: var(--color1);
     padding: 10px;
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-    transition: bottom 0.5s ease; /* Transition effect for bottom property */
+    transition: bottom 0.5s ease;
+    /* Transition effect for bottom property */
 }
-.select{
+
+.select {
     display: flex;
     flex-direction: row;
     align-items: center;
     padding-left: 20px;
 }
-.select i{
+
+.select i {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -296,13 +335,16 @@ tbody td:first-child,
     border-radius: 5px;
     transition: 0.3s;
 }
-.select i:hover{
+
+.select i:hover {
     background-color: var(--color2);
 }
-.select span{
+
+.select span {
     padding: 0 5px;
 }
-.selectDelete{
+
+.selectDelete {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -315,16 +357,19 @@ tbody td:first-child,
     padding: 0 10px;
     border-radius: 5px;
 }
-.selectDelete button{
+
+.selectDelete button {
     background: none;
     border: none;
     color: white;
 }
-.selectDelete:hover{
+
+.selectDelete:hover {
     background-color: var(--color2);
     opacity: 1;
 }
-.stretch-card{
+
+.stretch-card {
     height: 620px;
 }
 
@@ -339,23 +384,26 @@ tbody td:first-child,
     font-size: 0.9em;
     font-weight: 500;
 }
-.nav-tabs .nav-link{
+
+.nav-tabs .nav-link {
     border: none;
-    
+
 }
-.nav-link{
+
+.nav-link {
     padding: 9px 20px;
 }
 
-.nav-item:hover{
+.nav-item:hover {
     background-color: var(--btn);
     transition: 0.3s;
     border-radius: 5px;
 }
 
-.topNavlink .nav-tabs .nav-item:hover .nav-link{
+.topNavlink .nav-tabs .nav-item:hover .nav-link {
     color: white;
 }
+
 .TopNavigation .contain .nav-item .nav-link {
     color: white;
     width: 25px;
@@ -367,6 +415,7 @@ tbody td:first-child,
     justify-content: center;
     align-items: center;
 }
+
 .nav-tabs {
     padding-left: 50px;
     margin-top: 28px;
@@ -375,17 +424,18 @@ tbody td:first-child,
     border-bottom: 2px solid #dee2e6;
 }
 
-.topNavlink .nav-tabs{
+.topNavlink .nav-tabs {
     color: black;
 }
 
-.topNavlink .nav-tabs .nav-link{
+.topNavlink .nav-tabs .nav-link {
     color: var(--text);
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.topNavlink .nav-tabs .nav-link.active{
+
+.topNavlink .nav-tabs .nav-link.active {
     color: var(--btn);
     border-bottom: 4px solid var(--btn);
     border-radius: 0;
@@ -393,24 +443,204 @@ tbody td:first-child,
     border-left: none;
     border-right: none;
 }
-.topNavlink .nav-tabs .nav-link.active:hover{
+
+.topNavlink .nav-tabs .nav-link.active:hover {
     color: var(--btn);
 }
+
 .topNavlink .nav-item:hover::after {
     display: none;
 }
-.add-member-container h2{
+
+.add-member-container h2 {
     margin: 30px 50px 20px 50px;
 }
-#memberAll{
+
+#memberAll {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-left: 10px;
 }
-#memberAll img{
-    width: 50px;
-    height: 50px;
+
+#memberAll img {
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
+}
+
+#accept {
+    padding: 6px 15px;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+    background-color: #f0fdf4;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+#accept:hover {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+#reject {
+    padding: 6px 15px;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    background-color: #fef2f2;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+#reject:hover {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.fileAll,
+.fileAllDropdown {
+    border: 1px solid #e2e8f0;
+    padding: 8px 15px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.fileShow,
+.fileShowDropdown {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.fileNameWrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 70%;
+}
+
+.fileName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    text-decoration: none;
+    color: black;
+}
+.attachment-link{
+    text-decoration: none;
+    color: black;
+    width: 90px;
+}
+.fileSize {
+    color: gray;
+    font-weight: 300;
+    font-size: 14px;
+}
+
+.fileShowDropdown .fa-chevron-down {
+    font-size: 12px;
+}
+
+.moreFile {
+    display: none;
+    position: absolute;
+    top: 120%;
+    /* Ensure it flows below the parent */
+    left: 0;
+    /* Align to the left of the parent */
+    background-color: white;
+    border-radius: 5px;
+    z-index: 105;
+    min-width: 200px;
+    /* Ensure it’s wide enough for content */
+    box-shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.25),
+        0 0 1px rgba(9, 30, 66, 0.31);
+}
+
+.moreFile.show {
+    display: block;
+}
+
+.fa-chevron-down.rotate {
+    transform: rotate(180deg);
+    transition: transform 0.3s ease;
+}
+
+.attachItem {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 15px;
+}
+
+.attachItem:last-child {
+    border-bottom: none;
+    /* Remove border for the last item */
+}
+
+.add-member-container {
+    background-color: #f8f9fd;
+}
+
+.fileSection .fileAllDropdown .moreFile {
+    display: none;
+}
+
+.fileSection .fileAllDropdown.active .moreFile {
+    display: block;
+}
+
+.fileSection .fileShowDropdown {
+    cursor: pointer;
+}
+
+.user-info {
+    display: inline-block;
+    position: relative;
+}
+
+.user-info .tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 120%;
+    /* Position tooltip below the image */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.user-info:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.user-info.over-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    font-size: 14px;
+    color: #555;
+    font-weight: bold;
 }

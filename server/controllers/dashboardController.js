@@ -24,22 +24,28 @@ dayjs.extend(timezone);
 dayjs.locale('th');
 moment.locale('th');
 
+// dashboardRender controller
 exports.dashboardRender = async (req, res) => {
     try {
         const user = req.user;
+        const taskId = req.params.taskId;
 
         // Fetch spaces associated with the user
         const spaces = await Spaces.find({ 'collaborators.user': user._id })
             .select('projectName projectCover projectDetail createdAt collaborators');
 
+        // Fetch the task by taskId to get its spaceId (project)
+        const task = await Task.findById(taskId).populate('space');  // Ensure 'space' is populated properly
+        const spaceIdFromTask = task && task.project ? task.project : null;
+
         // Filter spaces based on user role
         const allProjects = spaces;
-        const leaderProjects = spaces.filter(space => 
-            space.collaborators.some(collab => 
+        const leaderProjects = spaces.filter(space =>
+            space.collaborators.some(collab =>
                 collab.user.equals(user._id) && (collab.role === 'owner' || collab.role === 'admin')
             ));
-        const memberProjects = spaces.filter(space => 
-            space.collaborators.some(collab => 
+        const memberProjects = spaces.filter(space =>
+            space.collaborators.some(collab =>
                 collab.user.equals(user._id) && collab.role === 'member')
         );
 
@@ -65,7 +71,7 @@ exports.dashboardRender = async (req, res) => {
             {
                 $group: {
                     _id: "$project",
-                    toDo: { $sum: { $cond: [{ $eq: ["$taskStatus", "toDo"] }, 1, 0] } },
+                    pending: { $sum: { $cond: [{ $eq: ["$taskStatus", "pending"] }, 1, 0] } },
                     inProgress: { $sum: { $cond: [{ $eq: ["$taskStatus", "inProgress"] }, 1, 0] } },
                     fix: { $sum: { $cond: [{ $eq: ["$taskStatus", "fix"] }, 1, 0] } },
                     finished: { $sum: { $cond: [{ $eq: ["$taskStatus", "finished"] }, 1, 0] } },
@@ -82,7 +88,7 @@ exports.dashboardRender = async (req, res) => {
             };
 
             const statusCounts = taskStatusCounts.find(count => String(count._id) === String(space._id)) || {
-                toDo: 0,
+                pending: 0,
                 inProgress: 0,
                 fix: 0,
                 finished: 0,
@@ -104,10 +110,13 @@ exports.dashboardRender = async (req, res) => {
 
         const tasks = await Task.find({
             $or: [{ user: user._id }, { assignedUsers: user._id }],
-        }).select('taskName taskPriority taskStatus subtasks');
-
+        })
+            .populate('assignedUsers', 'username profileImage firstName')  // Populate user data
+            .populate('project', 'projectName')  // Populate the 'project' field to get projectName
+            .select('taskName taskDetail taskStatus taskPriority dueDate createdAt project assignedUsers');
+        
         const statusCounts = {
-            toDo: 0,
+            pending: 0,
             inProgress: 0,
             fix: 0,
             finished: 0,
@@ -160,6 +169,24 @@ exports.dashboardRender = async (req, res) => {
             return 0;
         });
 
+        // Fetch tasks with 'pending' status and sort by due date and priority
+        const pendingTasks = tasks.filter(task => task.taskStatus === 'pending')
+        .sort((a, b) => {
+            // First, compare by dueDate (earliest due date should come first)
+            if (a.dueDate && b.dueDate) {
+                if (a.dueDate < b.dueDate) return -1;
+                if (a.dueDate > b.dueDate) return 1;
+            } else if (a.dueDate) {
+                return -1; // If only task a has a due date, it should come first
+            } else if (b.dueDate) {
+                return 1; // If only task b has a due date, it should come first
+            }
+
+            // If due dates are equal or undefined, compare by taskPriority
+            const priorityOrder = { 'urgent': 1, 'normal': 2, 'low': 3 };
+            return priorityOrder[a.taskPriority] - priorityOrder[b.taskPriority];
+        });
+
         const dateText = dayjs().format('dddd, D MMMM BBBB');
 
         // Determine the current time and greeting
@@ -167,10 +194,10 @@ exports.dashboardRender = async (req, res) => {
         let greeting, greetingIcon;
         if (currentHour >= 0 && currentHour < 12) {
             greeting = "สวัสดีตอนเช้า";
-            greetingIcon = "fa-solid fa-sun"; 
+            greetingIcon = "fa-solid fa-sun";
         } else if (currentHour >= 12 && currentHour < 18) {
             greeting = "สวัสดีตอนบ่าย";
-            greetingIcon = "fa-solid fa-cloud-sun"; 
+            greetingIcon = "fa-solid fa-cloud-sun";
         } else {
             greeting = "สวัสดีตอนค่ำ";
             greetingIcon = "fa-solid fa-moon";
@@ -178,13 +205,20 @@ exports.dashboardRender = async (req, res) => {
 
         res.render('layouts/userDashboard', {
             user,
+            tasks: tasks,
             spaces: spacesWithStats,
+            validSpaceId: spaceIdFromTask,
+            tasks: JSON.stringify(tasks),
+            taskId: tasks.map(task => task._id),
+            spaceId: spacesWithStats.map(space => space._id),
+            tasksData: tasks,
             allProjects,
             leaderProjects,
             memberProjects,
             dateText,
             tasksDueToday,
             statusCounts,
+            pendingTasks,
             allTaskCount: tasks.length,
             completedCount,
             incompletedCount,
@@ -200,6 +234,7 @@ exports.dashboardRender = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 exports.getCalendarTasks = async (req, res) => {
     try {
@@ -262,7 +297,7 @@ exports.getTasksByDate = async (req, res) => {
         };
 
         const statusConfig = {
-            toDo: { color: '#DFE1E6', text: 'ยังไม่ทำ' },
+            pending: { color: '#DFE1E6', text: 'รอตรวจ' },
             inProgress: { color: '#2684FF', text: 'กำลังทำ' },
             fix: { color: '#FF7452', text: 'แก้ไข' },
             finished: { color: '#57D9A3', text: 'เสร็จสิ้น' },
@@ -271,7 +306,7 @@ exports.getTasksByDate = async (req, res) => {
         const tasksWithConfig = tasks.map(task => ({
             taskName: task.taskName,
             priority: priorityConfig[task.taskPriority] || priorityConfig.normal,
-            status: statusConfig[task.taskStatus] || statusConfig.toDo,
+            status: statusConfig[task.taskStatus] || statusConfig.inProgress,
         }));
 
         res.json(tasksWithConfig);
@@ -291,7 +326,7 @@ exports.getTaskStatusCounts = async (req, res) => {
         }).select('taskStatus subtasks');
 
         let statusCounts = {
-            incomplete: 0, // Grouping toDo, inProgress, fix
+            incomplete: 0,
             finished: 0,
         };
 

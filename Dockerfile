@@ -1,20 +1,35 @@
-# Use the official Node.js image as the base image
-FROM node:18
+# Use a base image that has the necessary build tools
+FROM node:18-slim
 
-# Set the working directory
+# Install necessary libraries for canvas
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpango1.0-dev \
+    libcairo2-dev \
+    pkg-config \
+    libjpeg-dev \
+    libgif-dev \
+    libpng-dev \
+    libpixman-1-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install nodemon globally
+RUN npm install -g nodemon
+
+# Set working directory
 WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
+# Install production and development dependencies
 RUN npm install
 
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 5001
+# Expose the application port
+EXPOSE 3000
 
-# Define the command to run the app
-CMD ["node", "app.js"]
+# Use nodemon as the start command
+CMD ["npm", "start"]

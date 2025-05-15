@@ -49,8 +49,6 @@ exports.createSubTask = async (req, res) => {
     }
 };
 
-
-
 exports.deleteSubtask = async (req, res) => {
     try {
         const subtaskId = req.params.id;
@@ -77,27 +75,32 @@ exports.toggleSubTaskStatus = async (req, res) => {
             return res.status(404).json({ message: 'Subtask not found' });
         }
 
-        const isOwner = String(subtask.creator) === String(userId);
         const isAssignee = subtask.assignee && String(subtask.assignee._id) === String(userId);
 
         if (!isAssignee) {
             return res.status(403).json({ message: 'You are not authorized to update this subtask status' });
         }
 
-        // Toggle the status
-        subtask.subTask_status = subtask.subTask_status === 'กำลังทำ' ? 'เสร็จสิ้น' : 'กำลังทำ';
+        // Toggle the status: if it's 'inProgress', change it to 'finished', and vice versa
+        const newStatus = subtask.subTask_status === 'inProgress' ? 'finished' : 'inProgress';
+        subtask.subTask_status = newStatus;
+
+        // Add an activity log
+        subtask.activityLogs.push(
+            `Status changed to '${newStatus}' by ${req.user.username || 'user'} on ${new Date().toISOString()}`
+        );
+
         await subtask.save();
 
         res.status(200).json({
             message: 'Status updated successfully',
-            status: subtask.subTask_status,
+            subtask,
         });
     } catch (error) {
         console.error('Error toggling status:', error);
         res.status(500).json({ message: 'Error updating status' });
     }
 };
-
 
 exports.getSubtaskDetails = async (req, res) => {
     try {

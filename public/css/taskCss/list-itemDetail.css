@@ -285,16 +285,16 @@
 
 .firstSec {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
     width: 100%;
     margin-top: 10px;
 }
 
-#checkTask {
-    padding: 10px 20px;
-    /* Adjust padding as needed */
+#sendTask {
     border: none;
+    padding: 10px 20px;
     background-color: #4CAF50;
     color: white;
     border-radius: 5px;
@@ -313,7 +313,7 @@
     opacity: 0.7;
 }
 
-#checkTask i {
+#sendTask i {
     position: absolute;
     /* Remove it from the flow */
     left: 10px;
@@ -328,7 +328,7 @@
 }
 
 /* Button expands and icon slides in on hover */
-#checkTask:hover {
+#sendTask:hover {
     width: 130px;
     /* Expanded width */
     background-color: #45a049;
@@ -336,7 +336,7 @@
     opacity: 1;
 }
 
-#checkTask:hover i {
+#sendTask:hover i {
     transform: translateX(80%);
     /* Slide to its original position */
     opacity: 1;
@@ -345,17 +345,17 @@
     /* Ensure visibility */
 }
 
-#checkTask span {
+#sendTask span {
     padding-left: 0;
     font-size: 14px;
 }
 
-#checkTask:hover span {
+#sendTask:hover span {
     padding-left: 35px;
     transition: 0.5s cubic-bezier(0.25, 0.8, 0.5, 1), opacity 0.5s ease;
 }
 
-#checkTask span {
+#sendTask span {
     transition: opacity 0.3s ease;
     /* Smooth transition for the text */
 }
@@ -1091,14 +1091,14 @@ td img {
 /* detail */
 
 /* activity */
-.activity {
+.mainActivity {
     width: 35%;
     height: 100%;
     background-color: #F7F8F9;
     border-left: 1.5px solid var(--line);
 }
 
-.activity .textTopic {
+.mainActivity .textTopic {
     background-color: white;
     padding: 20px;
     border-bottom: 1.5px solid var(--line);
@@ -1108,7 +1108,7 @@ td img {
     justify-content: space-between;
 }
 
-.activity .textTopic h1 {
+.mainActivity .textTopic h1 {
     font-size: 18px;
     margin: 0;
 }
@@ -1129,7 +1129,7 @@ td img {
     padding: 20px;
     font-weight: 300;
     font-size: 14px;
-    max-height: 550px;
+    max-height: 600px;
     overflow: scroll;
 }
 
@@ -2339,7 +2339,286 @@ button.btn:hover {
     }
 }
 
-.comment-log {
-    color: red; /* Set text color for comment logs */
-    font-weight: 500;
+.comment-container {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.comment-user-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.comment-user-info {
+    flex-grow: 1;
+    font-size: 0.9rem;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-date {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.delete-comment-btn {
+    background: none;
+    border: none;
+    color: #d9534f;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.delete-comment-btn:hover {
+    color: #c9302c;
+}
+
+.comment-body {
+    margin-top: 0.5rem;
+}
+
+.comment-text {
+    margin: 0.5rem;
+    color: #444;
+    font-size: 16px;
+}
+
+.comment-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.attachment-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.attachment-preview-large {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.attachment-link {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.attachment-link:hover {
+    text-decoration: underline;
+}
+
+.download-link {
+    color: #5cb85c;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+.download-link:hover {
+    color: #4cae4c;
+    text-decoration: underline;
+}
+
+.selectMessage div {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    margin: 0 5px;
+}
+
+.selectMessage div.active {
+    background-color: #007bff;
+    color: white;
+}
+
+#logText_sendTask{
+    padding: 0;
+}
+
+/* Overlay styles */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8); /* White overlay with some transparency */
+    z-index: 9998; /* Ensure it's below the spinner but above the content */
+    display: none; /* Initially hidden */
+}
+
+/* Spinner styles */
+.loader {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 9999; /* Ensure it's above the overlay */
+    transform: translate(-50%, -50%);
+}
+
+/* Keyframes for the spinning animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* When the page is loading, show the overlay and spinner */
+body.loading .overlay, 
+body.loading .loader {
+    display: block;
+}
+
+/* Hide the overlay and spinner once the page is loaded */
+body.loaded .overlay, 
+body.loaded .loader {
+    display: none;
+}
+
+.commentSection {
+    border-radius: 8px;
+    margin-left: 0;
+    margin-bottom: 20px;
+}
+#addCommentForm{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    padding: 0 20px;
+}
+.comment-textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: none;
+    font-size: 0.9rem;
+}
+
+.comment-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+}
+
+.upload-btn {
+    cursor: pointer;
+    color: #007bff;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.upload-btn i {
+    margin-right: 0.5rem;
+}
+
+.submit-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+
+
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #f5f5f5;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.attachment-preview-large {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.attachment-link {
+    text-decoration: none;
+    color: #007bff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.attachment-link:hover {
+    text-decoration: underline;
+}
+
+.attachment-name {
+    font-size: 0.9rem;
+    color: #444;
+}
+
+.download-link {
+    color: #5cb85c;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+.download-link:hover {
+    color: #4cae4c;
+    text-decoration: underline;
+}
+
+
+#downloadIcon{
+    font-size: 18px !important;
+}
+.time-text{
+    display: flex;
+    flex-direction: column;
+}
+#innerTimeText{
+    display: flex;
+    flex-direction: column;
+}
+.download-link{
+    display: flex;
+    flex-direction: column;
+}
+.file-content{
+    height: 150px;
 }

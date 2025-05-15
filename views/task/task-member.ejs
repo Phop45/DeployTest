@@ -6,249 +6,296 @@
     <%- include('../task/task_component/task-navbar.ejs') %>
 
         <div class="add-member-container">
-            <h2>จัดการสมาชิก</h2>
-            <div class="addSection">
-                <% if (currentUserRole === 'owner') { %>
-                    <!-- Select Member -->
-                     <div class="addleft">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="filterMemberInput" placeholder="ค้นหาสมาชิกในพื้นที่" onkeyup="filterMembers()">
-                     </div>
-                    
-                    <div class="addright">
-                        <div class="dropdown memberSelect search-member">
-                            <input 
-                                type="text" 
-                                id="searchMemberInput" 
-                                placeholder="เชิญโดยใช้ชื่อผู้ใช้ ID หรืออีเมล"
-                                oninput="searchMember()"
-                                onfocus="showDropdown()"
-                                onblur="hideDropdown()"
-                            />
-                            <span id="clearSelection" class="clear-selection" onclick="clearSelectedMember()">
-                                <i class="fa-solid fa-xmark"></i>
-                            </span>
-                            <ul class="dropdown-menu" id="searchResultsDropdown" style="display: none;">
-                                <!-- show result -->
-                            </ul>
-                            <input type="hidden" id="selectedMemberId" name="selectedMemberId" />
+            <h2><i class="fa-solid fa-users" style="margin-right: 10px;"></i> จัดการสมาชิกในโปรเจกต์</h2>
+                <% if (currentUserRole==='owner' ) { %>
+                    <div class="addSection">
+                        <!-- Select Member -->
+                        <div class="addleft">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filterMemberInput" placeholder="ค้นหาสมาชิกในพื้นที่" onkeyup="filterMembers()">
                         </div>
                 
-                        <!-- Select Role -->
-                        <div class="dropdown roleSelect">
-                            <a class="dropdown-toggle" id="roleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span id="selectedRoleDisplay"> เลือกบทบาท </span> 
-                            </a>
-                            <ul class="dropdown-menu" id="roleDropdownMenu" aria-labelledby="roleDropdown">
-                                <li class="dropdown-item" onclick="selectRole('admin')" id="roleLeader">
-                                    <span>ผู้ดูแลโปรเจกต์</span>
-                                </li>
-                                <li class="dropdown-item" onclick="selectRole('member')" id="roleMember">
-                                    <span>สมาชิก</span>
-                                </li>
-                                <li class="dropdown-item" onclick="selectRole('guest')" id="roleGuest">
-                                    <span>ผู้เยี่ยมชม</span>
-                                </li>
-                            </ul>
-                        </div>
+                        <div class="addright">
+                            <div class="dropdown memberSelect search-member">
+                                <input type="text" id="searchMemberInput" placeholder="เชิญโดยใช้ชื่อผู้ใช้ ID หรืออีเมล"
+                                    oninput="searchMember()" onfocus="showDropdown()" onblur="hideDropdown()" />
+                                <span id="clearSelection" class="clear-selection" onclick="clearSelectedMember()">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </span>
+                                <ul class="dropdown-menu" id="searchResultsDropdown" style="display: none;">
+                                    <!-- show result -->
+                                </ul>
+                                <input type="hidden" id="selectedMemberId" name="selectedMemberId" />
+                            </div>
                 
-                        <button id="addMemberBtn" onclick="addMember()">เพิ่มสมาชิก</button>
+                            <!-- Select Role -->
+                            <div class="dropdown roleSelect">
+                                <a class="dropdown-toggle" id="roleDropdown" role="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <span id="selectedRoleDisplay"> เลือกบทบาท </span>
+                                </a>
+                                <ul class="dropdown-menu" id="roleDropdownMenu" aria-labelledby="roleDropdown">
+                                    <li class="dropdown-item" onclick="selectRole('reporter')" id="roleReporter">
+                                        <span>ผู้ช่วย</span>
+                                    </li>
+                                    <li class="dropdown-item" onclick="selectRole('member')" id="roleMember">
+                                        <span>สมาชิก</span>
+                                    </li>
+                                </ul>
+                            </div>
+                
+                            <button id="addMemberBtn" onclick="addMember()">เพิ่มสมาชิก</button>
+                        </div>
                     </div>
                 <% } else { %>
-                <% } %>
-            </div>
+                    <!-- Hide the addleft div for other roles -->
+                    <div class="addSection" style="display: none;"></div>
+                <% } %>  
             
             <!-- Display Existing Members in the Space -->
-             <div class="memberTable">
-                <table class="table table-responsive" id="myTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 250px;">ชื่อผู้ใช้</th>
-                            <th>อีเมล</th>
-                            <th>บทบาท</th>
-                            <th>สถานะ</th>
-                            <th style="width: 120px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%  const owner = collaborators.filter(collab => collab.role === 'owner');
-                            const members = collaborators.filter(collab => collab.role === 'member' || collab.role === 'guest');
-                            
-                            owner.forEach(collab => { %>
-                            <tr class="alert" role="alert">
-                                <td class="imgName">
-                                    <div class="img">
-                                        <img src="<%= collab.user.profileImage %>" alt="Profile" width="40" height="40"
-                                            onerror="this.onerror=null; this.src='/public/img/profileImage/userDefalt.jpg';">
-                                        <span class="name">
-                                            <%= collab.user.username %>
-                                        </span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <%= collab.user.googleEmail %>
-                                </td>
-                                <td>
-                                    <div class="dropdown changeRole">
-                                        <% if (currentUserRole === 'owner') { %>
-                                            <a  class="dropdown-toggle" 
-                                                id="roleDropdown<%= collab._id %>" role="button"
-                                                data-bs-toggle="dropdown" 
-                                                aria-expanded="false">
-                                                <span   class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : '' %>" 
-                                                        id="selectedRoleDisplay<%= collab._id %>">
+            <% if (currentUserRole === 'owner') { %>
+                <div class="memberTable">
+                    <table class="table table-responsive" id="myTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 250px;">ชื่อผู้ใช้</th>
+                                <th>อีเมล</th>
+                                <th>บทบาท</th>
+                                <th>สถานะ</th>
+                                <th style="width: 120px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% const owner = collaborators.filter(collab => collab.role === 'owner'); %>
+                            <% const members = collaborators.filter(collab => collab.role === 'member' || collab.role === 'guest' || collab.role === 'reporter'); %>
+            
+                            <% owner.forEach(collab => { %>
+                                <tr class="alert" role="alert">
+                                    <td class="imgName">
+                                        <div class="img">
+                                            <img src="<%= collab.user.profileImage %>" alt="Profile" class="user-avatar-profile"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="fallback-profile-avatar-profile" style="display: none;">
+                                                <span><%= collab.user.firstName[0] %></span>
+                                            </div>
+                                            <span class="name">
+                                                <%= collab.user.firstName %> <%= collab.user.lastName %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td><%= collab.user.googleEmail %></td>
+                                    <td>
+                                        <div class="dropdown changeRole">
+                                            <% if (currentUserRole === 'owner') { %>
+                                                <a class="dropdown-toggle" id="roleDropdown<%= collab._id %>" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : collab.role === 'reporter' ? 'roleReporter' : '' %>"
+                                                          id="selectedRoleDisplay<%= collab._id %>">
+                                                        <%= collab.role === 'owner' ? 'เจ้าของ' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>
+                                                    </span>
+                                                </a>
+                                                <ul class="dropdown-menu" aria-labelledby="roleDropdown<%= collab._id %>">
+                                                    <li class="dropdown-item" 
+                                                        onclick="changeRole('<%= collab.user._id %>', 'reporter', '<%= collab._id %>')"
+                                                        id="roleReporter">
+                                                        <span>ผู้ช่วย</span>
+                                                    </li>
+                                                    <li class="dropdown-item" 
+                                                        onclick="changeRole('<%= collab.user._id %>', 'member', '<%= collab._id %>')"
+                                                        id="roleMember">
+                                                        <span>สมาชิก</span>
+                                                    </li>
+                                                </ul>
+                                            <% } else if (currentUserRole === 'member') { %>
+                                                <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : '' %>">
                                                     <%= collab.role === 'owner' ? 'ผู้ดูแล' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'แขก' : collab.role %>
                                                 </span>
-                                            </a>
-                                            <ul class="dropdown-menu" aria-labelledby="roleDropdown<%= collab._id %>">
-                                                <li class="dropdown-item" 
-                                                    onclick="changeRole('<%= collab.user._id %>', 'admin', '<%= collab._id %>')"
-                                                    id="roleLeader">
-                                                    <span>ผู้ดูแล</span>
-                                                </li>
-                                                <li class="dropdown-item" 
-                                                    onclick="changeRole('<%= collab.user._id %>', 'member', '<%= collab._id %>')"
-                                                    id="roleMember">
-                                                    <span>สมาชิก</span>
-                                                </li>
-                                                <li class="dropdown-item" 
-                                                    onclick="changeRole('<%= collab.user._id %>', 'guest', '<%= collab._id %>')"
-                                                    id="roleGuest">
-                                                    <span>แขก</span>
-                                                </li>
-                                            </ul>
-                                        <% } else if (currentUserRole === 'member') { %>
-                                            <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : '' %>">
-                                                <%= collab.role === 'owner' ? 'ผู้ดูแล' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'แขก' : collab.role %>
-                                            </span>
-                                        <% } %>                             
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="logStatus <%= collab.user.isOnline ? 'online' : 'offline' %>">
-                                        <span class="status-indicator <%= collab.user.isOnline ? 'online' : 'offline' %>" data-is-online="<%= collab.user.isOnline %>"></span>
-                                        <%= collab.user.isOnline ? 'ออนไลน์' : 'ออฟไลน์' %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <% if (collab.user._id.toString() !== user._id.toString() && currentUserRole === 'owner') { %>
-                                        <button class="btn btn-danger btn-sm" 
-                                                onclick="deleteMember('<%= collab.user._id %>')" id="deleteBtn">ลบสมาชิก</button>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }) %>
-
-                        <% members.forEach(collab => { %>
-                            <tr class="alert" role="alert">
-                                <td class="imgName">
-                                    <div class="img">
-                                        <img src="<%= collab.user.profileImage %>" alt="Profile" width="40" height="40"
-                                            onerror="this.onerror=null; this.src='/public/img/profileImage/userDefalt.jpg';">
-                                        <span class="name">
-                                            <%= collab.user.username %>
+                                            <% } %>                             
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="logStatus <%= collab.user.isOnline ? 'online' : 'offline' %>">
+                                            <span class="status-indicator <%= collab.user.isOnline ? 'online' : 'offline' %>"
+                                                  data-is-online="<%= collab.user.isOnline %>"></span>
+                                            <%= collab.user.isOnline ? 'ออนไลน์' : 'ออฟไลน์' %>
                                         </span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <%= collab.user.googleEmail %>
-                                </td>
-                                <td>
-                                    <div class="dropdown changeRole">
-                                        <% if (currentUserRole === 'owner') { %>
-                                            <a class="dropdown-toggle" 
-                                            id="roleDropdown<%= collab._id %>" role="button"
-                                            data-bs-toggle="dropdown" 
-                                            aria-expanded="false">
-                                                <span  class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : '' %>" 
-                                                    id="selectedRoleDisplay<%= collab._id %>">
-                                                    <%= collab.role === 'owner' ? 'ผู้ดูแล' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'แขก' : collab.role %>
+                                    </td>
+                                    <td>
+                                        <% if (collab.user._id.toString() !== user._id.toString() && currentUserRole === 'owner') { %>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteMember('<%= collab.user._id %>')" id="deleteBtn">ลบสมาชิก</button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+            
+                            <% members.forEach(collab => { %>
+                                <tr class="alert" role="alert">
+                                    <td class="imgName">
+                                        <div class="img">
+                                            <img src="<%= collab.user.profileImage %>" alt="Profile" class="user-avatar-profile"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="fallback-profile-avatar-profile" style="display: none;">
+                                                <span><%= collab.user.firstName[0] %></span>
+                                            </div>
+                                            <span class="name">
+                                                <%= collab.user.firstName %> <%= collab.user.lastName %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td><%= collab.user.googleEmail %></td>
+                                    <td>
+                                        <div class="dropdown changeRole">
+                                            <% if (currentUserRole === 'owner') { %>
+                                                <a class="dropdown-toggle" id="roleDropdown<%= collab._id %>" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : collab.role === 'reporter' ? 'roleReporter' : '' %>"
+                                                          id="selectedRoleDisplay<%= collab._id %>">
+                                                        <%= collab.role === 'owner' ? 'เจ้าของ' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>
+                                                    </span>
+                                                </a>
+                                                <ul class="dropdown-menu" aria-labelledby="roleDropdown<%= collab._id %>">
+                                                    <li class="dropdown-item" 
+                                                        onclick="changeRole('<%= collab.user._id %>', 'reporter', '<%= collab._id %>')"
+                                                        id="roleReporter">
+                                                        <span>ผู้ช่วย</span>
+                                                    </li>
+                                                    <li class="dropdown-item" 
+                                                        onclick="changeRole('<%= collab.user._id %>', 'member', '<%= collab._id %>')"
+                                                        id="roleMember">
+                                                        <span>สมาชิก</span>
+                                                    </li>
+                                                </ul>
+                                            <% } else if (currentUserRole === 'member') { %>
+                                                <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : '' %>">
+                                                    <%= collab.role === 'owner' ? 'ผู้ดูแล' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>
                                                 </span>
-                                            </a>
-                                            <ul class="dropdown-menu" aria-labelledby="roleDropdown<%= collab._id %>">
-                                                <li class="dropdown-item" 
-                                                    onclick="changeRole('<%= collab.user._id %>', 'owner', '<%= collab._id %>')">
-                                                    หัวหน้า
-                                                </li>
-                                                <li class="dropdown-item" 
-                                                    onclick="changeRole('<%= collab.user._id %>', 'member', '<%= collab._id %>')">
-                                                    สมาชิก
-                                                </li>
-                                                <li class="dropdown-item" 
-                                                    onclick="changeRole('<%= collab.user._id %>', 'guest', '<%= collab._id %>')">
-                                                    แขก
-                                                </li>
-                                            </ul>
-                                        <% } else if (currentUserRole === 'member') { %>
-                                            <span  class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : '' %>">
-                                                <%= collab.role === 'owner' ? 'ผู้ดูแล' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'แขก' : collab.role %>
-                                            </span>
-                                        <% } %>                             
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="logStatus <%= collab.user.isOnline ? 'online' : 'offline' %>">
-                                        <span class="status-indicator <%= collab.user.isOnline ? 'online' : 'offline' %>" data-is-online="<%= collab.user.isOnline %>"></span>
-                                        <%= collab.user.isOnline ? 'ออนไลน์' : 'ออฟไลน์' %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <% if (collab.user._id.toString() !== user._id.toString() && currentUserRole === 'owner') { %>
-                                        <button class="btn btn-danger btn-sm" 
-                                                onclick="deleteMember('<%= collab.user._id %>')" id="deleteBtn">ลบสมาชิก</button>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }) %>
-
-                        <% pendingInvitations.forEach(invitation => { %>
-                            <tr class="alert" role="alert">
-                                <td class="imgName">
-                                    <div class="img">
-                                        <img src="<%= invitation.user.profileImage %>" alt="Profile" width="40" height="40"
-                                            onerror="this.onerror=null; this.src='/public/img/profileImage/userDefalt.jpg';">
-                                        <span class="name">
-                                            <%= invitation.user.username %>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="logStatus <%= collab.user.isOnline ? 'online' : 'offline' %>">
+                                            <span class="status-indicator <%= collab.user.isOnline ? 'online' : 'offline' %>"
+                                                  data-is-online="<%= collab.user.isOnline %>"></span>
+                                            <%= collab.user.isOnline ? 'ออนไลน์' : 'ออฟไลน์' %>
                                         </span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <%= invitation.user.googleEmail %>
-                                </td>
-                                <td>
-                                    <span  class="roleDisplay <%= invitation.role === 'Leader' ? 'roleLeader' : invitation.role === 'Member' ? 'roleMember' : invitation.role === 'Guest' ? 'roleGuest' : '' %>" 
-                                        id="selectedRoleDisplay<%= invitation._id %>">
-                                        <%= invitation.role === 'Leader' ? 'ผู้ดูแล' : invitation.role === 'Member' ? 'สมาชิก' : invitation.role === 'Guest' ? 'แขก' : invitation.role %>
-                                    </span>
-                                </td>
-                                <td class="status">
-                                    <span class="waiting">
-                                        รอการตอบรับ
-                                    </span>
-                                </td>
-                                <td id="optionBtn">
-                                    <div class="dropdown">
-                                        <button class="dropdown-toggle" type="button" id="dropdownMenuButton<%= invitation._id %>" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fa-solid fa-ellipsis"></i>
-                                        </button>
-                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton<%= invitation._id %>">
-                                            <li><button class="dropdown-item otpItem" onclick="resendInvitation('<%= invitation._id %>')">
-                                                <i class="fa-solid fa-paper-plane"></i>
-                                                ส่งคำเชิญอีกครั้ง</button>
-                                            </li>
-                                            <li><button class="dropdown-item otpItem" onclick="cancelInvitation('<%= invitation._id %>')"
-                                                style="color: #E53935;">
-                                                <i class="fa-solid fa-xmark"></i>
-                                                ยกเลิกคำเชิญ</button>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </td>
+                                    </td>
+                                    <td>
+                                        <% if (collab.user._id.toString() !== user._id.toString() && currentUserRole === 'owner') { %>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteMember('<%= collab.user._id %>')" id="deleteBtn">ลบสมาชิก</button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %> 
+
+            <% if (currentUserRole === 'member' || currentUserRole === 'guest' || currentUserRole === 'reporter') { %>
+                <div class="memberTable" id="anotherDisplayView">
+                    <table class="table table-responsive" id="myTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 250px;">ชื่อผู้ใช้</th>
+                                <th>อีเมล</th>
+                                <th>บทบาท</th>
+                                <th>สถานะ</th>
+                                <th style="width: 120px;"></th>
                             </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-             </div>          
+                        </thead>
+                        <tbody>
+                            <% const owner = collaborators.filter(collab => collab.role === 'owner'); %>
+                            <% const members = collaborators.filter(collab => collab.role === 'member' || collab.role === 'guest' || collab.role === 'reporter'); %>
+            
+                            <% owner.forEach(collab => { %>
+                                <tr class="alert" role="alert">
+                                    <td class="imgName">
+                                        <div class="img">
+                                            <img src="<%= collab.user.profileImage %>" alt="Profile" class="user-avatar-profile"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="fallback-profile-avatar-profile" style="display: none;">
+                                                <span><%= collab.user.firstName[0] %></span>
+                                            </div>
+                                            <span class="name">
+                                                <%= collab.user.firstName %> <%= collab.user.lastName %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td><%= collab.user.googleEmail %></td>
+                                    <td>
+                                        <div class="dropdown changeRole">
+                                            <% if (collab.role === 'owner') { %>
+                                                <a class="dropdown-toggle" id="roleDropdown<%= collab._id %>" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : collab.role === 'reporter' ? 'roleReporter' : '' %>"
+                                                          id="selectedRoleDisplay<%= collab._id %>">
+                                                        <%= collab.role === 'owner' ? 'เจ้าของ' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>
+                                                    </span>
+                                                </a>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="logStatus <%= collab.user.isOnline ? 'online' : 'offline' %>">
+                                            <span class="status-indicator <%= collab.user.isOnline ? 'online' : 'offline' %>"
+                                                  data-is-online="<%= collab.user.isOnline %>"></span>
+                                            <%= collab.user.isOnline ? 'ออนไลน์' : 'ออฟไลน์' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (collab.user._id.toString() !== user._id.toString() && currentUserRole === 'owner') { %>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteMember('<%= collab.user._id %>')" id="deleteBtn">ลบสมาชิก</button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+            
+                            <% members.forEach(collab => { %>
+                                <tr class="alert" role="alert">
+                                    <td class="imgName">
+                                        <div class="img">
+                                            <img src="<%= collab.user.profileImage %>" alt="Profile" class="user-avatar-profile"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="fallback-profile-avatar-profile" style="display: none;">
+                                                <span><%= collab.user.firstName[0] %></span>
+                                            </div>
+                                            <span class="name">
+                                                <%= collab.user.firstName %> <%= collab.user.lastName %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td><%= collab.user.googleEmail %></td>
+                                    <td>
+                                        <div class="dropdown changeRole">
+                                            <% if (currentUserRole === 'owner') { %>
+                                                <a class="dropdown-toggle" id="roleDropdown<%= collab._id %>" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : collab.role === 'reporter' ? 'roleReporter' : '' %>"
+                                                          id="selectedRoleDisplay<%= collab._id %>">
+                                                        <%= collab.role === 'owner' ? 'เจ้าของ' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>
+                                                    </span>
+                                                </a>
+                                            <% } else if (currentUserRole === 'member') { %>
+                                                <span class="roleDisplay <%= collab.role === 'owner' ? 'roleLeader' : collab.role === 'member' ? 'roleMember' : collab.role === 'guest' ? 'roleGuest' : collab.role === 'reporter' ? 'roleReporter' : '' %>">
+                                                    <%= collab.role === 'owner' ? 'เจ้าของ' : collab.role === 'member' ? 'สมาชิก' : collab.role === 'guest' ? 'ผู้เยี่ยมชม' : collab.role === 'reporter' ? 'ผู้ช่วย' : collab.role %>
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="logStatus <%= collab.user.isOnline ? 'online' : 'offline' %>">
+                                            <span class="status-indicator <%= collab.user.isOnline ? 'online' : 'offline' %>"
+                                                  data-is-online="<%= collab.user.isOnline %>"></span>
+                                            <%= collab.user.isOnline ? 'ออนไลน์' : 'ออฟไลน์' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (collab.user._id.toString() !== user._id.toString() && currentUserRole === 'owner') { %>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteMember('<%= collab.user._id %>')" id="deleteBtn">ลบสมาชิก</button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %> 
         </div>
 </div>
 
@@ -303,8 +350,15 @@
     }
 
     // Attach the filter function to the input field
-    document.getElementById('filterMemberInput').addEventListener('input', filterMembers);
-
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('filterMemberInput');
+        if (input) {
+            input.addEventListener('input', filterMembers);
+        } else {
+            console.error('filterMemberInput not found');
+        }
+    });
+    
     // Function to search users
     async function searchMember() {
         const query = document.getElementById('searchMemberInput').value.trim();
@@ -339,14 +393,27 @@
                 li.className = 'dropdown-item';
                 li.style.cursor = 'pointer';
                 li.onclick = () => selectMember(user);
+                
                 li.innerHTML = `
-                    <img src="${user.profileImage || '/img/profileImage/Profile.jpeg'}" 
-                         alt="Profile"
-                         onerror="this.onerror=null; this.src='/img/profileImage/userDefalt.jpg';">
-                    ${user.username} <span class="resultEmail">(${user.googleEmail})</span>
+                    <div class="memberItemWrap">
+                        <img src="${user.profileImage}" 
+                            alt="Profile" class="user-avatar"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="fallback-profile-member" style="display: none;">
+                            <span>
+                                ${user.firstName[0]}
+                            </span>
+                        </div>
+                        <div class="memberNameWrap">
+                            <span class="resultName">${user.firstName} ${user.lastName}</span>
+                            <span class="resultEmail">(${user.googleEmail})</span>
+                        </div>
+                    </div>
                 `;
+                
                 dropdown.appendChild(li);
             });
+
 
             dropdown.style.display = 'block';
         } catch (error) {
@@ -371,7 +438,7 @@
 
     function selectMember(user) {
         const input = document.getElementById('searchMemberInput');
-        input.value = `${user.username} (${user.googleEmail})`;
+        input.value = `${user.firstName} ${user.lastName} (${user.googleEmail})`;
         document.getElementById('selectedMemberId').value = user._id;
         document.getElementById('searchResultsDropdown').style.display = 'none';
     }
@@ -401,7 +468,7 @@
 
         const roleDisplay = 
                 role === 'owner' ? 'เจ้าของ' :
-                role === 'admin' ? 'ผู้ดูแล' : 
+                role === 'reporter' ? 'ผู้ช่วย' : 
                 role === 'member' ? 'สมาชิก' : 
                 role === 'guest' ? 'ผู้เยี่ยมชม': role;
         document.getElementById('selectedRoleDisplay').innerText = roleDisplay;
@@ -409,8 +476,8 @@
         if (role === 'owner') {
             displayElement.style.borderLeft = '5px solid #5C54E5';
             displayElement.style.paddingLeft = '10px';
-        } else if (role === 'admin') {
-            displayElement.style.borderLeft = '5px solid #5C54E5';
+        } else if (role === 'reporter') {
+            displayElement.style.borderLeft = '5px solid #3B82F6';
             displayElement.style.paddingLeft = '10px';
         } else if (role === 'member') {
             displayElement.style.borderLeft = '5px solid #ED79AD';
@@ -461,6 +528,19 @@
     }
 
     function changeRole(memberId, newRole, collabId) {
+        // Show a confirmation prompt
+        const roleDisplay = newRole === 'owner' ? 'ผู้ดูแล' : 
+                            newRole === 'member' ? 'สมาชิก' : 
+                            newRole === 'guest' ? 'ผู้เยี่ยมชม' : 
+                            newRole === 'reporter' ? 'ผู้ช่วย' : 'unknown';
+        
+        const confirmChange = confirm(`คุณต้องการเปลี่ยนบทบาทของผู้ใช้นี้เป็น "${roleDisplay}" หรือไม่?`);
+        
+        if (!confirmChange) {
+            return; // Cancel the action if the user does not confirm
+        }
+    
+        // Proceed with the role update
         fetch(`/update-role/${memberId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -477,8 +557,12 @@
         })
         .then(data => {
             if (data.success) {
-                const roleDisplay = newRole === 'owner' ? 'ผู้ดูแล' : newRole === 'member' ? 'สมาชิก' : 'แขก';
-                document.getElementById(`selectedRoleDisplay${collabId}`).innerText = roleDisplay;
+                const updatedRoleDisplay = newRole === 'owner' ? 'ผู้ดูแล' : 
+                                           newRole === 'member' ? 'สมาชิก' : 
+                                           newRole === 'guest' ? 'ผู้เยี่ยมชม' : 
+                                           newRole === 'reporter' ? 'ผู้ช่วย' : 'unknown';
+                
+                document.getElementById(`selectedRoleDisplay${collabId}`).innerText = updatedRoleDisplay;
                 alert('อัปเดตบทบาทสำเร็จแล้ว!');
                 location.reload();
             } else {
