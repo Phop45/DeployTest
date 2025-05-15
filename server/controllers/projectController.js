@@ -132,26 +132,26 @@ exports.createProject = async (req, res) => {
                 layout: "../views/layouts/project",
                 notifications,
                 unreadCount,
-                errorMessage: errorMessage.length > 0 ? errorMessage[0] : null, // Pass the message to the view
+                errorMessage: errorMessage.length > 0 ? errorMessage[0] : null,
             });
         } catch (error) {
-            console.log(error);
+            console.error("Error fetching spaces or notifications:", error);
             res.status(500).send("Internal Server Error");
         }
-    }
-
-    else if (req.method === 'POST') {
+    } else if (req.method === 'POST') {
         try {
             const { projectName, projectDetail, members, dueDate } = req.body;
 
-            // Ensure the current user's details are fetched
+            // Fetch user details
             const userDetails = await User.findById(req.user.id).select('firstName lastName').lean();
             if (!userDetails) {
                 req.flash('error', 'User details not found.');
                 return res.redirect('/createProject');
             }
-            
+
             const userId = mongoose.Types.ObjectId(req.user.id);
+
+            // Check for existing project with the same name
             const existingProject = await Spaces.findOne({
                 projectName: projectName.trim(),
                 $or: [
@@ -165,6 +165,7 @@ exports.createProject = async (req, res) => {
                 return res.redirect("/createProject");
             }
 
+            // Parse due date if provided
             let parsedDueDate = null;
             if (dueDate) {
                 const tempDate = new Date(dueDate);
@@ -173,8 +174,8 @@ exports.createProject = async (req, res) => {
                 }
             }
 
-            // Upload the project cover to Cloudinary
-            let projectCoverUrl = 'https://res.cloudinary.com/dibbpr0zu/image/upload/v1743406589/defultBackground_vjda8s.jpg'; // Default cover
+            // Upload project cover or use default
+            let projectCoverUrl = 'https://res.cloudinary.com/dibbpr0zu/image/upload/v1743406589/defultBackground_vjda8s.jpg';
             if (req.file) {
                 const result = await cloudinary.uploader.upload(req.file.path, {
                     folder: 'projectCovers',
@@ -183,6 +184,7 @@ exports.createProject = async (req, res) => {
                 projectCoverUrl = result.secure_url;
             }
 
+            // Create the new project
             const newSpace = new Spaces({
                 projectName,
                 projectDetail: projectDetail?.trim() || "",
@@ -196,56 +198,47 @@ exports.createProject = async (req, res) => {
                 projectCover: projectCoverUrl,
             });
 
-            // Add members to the collaborators list and create notifications
+            // Add members and send notifications
             if (members) {
                 const memberList = JSON.parse(members);
                 const userGroup = [];
-                
+
                 for (const member of memberList) {
-                    const isMember = newSpace.collaborators.some(
-                        (collab) => collab.user.toString() === member.id
-                    );
-                    if (!isMember) {
+                    if (!newSpace.collaborators.some((collab) => collab.user.toString() === member.id)) {
                         newSpace.collaborators.push({
                             user: member.id,
                             role: "member",
                         });
-            
-                        // Add member to userGroup for the notification
-                        userGroup.push({
-                            user: member.id,
-                            status: "unread",
-                        });
-            
-                        // Send email notification if applicable
+
+                        userGroup.push({ user: member.id, status: "unread" });
+
+                        // Send email notification
                         const userToNotify = await User.findById(member.id);
                         if (userToNotify) {
                             const spaceDetailLink = `https://deploytest-8mln.onrender.com/space/item/${newSpace._id}/dashboard?period=7day`;
                             const emailMessage = `คุณได้รับเชิญเข้าร่วมโปรเจกต์ "${projectName}" ในบทบาท "สมาชิก"`;
-            
                             await sendSpaceMemberAddedEmail(userToNotify, newSpace, spaceDetailLink, emailMessage);
                         }
                     }
                 }
-            
-                // Create notification for the members
+
+                // Create notification for members
                 const notificationMessage = `${userDetails.firstName}${userDetails.lastName} ได้เพิ่มคุณเข้าโปรเจกต์ ${projectName} แล้ว`;
                 const notification = new Notification({
                     userGroup,
-                    triggeredBy: req.user.id, // Who caused the notification
+                    triggeredBy: req.user.id,
                     message: notificationMessage,
                     type: 'memberAdded',
                     relatedEntityType: 'space',
                     relatedEntityId: newSpace._id,
                     space: newSpace._id,
                 });
-            
                 await notification.save();
             }
-            
+
             await newSpace.save();
 
-            // Add default statuses
+            // Insert default statuses
             const defaultStatuses = [
                 { name: "ยังไม่ทำ", category: "toDo", space: newSpace._id },
                 { name: "กำลังทำ", category: "inProgress", space: newSpace._id },
@@ -256,7 +249,7 @@ exports.createProject = async (req, res) => {
 
             res.redirect("/project");
         } catch (error) {
-            console.error('Error creating project:', error);
+            console.error("Error creating project:", error);
             req.flash('error', 'เกิดข้อผิดพลาดในการสร้างโปรเจกต์');
             res.redirect('/createProject');
         }

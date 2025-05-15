@@ -1,54 +1,29 @@
 const nodemailer = require('nodemailer');
-const { google } = require('googleapis');
 
-const oAuth2Client = new google.auth.OAuth2(
-    process.env.CLIENT_ID,
-    process.env.CLIENT_SECRET,
-    'https://developers.google.com/oauthplayground'
-);
-
-oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
-
-let transporter;
-
-async function getTransporter() {
-    if (!transporter) {
-        const accessToken = await oAuth2Client.getAccessToken().catch((err) => {
-            console.error("Failed to retrieve access token:", err);
-            throw new Error("Failed to authenticate email service.");
-        });
-        transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                type: 'OAuth2',
-                user: process.env.EMAIL_USER,
-                clientId: process.env.CLIENT_ID,
-                clientSecret: process.env.CLIENT_SECRET,
-                refreshToken: process.env.REFRESH_TOKEN,
-                accessToken: accessToken.token,
-            },
-        });
+const transporter = nodemailer.createTransport({
+    service: 'gmail', // Replace with your custom domain or email service
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     }
-    return transporter;
-}
+});
 
-exports.sendEmail = async ({ to, subject, html, text, from }) => {
+exports.sendEmail = async (to, subject, html, text) => {
     try {
-        const transporter = await getTransporter();
-        const senderEmail = from || process.env.EMAIL_USER;
         await transporter.sendMail({
-            from: senderEmail,
+            from: process.env.EMAIL_USER,
             to,
             subject,
-            text,
-            html,
+            text, // Plain text version
+            html  // HTML version
         });
-        console.info(`Email sent successfully to ${to}`);
+        console.log(`Email sent successfully to ${to}`);
+        return true;
     } catch (error) {
-        console.error("Error sending email:", error);
+        console.error(`Error sending email to ${to}:`, error);
+        return false;
     }
 };
-
 
 exports.sendTaskStatusEmails = async (assignedUsers, taskName, action, taskDetailLink, message) => {
     for (const assignedUser of assignedUsers) {
@@ -247,117 +222,133 @@ exports.sendTaskApprovalEmail = async (usersToNotify, task, taskDetailLink, mess
 
 exports.sendSpaceMemberAddedEmail = async (user, space, taskDetailLink, message) => {
     try {
-        if (user.googleEmail) {
-            // Construct the email content
-            const formatDateInThai = (date) => {
-                return new Date(date).toLocaleDateString('th-TH');
-            };
-
-            const emailHtml = `
-                <html>
-                <head>
-                    <script src="https://kit.fontawesome.com/421504dd7b.js" crossorigin="anonymous"></script>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-                    <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap');
-                        .header {
-                            background-color: #202020;
-                            color: white;
-                            display: flex;
-                            align-items: center;
-                            justify-content: start;
-                            padding: 20px;
-                            border-radius: 10px 10px 0 0;
-                            font-weight: 500;
-                            font-size: 20px;
-                        }
-                        .emailWrap {
-                            max-width: 600px; 
-                            margin: 50px auto;
-                            background-color: #ffffff; 
-                            border-radius: 8px; 
-                            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                        }
-                        .contentWrap {
-                            padding: 30px;
-                            background-color: #ffffff;
-                            border-radius: 0 0 8px 8px;
-                        }
-                        h2 {
-                            font-size: 24px;
-                            margin-bottom: 20px;
-                            font-weight: 500;
-                            text-align: center; 
-                            color: #4CAF50;
-                            margin-top: 0;
-                        }
-                        h3 {
-                            font-size: 18px;
-                            margin-bottom: 5px;
-                            font-weight: 400;
-                            color: #5C54E5;
-                        }
-                        p {
-                            font-size: 16px;
-                            color: #333;
-                        }
-                        a {
-                            background-color: #5C54E5;
-                            display: inline-block; 
-                            color: #fff; 
-                            padding: 12px 20px; 
-                            text-decoration: none; 
-                            border-radius: 4px; 
-                            font-weight: 400; 
-                            margin-top: 10px;
-                            font-size: 16px;
-                        }
-                    </style>
-                    </head>
-                    <body style="font-family: 'Kanit', sans-serif; background-color: #f4f4f4; padding: 50px 0;">
-                        <div class="emailWrap">    
-                            <div class="header">Task Hub</div>
-                            <div class="contentWrap">
-                                <h2>คุณถูกเพิ่มเข้าไปในโปรเจกต์ "${space.projectName}" <i class="fa-solid fa-user-plus" style="margin-left: 10px;"></i></h2>
-                                <h3>รายละเอียดโปรเจกต์:</h3>
-                                <ul style="color: #000;">
-                                    <li><strong>ชื่อโปรเจกต์:</strong> ${space.projectName}</li>
-                                    <li><strong>คำอธิบาย:</strong> ${space.description || 'ไม่มีคำอธิบาย'}</li>
-                                    <li><strong>วันที่สร้าง:</strong> ${formatDateInThai(space.createdAt)}</li>
-                                </ul>
-                                <div style="text-align: center;">
-                                    <p style="font-size: 16px;">คลิกลิงก์ด้านล่างเพื่อดูรายละเอียดโปรเจกต์:</p>
-                                    <a href="${taskDetailLink}" style="color: #fff;">ดูรายละเอียดโปรเจกต์</a>
-                                </div>
-                                <p style="font-size: 14px; color: #777; text-align: center; margin-top: 30px;">
-                                    หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้
-                                </p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>
-                    `;
-
-            const emailText = `
-                คุณถูกเพิ่มเข้าไปในโปรเจกต์ "${space.projectName}"
-                ========================
-                รายละเอียดพื้นที่:
-                - ชื่อโปรเจกต์: ${space.projectName}
-                - คำอธิบาย: ${space.description || 'ไม่มีคำอธิบาย'}
-                - วันที่สร้าง: ${formatDateInThai(space.createdAt)}
-
-                คลิกลิงก์ด้านล่างเพื่อดูรายละเอียดโปรเจกต์:
-                ${taskDetailLink}
-
-                หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้
-                `;
-
-            await exports.sendEmail(user.googleEmail, `คุณถูกเพิ่มเข้าไปในโปรเจกต์: ${space.projectName}`, emailHtml, emailText);
+        if (!user?.googleEmail) {
+            console.warn("⚠️ User email is not available, skipping email notification.");
+            return;
         }
-    } catch (err) {
-        console.error(`❌ Failed to send email to ${user.googleEmail}:`, err.message);
+
+        const formatDateInThai = (date) =>
+            new Date(date).toLocaleDateString('th-TH', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+            });
+
+        const projectDescription = space.description || "ไม่มีคำอธิบาย";
+
+        const emailHtml = `
+            <html>
+            <head>
+                <script src="https://kit.fontawesome.com/421504dd7b.js" crossorigin="anonymous"></script>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap');
+                    .header {
+                        background-color: #202020;
+                        color: white;
+                        padding: 20px;
+                        border-radius: 10px 10px 0 0;
+                        font-size: 20px;
+                        text-align: center;
+                    }
+                    .emailWrap {
+                        max-width: 600px;
+                        margin: 50px auto;
+                        background: white;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                        overflow: hidden;
+                    }
+                    .contentWrap {
+                        padding: 30px;
+                        font-family: 'Kanit', sans-serif;
+                        color: #333;
+                    }
+                    h2 {
+                        font-size: 24px;
+                        margin-bottom: 20px;
+                        color: #4CAF50;
+                        text-align: center;
+                    }
+                    h3 {
+                        font-size: 18px;
+                        color: #5C54E5;
+                        margin-bottom: 10px;
+                    }
+                    p, ul {
+                        font-size: 16px;
+                        line-height: 1.5;
+                    }
+                    a {
+                        display: inline-block;
+                        margin-top: 15px;
+                        padding: 10px 20px;
+                        background-color: #5C54E5;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 4px;
+                        font-weight: bold;
+                    }
+                    a:hover {
+                        background-color: #4a47d1;
+                    }
+                    .footer {
+                        margin-top: 30px;
+                        font-size: 14px;
+                        color: #777;
+                        text-align: center;
+                    }
+                </style>
+            </head>
+            <body style="background-color: #f4f4f4; padding: 20px;">
+                <div class="emailWrap">
+                    <div class="header">Task Hub</div>
+                    <div class="contentWrap">
+                        <h2>คุณถูกเพิ่มเข้าไปในโปรเจกต์ "${space.projectName}"</h2>
+                        <h3>รายละเอียดโปรเจกต์:</h3>
+                        <ul>
+                            <li><strong>ชื่อโปรเจกต์:</strong> ${space.projectName}</li>
+                            <li><strong>คำอธิบาย:</strong> ${projectDescription}</li>
+                            <li><strong>วันที่สร้าง:</strong> ${formatDateInThai(space.createdAt)}</li>
+                        </ul>
+                        <div style="text-align: center;">
+                            <p>คลิกลิงก์ด้านล่างเพื่อดูรายละเอียดโปรเจกต์:</p>
+                            <a href="${taskDetailLink}">ดูรายละเอียดโปรเจกต์</a>
+                        </div>
+                        <p class="footer">หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const emailText = `
+        คุณถูกเพิ่มเข้าไปในโปรเจกต์ "${space.projectName}"
+
+        รายละเอียดโปรเจกต์:
+        - ชื่อโปรเจกต์: ${space.projectName}
+        - คำอธิบาย: ${projectDescription}
+        - วันที่สร้าง: ${formatDateInThai(space.createdAt)}
+
+        คลิกลิงก์ด้านล่างเพื่อดูรายละเอียดโปรเจกต์:
+        ${taskDetailLink}
+
+        หากคุณไม่ได้ร้องขอสิ่งนี้ โปรดละเว้นอีเมลนี้
+        `;
+
+        await exports.sendEmail(
+            user.googleEmail,
+            `คุณถูกเพิ่มเข้าไปในโปรเจกต์: ${space.projectName}`,
+            emailHtml,
+            emailText
+        );
+
+        console.info(`✅ Email successfully sent to ${user.googleEmail}`);
+    } catch (error) {
+        console.error(`❌ Failed to send email to ${user?.googleEmail || 'unknown email'}:`, error.message);
     }
 };
+
 
 exports.sendTaskAssignment = async (usersToNotify, task, taskDetailLink) => {
     for (const user of usersToNotify) {

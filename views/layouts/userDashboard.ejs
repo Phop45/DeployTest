@@ -142,44 +142,47 @@
                         </div>
                         <div class="taskList">
                             <% pendingTasks.forEach(task => { %>
-                                <div class="taskItem">
+                                <div class="taskItem" onclick="location.href='/task/<%= task._id %>/detail?spaceId=<%= task.project._id %>'">
                                     <span class="attendIcon">
                                         <i class='bx bx-error-circle' 
-                                            style="color: <%= task.taskPriority === 'urgent' && task.taskStatus === 'pending' ? '#ef4444' : '#f59e0b' %>;"></i>
+                                            style="color: <%= task.taskPriority === 'urgent' && task.taskStatus === 'pending' ? '#ef4444' : '#f59e0b' %>;">
+                                        </i>
                                     </span>
                                     <div class="taskDetail">
                                         <span id="attendName"><%= task.taskName %></span>
-                                        <span id="attendItem">
-                                            <% if (task.taskPriority === 'urgent') { %>
-                                                <div id="attenPri">
-                                                    <i class="fa-solid fa-flag"></i>
-                                                    ด่วน
-                                                </div>
-                                            <% } %>
-                                            <% if (task.taskStatus === 'pending') { %>
-                                                <div id="attenStatus">
-                                                    <i class="fa-solid fa-hourglass-half"></i>
-                                                    รอตรวจ
-                                                </div>
-                                            <% } %>
-                                        </span>
-                                        <!-- Display Due Date or "No Due Date" -->
-                                        <% if (task.dueDate) { 
-                                            const dueDate = dayjs(task.dueDate); 
-                                            const today = dayjs();
-                                            const daysRemaining = dueDate.diff(today, 'day');
-                                            const isDueSoon = daysRemaining <= 3; %>
-                                            
-                                            <div id="attenDueDate" style="color: <%= isDueSoon ? 'red' : 'inherit' %>;">
-                                                <i class="fa-solid fa-calendar-day"></i>
-                                                <%= dueDate.format('D MMMM YYYY') %>
-                                            </div>
-                                        <% } else { %>
-                                            <div id="attenDueDate">
-                                                <i class="fa-solid fa-calendar-day"></i>
-                                                ไม่มีวันครบกำหนด
-                                            </div>
-                                        <% } %>
+                                        <div class="attendWrap">
+                                            <span id="attendItem">
+                                                <% if (task.taskPriority === 'urgent') { %>
+                                                    <div id="attenPri">
+                                                        <i class="fa-solid fa-flag"></i>
+                                                        ด่วน
+                                                    </div>
+                                                <% } %>
+                                                <% if (task.taskStatus === 'pending') { %>
+                                                    <div id="attenStatus">
+                                                        <i class="fa-solid fa-hourglass-half"></i>
+                                                        รอตรวจ
+                                                    </div>
+                                                <% } %>
+                                            </span>
+                                            <span id="attendItem">
+                                                <% if (task.dueDate) { 
+                                                    const dueDate = dayjs(task.dueDate); 
+                                                    const today = dayjs();
+                                                    const daysRemaining = dueDate.diff(today, 'day');
+                                                    const isDueSoon = daysRemaining <= 3; %>
+                                                    <div id="attenDueDate" style="color: <%= isDueSoon ? 'red' : 'inherit' %>;">
+                                                        <i class="fa-solid fa-calendar-day"></i>
+                                                        <%= dueDate.format('D MMM') %>
+                                                    </div>
+                                                <% } else { %>
+                                                    <div id="attenDueDate">
+                                                        <i class="fa-solid fa-calendar-day"></i>
+                                                        ไม่มีวันครบกำหนด
+                                                    </div>
+                                                <% } %>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             <% }); %>
@@ -537,6 +540,10 @@
             const tasksModal = document.getElementById("tasksModal");
             const closeModal = document.getElementById("closeModal");
             const tableBody = document.getElementById("tasksTableBody");
+            const modalTitle = document.getElementById('modalTitle');
+
+            // Update modal title
+            modalTitle.textContent = 'งานที่รอตรวจทั้งหมด';
 
             // Get the task data from the server (assuming it is passed to the page)
             const pendingTasks = <%- JSON.stringify(pendingTasks) %>; // EJS variable holding the pending tasks

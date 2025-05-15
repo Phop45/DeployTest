@@ -180,11 +180,6 @@ app.use('/', require('./server/routes/userRoutes'));
 app.use('/', require('./server/routes/adminRoutes'));
 app.use('/', require('./server/routes/collabRoutes'));
 
-app.use(cors({
-  origin: ['https://deploytest-8mln.onrender.com', 'http://localhost:5001'],
-  credentials: true
-}));
-
 // Handle 404
 app.get('*', (req, res) => {
   res.status(404).render('404');

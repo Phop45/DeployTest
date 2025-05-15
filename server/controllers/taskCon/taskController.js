@@ -13,7 +13,7 @@ const ObjectId = mongoose.Types.ObjectId;
 const Tag = require('../../models/Tag');
 const upload = require('../../middleware/upload'); 
 const { console } = require("inspector");
-const { sendTaskApprovalEmail, sendTaskStatusEmails } = require('../../../emailService');
+const { sendTaskApprovalEmail, sendTaskStatusEmails , sendTaskAssignment } = require('../../../emailService');
 
 moment.locale('th');
 
@@ -77,12 +77,13 @@ exports.createTask = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(spaceId)) {
       return res.status(400).send("Invalid space ID.");
     }
+
     const space = await Spaces.findById(spaceId);
     if (!space) {
       return res.status(404).send("Space not found.");
     }
 
-    const userId = req.user && req.user.id; // Assuming `req.user` is populated with the authenticated user
+    const userId = req.user && req.user.id;
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).send("Invalid user ID.");
     }
@@ -104,16 +105,19 @@ exports.createTask = async (req, res) => {
     if (assignedUsers) {
       const userIds = assignedUsers.split(',');
       for (const userId of userIds) {
-        if (!mongoose.Types.ObjectId.isValid(userId)) continue;
-        validAssignedUsers.push(mongoose.Types.ObjectId(userId));
+        if (mongoose.Types.ObjectId.isValid(userId)) {
+          validAssignedUsers.push(mongoose.Types.ObjectId(userId));
+        }
       }
     }
 
-    const tags = taskTag ? JSON.parse(taskTag).map(tag => ({
-        _id: tag._id ? mongoose.Types.ObjectId(tag._id) : undefined,
-        tagName: tag.tagName,
-        color: tag.color,
-      })) : [];
+    const tags = taskTag
+      ? JSON.parse(taskTag).map(tag => ({
+          _id: tag._id ? mongoose.Types.ObjectId(tag._id) : undefined,
+          tagName: tag.tagName,
+          color: tag.color,
+        }))
+      : [];
 
     const userTags = [];
     for (const tag of tags) {
@@ -149,23 +153,21 @@ exports.createTask = async (req, res) => {
 
     await newTask.save();
 
-    // Create notification
-    const notification = new Notification({
-      userGroup: validAssignedUsers.map(userId => ({
-        user: userId,
-        status: 'unread',
-      })),
-      triggeredBy: mongoose.Types.ObjectId(userId),
-      message: `คุณได้รับมอบหมายงานชื่อ: ${newTask.taskName}`,
-      type: 'taskAssignment',
-      relatedEntityType: 'task',
-      relatedEntityId: newTask._id,
+    const notifications = validAssignedUsers.map(userId => ({
+      user: userId,
+      task: newTask._id,
       space: mongoose.Types.ObjectId(spaceId),
+      type: 'taskAssignment',
+      message: `You have been assigned a task: ${newTask.taskName}`,
+      status: 'unread',
       dueDate: parsedDueDate,
-      isActionable: false,
-    });
+    }));
+    await Notification.insertMany(notifications);
 
-    await notification.save();
+    // Send emails to assigned users
+    const usersToNotify = await User.find({ _id: { $in: validAssignedUsers } });
+    const taskDetailLink = `${req.protocol}://${req.get('host')}/task/${newTask._id}`;
+    await sendTaskAssignment(usersToNotify, newTask, taskDetailLink);
 
     res.redirect(`/space/item/${spaceId}/task_board`);
   } catch (error) {
@@ -835,9 +837,10 @@ exports.getTaskSubtasks = async (req, res) => {
 
 // upload file
 exports.uploadAttachments = async (req, res) => {
-  const { taskId, spaceId } = req.params; // Assuming you have spaceId in params
+  const { taskId, spaceId } = req.params;
   const userId = req.user._id;
-
+  res.set('Content-Type', 'text/html');
+  
   // Check if files are uploaded
   if (!req.files || (!req.files.taskAttachments && !req.files.userSubmission)) {
     req.flash('error', 'No files were uploaded');
@@ -856,9 +859,12 @@ exports.uploadAttachments = async (req, res) => {
       // Clean path if needed
       filePath = filePath.endsWith(',') ? filePath.slice(0, -1) : filePath;
 
+      // Ensure the original name is properly decoded
+      const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
       attachments.push({
         path: filePath,
-        originalName: file.originalname,
+        originalName: originalName, // Now properly handles Thai characters
         fileSize: file.size,
         fileType: file.mimetype,
         uploadedBy: userId,
@@ -890,7 +896,20 @@ exports.uploadAttachments = async (req, res) => {
     }
 
     req.flash('success', 'Files uploaded successfully');
-    return res.redirect(`/task/${taskId}/detail?spaceId=${spaceId}`);
+    return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script>
+                    sessionStorage.removeItem('uploadInProgress');
+                    window.location.href = '/task/${taskId}/detail?spaceId=${spaceId}';
+                </script>
+            </head>
+            <body></body>
+            </html>
+        `);
+
+    // return res.redirect(`/task/${taskId}/detail?spaceId=${spaceId}`);
 
   } catch (error) {
     console.error('Upload error:', error);

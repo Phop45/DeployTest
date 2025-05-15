@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 
 const attachmentSchema = new Schema({
     path: { type: String, required: true }, // File storage path (Local/GridFS/S3)
-    originalName: { type: String, required: true }, // Original file name
+    originalName: { type: String, required: true },
     uploadedAt: { type: Date, default: Date.now }, // Upload timestamp
     fileSize: { type: Number, required: true }, // File size in bytes
     fileType: { type: String, required: true }, // File MIME type (e.g., "application/pdf", "image/png")

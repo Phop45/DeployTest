@@ -93,13 +93,21 @@ const compressAndUploadImage = async (req, res, next) => {
 const uploadFiles = multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
+            // Ensure upload directory exists
+            if (!fs.existsSync(fileUploadDir)) {
+                fs.mkdirSync(fileUploadDir, { recursive: true });
+            }
             cb(null, fileUploadDir); 
         },
         filename: (req, file, cb) => {
-            cb(null, file.originalname);
+            const timestamp = Date.now();
+            // Preserve the original filename exactly as uploaded
+            const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+            const safeFilename = `${timestamp}-${originalName}`;
+            cb(null, safeFilename);
         }
     }),
-    limits: { fileSize: 5 * 1024 * 1024 },  // 5MB
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: (req, file, cb) => {
         const allowedTypes = [
             'image/jpeg', 'image/png', 'application/pdf',

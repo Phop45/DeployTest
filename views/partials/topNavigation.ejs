@@ -12,7 +12,7 @@
 
         <div class="navbar_options">
             <div class="search_container">
-                <form class="search_formTop">
+                <!-- <form class="search_formTop">
                     <i class="fa-solid fa-magnifying-glass" id="search_icon"></i>
                     <input 
                         class="searchInputTop" 
@@ -22,30 +22,30 @@
                         placeholder="ค้นหา" 
                         aria-label="Search" 
                         maxlength="500">
-                </form>
+                </form> -->
 
-                <div class="mainSearchResult" style="display: none;">
+                <!-- <div class="mainSearchResult" style="display: none;">
                     <ul class="resultList">
                         <li class="resultItem">
 
                         </li>
                     </ul>
-                </div>
+                </div> -->
             </div>
 
             <div class="navbar_nav">
-                <div class="nav_item" data-label="ช่วยเหลือ">
+                <!-- <div class="nav_item" data-label="ช่วยเหลือ">
                     <a class="nav_link" aria-current="page" href="/complaint">
                         <i class="fa-solid fa-circle-info" id="iconLink"></i>
                     </a>
-                </div>
+                </div> -->
                 <div class="nav_item" data-label="แจ้งเตือน" id="notiSection">
                     <a class="nav_link" aria-current="page" id="noti-dropdown" role="button" data-bs-toggle="dropdown"
                       aria-expanded="false" aria-label="Notifications" name="notifications">
                       <i class="fa-solid fa-bell" id="iconLink"></i>
                     </a>
                     <div class="notiNew">
-                        <span class="count"><%= unreadCount %></span>
+                        <span class="count"><%= unreadCount || 0 %></span>
                     </div>
 
 
@@ -142,80 +142,6 @@
                         <% } else { %>
                             <p style="text-align: center; color: gray;">ไม่มีการแจ้งเตือน</p>
                         <% } %>
-
-                        <!-- <div class="notiItem notRead" id="invitation">
-                            <div class="notiConteneWarp">
-                                <div class="imgProfile">
-                                    <img src="/pic/images.jpeg" alt="" class="profileImage">
-                                </div>
-                                <div class="notiContent">
-                                    <span class="firstLine">
-                                        <span style="font-weight: 400;">User Name</span> ได้เพิ่มคุณเข้าโปรเจกต์
-                                        <a href="#" style="font-weight: 400;" id="viewLine">Project Name</a> แล้ว
-                                    </span>
-                                    <span class="secondLine">
-                                        แจ้งเตือนเมื่อ:
-                                    </span>
-                                </div>
-
-                                <div class="readSec">
-                                    <button id="isRead"></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="notiItem" id="invitation">
-                            <div class="notiConteneWarp">
-                                <div class="imgProfile">
-                                    <img src="/pic/images.jpeg" alt="" class="profileImage">
-                                </div>
-                                <div class="notiContent">
-                                    <span class="firstLine">
-                                        <span>User Name</span> ได้เพิ่มคุณเข้าโปรเจกต์
-                                        <a href="#">Project Name</a> แล้ว
-                                    </span>
-                                    <span class="secondLine">
-                                        แจ้งเตือนเมื่อ
-                                    </span>
-                                </div>
-
-                                <div class="readSec">
-                                    <button id="isRead"></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="notiItem taskAssignment" id="taskAssignment">
-                            <div class="notiItemWrap">
-                                <div class="notiFrom">
-                                    <div class="assTask">
-                                        <a href="#" id="viewTaskLink">Assgined Task Name</a>
-                                    </div>
-                                    <div class="assProject">
-                                        Assgined Project Name: <span style="font-weight: 300;">
-                                            <a href="#" style="color: white;">spaceName</a></span>
-                                    </div>
-                                </div>
-                                <div class="notiConteneWarp">
-                                    <div class="imgProfile">
-                                        <img src="/pic/images.jpeg" alt="" class="profileImage">
-                                    </div>
-                                    <div class="notiContent">
-                                        <span class="firstLine">
-                                            <span style="font-weight: 400;">User Name</span> ได้มอบหมายงานให้กับคุณ
-                                            <br> ครบกำหนดวันที่: <span style="font-weight: 400;">DueDate</span>
-                                        </span>
-                                        <span class="secondLine">
-                                            แจ้งเตือนเมื่อ
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="readSec">
-                                <button id="isRead"></button>
-                            </div>
-                        </div> -->
                     </div>
                 </div>
 
@@ -225,8 +151,8 @@
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <img src="<%= user.profileImage %>" 
                             alt="<%= user.username %>'s Profile Image" 
-                            width="40px" 
-                            height="40px" 
+                            width="30px" 
+                            height="30px" 
                             style="border-radius: 50%;"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="fallback-profile" style="display: none;">
